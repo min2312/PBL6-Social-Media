@@ -2,7 +2,7 @@
 	"development": {
 		"username": "root",
 		"password": null,
-		"database": "restaurant_management",
+		"database": "social_media",
 		"host": "127.0.0.1",
 		"dialect": "mysql"
 	},
