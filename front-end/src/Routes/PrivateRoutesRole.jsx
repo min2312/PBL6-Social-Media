@@ -1,6 +1,6 @@
 import React, { useContext } from "react";
 import { Route, Redirect } from "react-router-dom";
-import { UserContext } from "../Context/UserProvider";
+import { UserContext } from "../Context/UserProvider.jsx";
 
 const PrivateRoutesRole = ({ component: Component, role, ...rest }) => {
 	const { user, admin } = useContext(UserContext);

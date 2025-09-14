@@ -1,6 +1,6 @@
 import React, { createContext, useEffect, useState } from "react";
-import { getUserAccount } from "../services/userService";
-import { getAdminAccount } from "../services/adminService";
+import { getUserAccount } from "../services/userService.jsx";
+import { getAdminAccount } from "../services/adminService.jsx";
 const UserContext = createContext({ name: "", auth: false });
 const UserProvider = ({ children }) => {
 	// User is the name of the "data" that gets stored in context
