@@ -1,0 +1,25 @@
+/node_modules
+/vendor
+.idea/
+/.idea
+
+.env
+.babelrc
+
+# undo
+# npx sequelize-cli db:migrate:undo --name migrations-orderDetail.js
+# npx sequelize-cli db:migrate:undo --name migrations-reservation.js
+# npx sequelize-cli db:migrate:undo --name migrations-invoice.js
+# npx sequelize-cli db:migrate:undo --name migrations-order.js
+# npx sequelize-cli db:migrate:undo --name migrations-table.js
+# npx sequelize-cli db:migrate:undo --name migrations-customer.js
+# npx sequelize-cli db:migrate:undo --name migrations-dish.js
+
+# generate
+# npx sequelize-cli db:migrate --name migrations-dish.js
+# npx sequelize-cli db:migrate --name migrations-customer.js
+# npx sequelize-cli db:migrate --name migrations-table.js
+# npx sequelize-cli db:migrate --name migrations-order.js
+# npx sequelize-cli db:migrate --name migrations-invoice.js
+# npx sequelize-cli db:migrate --name migrations-reservation.js
+# npx sequelize-cli db:migrate --name migrations-orderDetail.js
