@@ -2,7 +2,7 @@ import axios from "axios";
 
 // Set config defaults when creating the instance
 const instance = axios.create({
-	baseURL: "http://localhost:8081",
+	baseURL: "http://localhost:5000",
 });
 
 instance.defaults.withCredentials = true;
@@ -34,10 +34,6 @@ instance.interceptors.response.use(
 		switch (status) {
 			// authentication (token related issues)
 			case 401: {
-				// if (err && err.response.data.errCode === -2) {
-				// 	alert("Token has expired. Please log in again.");
-				// 	window.location.href = "/login";
-				// }
 				return err.response.data;
 			}
 
@@ -68,10 +64,6 @@ instance.interceptors.response.use(
 
 			// generic api error (server related) unexpected
 			default: {
-				if (err && err.response.data.errCode === -2) {
-					alert("Token has expired. Please log in again.");
-					window.location.href = "/login";
-				}
 				return err.response.data;
 			}
 		}

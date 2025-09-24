@@ -1,13 +1,16 @@
 import { Fragment, useContext } from "react";
 import "./App.css";
 import ClientRoute from "./Routes/ClientRoute";
-import NavBar from "./Component/NavBar/NavBar";
+import Navbar from "./components/Navbar/Navbar";
+import Footer from "./components/Footer/Footer";
+import Sidebar from "./components/Sidebar/Sibebar";
 import { Oval } from "react-loader-spinner";
 import { UserContext } from "./Context/UserProvider";
-import Footer from "./Component/Common/Footer/Footer";
+
 import { BrowserRouter as Router } from "react-router-dom";
 import { Bounce, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+
 function App() {
 	const { user } = useContext(UserContext);
 	return (
@@ -27,17 +30,16 @@ function App() {
 						<div>Loading Data....</div>
 					</div>
 				) : (
-					<>
-						<div className="app-header">
-							<NavBar />
-						</div>
-						<div className="app-container">
-							<ClientRoute />
-						</div>
-						<div className="app-footer">
+					<div className="app-layout">
+						<Sidebar />
+						<div className="main-content">
+							<Navbar title="Bird Social" />
+							<div className="content-area">
+								<ClientRoute />
+							</div>
 							<Footer />
 						</div>
-					</>
+					</div>
 				)}
 			</Router>
 			<ToastContainer
