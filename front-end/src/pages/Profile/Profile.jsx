@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Calendar, MapPin, Link as LinkIcon, X, MessageSquare } from 'lucide-react';
-import { MoreHorizontal, ThumbsUp, MessageSquare as MessageSquareIcon, Share } from 'lucide-react';
+import Post from '../../components/Post/Post';
 import './Profile.css';
 
 const Profile = () => {
@@ -26,26 +26,49 @@ const Profile = () => {
     website: profileData.website
   });
 
-  const userPosts = [
+  const [userPosts, setUserPosts] = useState([
     {
       id: 1,
+      user: {
+        name: 'Esmeralda Rodriguez',
+        username: '@esmeralda',
+        avatar: '/api/placeholder/40/40'
+      },
       content: 'Just finished implementing a new feature using React hooks! The component lifecycle is so much cleaner now 🚀',
       images: [],
       likes: 24,
-      comments: 5,
+      comments: [
+        {
+          id: 1,
+          user: {
+            name: 'John Doe',
+            username: '@johndoe',
+            avatar: '/api/placeholder/32/32'
+          },
+          content: 'Great work! React hooks are amazing 👏',
+          likes: 3,
+          timestamp: '1h ago',
+          isLiked: false
+        }
+      ],
       shares: 2,
       timestamp: '2 hours ago'
     },
     {
       id: 2,
+      user: {
+        name: 'Esmeralda Rodriguez',
+        username: '@esmeralda',
+        avatar: '/api/placeholder/40/40'
+      },
       content: 'Beautiful sunset from my office window. Sometimes you need to pause and appreciate the simple things in life 🌅',
       images: ['/api/placeholder/400/300'],
       likes: 89,
-      comments: 12,
+      comments: [],
       shares: 7,
       timestamp: '1 day ago'
     }
-  ];
+  ]);
 
   const handleEditProfile = () => {
     setEditForm({
@@ -73,6 +96,12 @@ const Profile = () => {
     }));
   };
 
+  const handleUpdatePost = (updatedPost) => {
+    setUserPosts(prev => prev.map(post => 
+      post.id === updatedPost.id ? updatedPost : post
+    ));
+  };
+
   const renderPosts = () => {
     if (userPosts.length === 0) {
       return (
@@ -87,52 +116,11 @@ const Profile = () => {
     return (
       <div className="profile-posts">
         {userPosts.map((post) => (
-          <div key={post.id} className="post-card">
-            <div className="post-header">
-              <div className="post-user-info">
-                <div className="post-user-avatar"></div>
-                <div className="post-user-details">
-                  <p className="user-name">{profileData.name}</p>
-                  <p className="user-username">{profileData.username}</p>
-                </div>
-              </div>
-              <div className="post-meta">
-                <span className="post-timestamp">{post.timestamp}</span>
-                <button className="post-menu-btn">
-                  <MoreHorizontal size={16} />
-                </button>
-              </div>
-            </div>
-
-            <p className="post-content">{post.content}</p>
-
-            {post.images.length > 0 && (
-              <div className="post-images">
-                {post.images.map((image, index) => (
-                  <div key={index} className="post-image">
-                    <div className="image-placeholder">🖼️</div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            <div className="post-actions-bar">
-              <div className="post-actions-left">
-                <button className="action-btn like-btn">
-                  <ThumbsUp size={18} />
-                  <span>{post.likes}</span>
-                </button>
-                <button className="action-btn comment-btn">
-                  <MessageSquareIcon size={18} />
-                  <span>{post.comments}</span>
-                </button>
-                <button className="action-btn share-btn">
-                  <Share size={18} />
-                  <span>{post.shares}</span>
-                </button>
-              </div>
-            </div>
-          </div>
+          <Post 
+            key={post.id} 
+            post={post} 
+            onUpdatePost={handleUpdatePost}
+          />
         ))}
       </div>
     );
@@ -321,5 +309,6 @@ const Profile = () => {
     </div>
   );
 };
+
 
 export default Profile;

@@ -40,10 +40,10 @@ const Sidebar = () => {
         </nav>
 
         <div className="user-profile">
-          <button className="profile-button">
+          <Link to="/profile" className="profile-button">
             <div className="user-avatar"></div>
             <span>Esmeralda</span>
-          </button>
+          </Link>
         </div>
       </div>
     </div>

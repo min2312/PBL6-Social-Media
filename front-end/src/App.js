@@ -37,7 +37,7 @@ function App() {
 							<div className="content-area">
 								<ClientRoute />
 							</div>
-							<Footer />
+							{/* <Footer /> */}
 						</div>
 					</div>
 				)}
