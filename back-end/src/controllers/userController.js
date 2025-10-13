@@ -89,7 +89,8 @@ const getUserAccount = async (req, res) => {
 			id: req.user.id,
 			fullName: req.user.fullName,
 			email: req.user.email,
-			role: req.user.role,
+			createdAt: req.user.createdAt,
+			bio: req.user.bio,
 		},
 	});
 };

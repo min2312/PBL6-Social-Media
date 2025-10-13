@@ -21,18 +21,18 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use(cookieParser());
 // configSession(app);
-// initWebRouters(app);
+initWebRouters(app);
 
 connectDB();
-// const server = http.createServer(app);
-// initSocket(server);
+const server = http.createServer(app);
+initSocket(server);
 
 app.use((req, res) => {
 	return res.send("404 Not Found");
 });
 
 let port = process.env.PORT || 6969;
-app.listen(port, () => {
+server.listen(port, () => {
 	console.log("Backend Nodejs is running on the port: " + port);
 });
 // app.use(passport.initialize());
