@@ -5,14 +5,14 @@ import App from "./App";
 import reportWebVitals from "./reportWebVitals";
 import { store } from "./Redux/store";
 import { Provider } from "react-redux";
-// import { UserProvider } from "./Context/UserProvider";
+import { UserProvider } from "./Context/UserProvider";
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
 	<Provider store={store}>
 		<React.StrictMode>
-			{/* <UserProvider> */}
+			<UserProvider>
 				<App />
-			{/* </UserProvider> */}
+			</UserProvider>
 		</React.StrictMode>
 	</Provider>
 );
