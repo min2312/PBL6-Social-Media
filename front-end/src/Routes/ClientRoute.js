@@ -5,6 +5,8 @@ import { BrowserRouter as Router, Switch, Route, Link } from "react-router-dom";
 import HomePage from "../pages/Home/HomePage";
 import Profile from "../pages/Profile/Profile";
 import ChatPage from "../pages/ChatPage/ChatPage";
+import Login from "../pages/Login/Login";
+import Register from "../pages/Register/Register";
 // import PrivateRoutesRole from "./PrivateRoutesRole";
 // import PrivateRoutes from "./PrivateRoutes";
 // import LoginAdmin from "../pages/Login/LoginAdmin";
@@ -40,6 +42,8 @@ const ClientRoute = () => {
 				</Route>
 				<Route path="/profile" component={Profile} />
 				<Route path="/messenger" component={ChatPage} />
+				<Route path="/login" component={Login} />
+				<Route path="/register" component={Register} />
 				<Route path="*">404 Not Found</Route>
 				
 			</Switch>
