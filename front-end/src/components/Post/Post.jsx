@@ -7,34 +7,35 @@ import {
 	Send,
 } from "lucide-react";
 import "./Post.css";
-
+import useSmartRelativeTime from "../../hook/useSmartRelativeTime";
 const Post = ({ post, onUpdatePost }) => {
 	const [isLiked, setIsLiked] = useState(false);
 	const [showComments, setShowComments] = useState(post.comments.length > 0);
 	const [commentText, setCommentText] = useState("");
 	const [comments, setComments] = useState(post.comments || []);
-
+	const formattedTime = useSmartRelativeTime(
+		post.timestamp,
+		post.formatTimeAgo
+	);
 	const handleLike = () => {
 		setIsLiked(!isLiked);
 		const newLikes = isLiked ? post.likes - 1 : post.likes + 1;
 		onUpdatePost({ ...post, likes: newLikes });
 	};
-
 	const handleAddComment = () => {
 		if (commentText.trim()) {
 			const newComment = {
 				id: Date.now(),
-				user: {
+				User: {
 					fullName: "Current User",
 					username: "@currentuser",
-					avatar: "/api/placeholder/32/32",
+					profilePicture: "/api/placeholder/32/32",
 				},
 				content: commentText,
 				likes: 0,
 				timestamp: "Just now",
 				isLiked: false,
 			};
-
 			setComments((prev) => [...prev, newComment]);
 			setCommentText("");
 			onUpdatePost({ ...post, comments: comments.length + 1 });
@@ -64,14 +65,22 @@ const Post = ({ post, onUpdatePost }) => {
 			{/* Post Header */}
 			<div className="post-header">
 				<div className="post-user-info">
-					<div className="post-user-avatar"></div>
+					<div className="post-user-avatar">
+						{post.User?.profilePicture && (
+							<img
+								src={post.User.profilePicture}
+								alt="avatar"
+								style={{ width: 40, height: 40, borderRadius: "50%" }}
+							/>
+						)}
+					</div>
 					<div className="post-user-details">
-						<p className="user-name">{post.user.fullName}</p>
-						<p className="user-username">{post.user.username}</p>
+						<p className="user-name">{post.User?.fullName}</p>
+						<p className="user-username">{post.User?.username}</p>
 					</div>
 				</div>
 				<div className="post-meta">
-					<span className="post-timestamp">{post.timestamp}</span>
+					<span className="post-timestamp">{formattedTime}</span>
 					<button className="post-menu-btn">
 						<MoreHorizontal size={16} />
 					</button>
@@ -82,11 +91,15 @@ const Post = ({ post, onUpdatePost }) => {
 			<p className="post-content">{post.content}</p>
 
 			{/* Post Images */}
-			{post.images.length > 0 && (
+			{post.images && post.images.length > 0 && (
 				<div className="post-images">
 					{post.images.map((image, index) => (
 						<div key={index} className="post-image">
-							<div className="image-placeholder">🎨</div>
+							<img
+								src={image}
+								alt="post"
+								style={{ width: "100%", height: "auto", borderRadius: 8 }}
+							/>
 						</div>
 					))}
 				</div>
@@ -121,15 +134,23 @@ const Post = ({ post, onUpdatePost }) => {
 				<div className="comments-section">
 					{comments.map((comment) => (
 						<div key={comment.id} className="comment">
-							<div className="comment-avatar"></div>
+							<div className="comment-avatar">
+								{comment.User?.profilePicture && (
+									<img
+										src={comment.User.profilePicture}
+										alt="avatar"
+										style={{ width: 32, height: 32, borderRadius: "50%" }}
+									/>
+								)}
+							</div>
 							<div className="comment-content">
 								<div className="comment-bubble">
 									<div className="comment-header">
 										<span className="comment-user">
-											{comment.user.fullName}
+											{comment.User?.fullName}
 										</span>
 										<span className="comment-username">
-											{comment.user.username}
+											{comment.User?.username}
 										</span>
 										<span className="comment-timestamp">
 											{comment.timestamp}

@@ -34,12 +34,15 @@ const AddPost = ({ isOpen, onClose, onSubmit }) => {
 		setImages((prev) => prev.filter((img) => img.id !== id));
 	};
 
+	// Chuẩn hóa dữ liệu gửi lên cho đúng với bảng posts
 	const handleSubmit = () => {
 		if (caption.trim() || images.length > 0) {
+			// Lấy mảng file gốc (nếu có)
+			const imageFiles = images.map((img) => img.file);
 			onSubmit({
-				user: user,
-				caption: caption.trim(),
-				images: images,
+				userId: user?.id,
+				content: caption.trim(),
+				imageUrl: imageFiles.length > 0 ? imageFiles : null, // gửi mảng file hoặc null
 			});
 
 			// Reset form
@@ -74,7 +77,7 @@ const AddPost = ({ isOpen, onClose, onSubmit }) => {
 					<div className="user-info">
 						<div className="user-avatar"></div>
 						<div className="user-details">
-							<h4>Esmeralda</h4>
+							<h4>{user.account.fullName}</h4>
 							<p>Public</p>
 						</div>
 					</div>

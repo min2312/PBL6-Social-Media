@@ -41,10 +41,13 @@ const UserProvider = ({ children }) => {
 			let fullName = response.DT.fullName;
 			let id = response.DT.id;
 			let role = response.DT.role;
+			let createdAt = response.DT.createdAt;
+			let bio = response.DT.bio;
+			let profilePicture = response.DT.profilePicture;
 			let data = {
 				isAuthenticated: true,
 				token,
-				account: { id, email, fullName, role },
+				account: { id, email, fullName, role, createdAt, bio, profilePicture },
 				isLoading: false,
 			};
 			setUser(data);

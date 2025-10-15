@@ -94,7 +94,9 @@ const CheckCustomer = (phoneNumber) => {
 
 const CreateNewOrder = (data) => {
 	return axios
-		.post("/api/create-new-order", data)
+		.post("/api/create-new-order", data, {
+			headers: { "Content-Type": "multipart/form-data" },
+		})
 		.then((response) => {
 			return response;
 		})
@@ -114,9 +116,9 @@ const CreateNewOrderDetail = (data) => {
 		});
 };
 
-const GetAllDish = (InputId) => {
+const GetAllPost = (InputId) => {
 	return axios
-		.get(`/api/getAllDish?id=${InputId}`)
+		.get(`/api/getAllPost?id=${InputId}`)
 		.then((response) => {
 			return response;
 		})
@@ -125,9 +127,9 @@ const GetAllDish = (InputId) => {
 		});
 };
 
-const CreateNewDish = (data) => {
+const CreateNewPost = (data) => {
 	return axios
-		.post("/api/create-new-dish", data)
+		.post("/api/create-new-post", data)
 		.then((response) => {
 			return response;
 		})
@@ -354,8 +356,8 @@ const GetCancellationsByOrderId = (orderId) => {
 
 export {
 	GetAllTable,
-	GetAllDish,
-	CreateNewDish,
+	GetAllPost,
+	CreateNewPost,
 	UpdateDish,
 	DeleteDish,
 	GetAllCategory,
