@@ -14,8 +14,8 @@ module.exports = (sequelize, DataTypes) => {
 		{
 			userId: DataTypes.INTEGER,
 			content: DataTypes.TEXT,
-			imageUrl: DataTypes.STRING,
-			videoUrl: DataTypes.STRING,
+			imageUrl: DataTypes.TEXT,
+			videoUrl: DataTypes.TEXT,
 			scope: DataTypes.STRING,
 			approvalStatus: DataTypes.STRING,
 			isApproved: DataTypes.BOOLEAN,

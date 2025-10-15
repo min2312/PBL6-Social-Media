@@ -10,12 +10,12 @@ cloudinary.config({
 
 const storage = new CloudinaryStorage({
 	cloudinary,
-	allowedFormats: ["jpg", "png", "jpeg", "webp"],
+	allowedFormats: ["jpg", "png", "jpeg", "webp", "jfif"],
 	params: {
-		folder: "Restaurant",
+		folder: "SocialMedia",
 	},
 });
 
-const uploadCloud = multer({ storage });
+const uploadCloud = multer({ storage, limits: { fileSize: 10 * 1024 * 1024 } }); // 10MB limit
 
 module.exports = uploadCloud;

@@ -921,41 +921,59 @@ let GetAllInvoice = (invoiceId) => {
 	});
 };
 
-let CreateDish = (data, fileImage) => {
+let CreatePost = (data, fileImages) => {
 	return new Promise(async (resolve, reject) => {
 		try {
-			let check = await db.Dish.findOne({
-				where: { name: data.name },
-			});
-			if (check) {
-				if (fileImage) {
-					await cloudinary.uploader.destroy(fileImage.filename);
+			if (!data) {
+				if (fileImages && fileImages.length > 0) {
+					await Promise.all(
+						fileImages.map((file) => cloudinary.uploader.destroy(file.filename))
+					);
 				}
-				resolve({
+				return resolve({
 					errCode: 1,
-					errMessage: "The dish already exists",
+					errMessage: "The post error",
 				});
 			} else {
-				let imagePath = data.image || (fileImage ? fileImage.path : null);
-				let newDish = await db.Dish.create({
-					name: data.name,
-					price: data.price,
-					Category: data.category,
-					pic_link: imagePath,
+				let imagePath = null;
+				if (Array.isArray(data.image) && data.image.length > 0) {
+					imagePath = data.image; // mảng ảnh từ Cloudinary
+				} else if (fileImages && fileImages.length > 0) {
+					imagePath = fileImages.map((f) => f.path);
+				}
+				let newPost = await db.Post.create({
+					userId: Number(data.userId),
+					content: data.content,
+					videoUrl: data.videoUrl,
+					imageUrl: Array.isArray(imagePath)
+						? JSON.stringify(imagePath)
+						: imagePath,
+				});
+				newPost = await db.Post.findOne({
+					where: { id: newPost.id },
+					include: [
+						{
+							model: db.User,
+							attributes: ["id", "fullName", "email", "profilePicture"],
+						},
+					],
 				});
 				resolve({
 					errCode: 0,
-					errMessage: "Create new dish successfully",
-					dish: newDish,
+					errMessage: "Create new post successfully",
+					post: newPost,
 				});
 			}
 		} catch (e) {
-			if (fileImage) {
-				await cloudinary.uploader.destroy(fileImage.filename);
+			console.log(e);
+			if (fileImages && fileImages.length > 0) {
+				await Promise.all(
+					fileImages.map((file) => cloudinary.uploader.destroy(file.filename))
+				);
 			}
 			reject({
 				errCode: 1,
-				errMessage: "Error creating dish",
+				errMessage: "Error creating post",
 			});
 		}
 	});
@@ -1048,38 +1066,49 @@ let DeleteDish = (dishId) => {
 	});
 };
 
-let GetAllDish = (dishId) => {
+let GetAllPost = (postId) => {
 	return new Promise(async (resolve, reject) => {
 		try {
-			let dishes = "";
-			if (dishId === "ALL") {
-				dishes = await db.Dish.findAll({
-					attributes: [
-						"id",
-						"name",
-						"price",
-						"Category",
-						"pic_link",
-						"createdAt",
-						"updatedAt",
+			let posts = "";
+			if (postId === "ALL") {
+				posts = await db.Post.findAll({
+					include: [
+						{
+							model: db.User,
+							attributes: ["id", "fullName", "email", "profilePicture"],
+						},
 					],
 				});
 			}
-			if (dishId && dishId !== "ALL") {
-				dishes = await db.Dish.findAll({
-					where: { id: dishId },
-					attributes: [
-						"id",
-						"name",
-						"price",
-						"Category",
-						"pic_link",
-						"createdAt",
-						"updatedAt",
+			if (postId && postId !== "ALL") {
+				posts = await db.Post.findAll({
+					where: { id: postId },
+					include: [
+						{
+							model: db.User,
+							attributes: ["id", "fullName", "email", "profilePicture"],
+						},
 					],
 				});
 			}
-			resolve(dishes);
+			const formattedPosts = posts.map((p) => {
+				let images = [];
+				try {
+					if (typeof p.imageUrl === "string") {
+						images = JSON.parse(p.imageUrl);
+					} else if (Array.isArray(p.imageUrl)) {
+						images = p.imageUrl;
+					}
+				} catch (err) {
+					console.warn("Invalid imageUrl JSON:", p.imageUrl);
+				}
+
+				return {
+					...p.toJSON(),
+					imageUrl: images,
+				};
+			});
+			resolve(formattedPosts);
 		} catch (e) {
 			reject(e);
 		}
@@ -1458,7 +1487,7 @@ module.exports = {
 	GetAllOrder,
 	GetAllOrderDetail,
 	GetAllReservation,
-	GetAllDish,
+	GetAllPost,
 	GetAllCategory,
 	GetAllCustomer,
 	CreateNewCustomer,
@@ -1471,7 +1500,7 @@ module.exports = {
 	updateOrder,
 	CreateOrderDetail,
 	updateOrderDetail,
-	CreateDish,
+	CreatePost,
 	EditDish,
 	DeleteDish,
 	CreateInvoice,

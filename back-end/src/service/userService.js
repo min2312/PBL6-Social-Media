@@ -25,6 +25,9 @@ let HandleUserLogin = (email, password) => {
 							fullName: user.fullName,
 							phone: user.phone,
 							gender: user.gender,
+							bio: user.bio,
+							createdAt: user.createdAt,
+							profilePicture: user.profilePicture,
 						};
 						let token = CreateJWT(payload);
 						userData.errCode = 0;

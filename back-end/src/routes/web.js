@@ -32,7 +32,7 @@ let initWebRoutes = (app) => {
 	router.post("/api/update-discounts", apiController.HandleUpdateDiscounts);
 	router.post("/api/create-discount", apiController.HandleCreateDiscount);
 	router.post("/api/delete-discount", apiController.HandleDeleteDiscount);
-	router.get("/api/getAllDish", apiController.HandleGetAllDish);
+	router.get("/api/getAllPost", apiController.HandleGetAllPost);
 	router.get("/api/getAllCategory", apiController.HandleGetAllCategory);
 	router.get("/api/account", userController.getUserAccount);
 	router.get("/api/accountAdmin", adminController.getAdminAccount);
@@ -51,16 +51,16 @@ let initWebRoutes = (app) => {
 		apiController.HandleCreateOrderDetail
 	);
 	router.post(
-		"/api/create-new-dish",
-		uploadCloud.single("image"),
-		apiController.HandleCreateDish
+		"/api/create-new-post",
+		uploadCloud.array("image"),
+		apiController.HandleCreatePost
 	);
-	router.post(
-		"/api/update-dish",
-		uploadCloud.single("image"),
-		apiController.HandleEditDish
-	);
-	router.post("/api/delete-dish", apiController.HandleDeleteDish);
+	// router.post(
+	// 	"/api/update-post",
+	// 	uploadCloud.array("image"),
+	// 	apiController.HandleEditPost
+	// );
+	// router.post("/api/delete-post", apiController.HandleDeletePost);
 	router.post(
 		"/api/create-new-customer",
 		apiController.HandleCreateNewCustomer

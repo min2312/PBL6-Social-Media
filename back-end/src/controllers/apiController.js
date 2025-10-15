@@ -238,14 +238,14 @@ let HandleUpdateOrder = async (req, res) => {
 	});
 };
 
-let HandleCreateDish = async (req, res) => {
+let HandleCreatePost = async (req, res) => {
 	let data = req.body;
-	let fileImage = req.file;
-	let urlImage = data.url_image;
-
+	let fileImages = req.files;
 	if (!data || Object.keys(data).length === 0) {
-		if (fileImage) {
-			await cloudinary.uploader.destroy(fileImage.filename);
+		if (fileImages) {
+			fileImages.forEach(async (fileImage) => {
+				await cloudinary.uploader.destroy(fileImage.filename);
+			});
 		}
 		return res.status(200).json({
 			errCode: 1,
@@ -254,26 +254,21 @@ let HandleCreateDish = async (req, res) => {
 	}
 
 	try {
-		if (urlImage) {
-			const uploadResponse = await cloudinary.uploader.upload(urlImage, {
-				folder: "Restaurant",
-			});
-			data.image = uploadResponse.secure_url;
-		}
-
-		let result = await apiService.CreateDish(data, fileImage);
+		let result = await apiService.CreatePost(data, fileImages);
 		return res.status(200).json({
 			errCode: result.errCode,
 			errMessage: result.errMessage,
-			dish: result.dish,
+			post: result.post,
 		});
 	} catch (error) {
-		if (fileImage) {
-			await cloudinary.uploader.destroy(fileImage.filename);
+		if (fileImages) {
+			fileImages.forEach(async (fileImage) => {
+				await cloudinary.uploader.destroy(fileImage.filename);
+			});
 		}
 		return res.status(500).json({
 			errCode: 1,
-			errMessage: "Error creating dish",
+			errMessage: "Error creating post",
 		});
 	}
 };
@@ -330,20 +325,20 @@ let HandleDeleteDish = async (req, res) => {
 	});
 };
 
-let HandleGetAllDish = async (req, res) => {
+let HandleGetAllPost = async (req, res) => {
 	let id = req.query.id;
 	if (!id) {
 		return res.status(200).json({
 			errCode: 1,
 			errMessage: "Missing required parameter",
-			dish: [],
+			post: [],
 		});
 	}
-	let dish = await apiService.GetAllDish(id);
+	let posts = await apiService.GetAllPost(id);
 	return res.status(200).json({
 		errCode: 0,
 		errMessage: "OK",
-		dish: dish,
+		post: posts,
 	});
 };
 
@@ -618,10 +613,10 @@ module.exports = {
 	HandleUpdateCustomer,
 	HandleGetAllOrder,
 	HandleGetAllReservation,
-	HandleCreateDish,
+	HandleCreatePost,
 	HandleEditDish,
 	HandleDeleteDish,
-	HandleGetAllDish,
+	HandleGetAllPost,
 	HandleGetAllCategory,
 	HandleCreateOrderDetail,
 	HandleGetAllOrderDetail,
