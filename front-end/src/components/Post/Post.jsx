@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useContext } from "react";
 import {
 	MoreHorizontal,
 	ThumbsUp,
@@ -12,6 +12,12 @@ import "./Post.css";
 import useSmartRelativeTime from "../../hook/useSmartRelativeTime";
 import EditPost from "../EditPost/EditPost";
 import DeletePost from "../DeletePost/DeletePost";
+import { UserContext } from "../../Context/UserProvider";
+import {
+	CreateComment,
+	CreateLike,
+	GetAllComment,
+} from "../../services/apiService";
 
 const Post = ({ post, onUpdatePost }) => {
 	const [isLiked, setIsLiked] = useState(false);
@@ -22,12 +28,15 @@ const Post = ({ post, onUpdatePost }) => {
 	const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 	const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 	const dropdownRef = useRef(null);
-
+	const { user } = useContext(UserContext);
 	const formattedTime = useSmartRelativeTime(
 		post.timestamp,
 		post.formatTimeAgo
 	);
-
+	const formattedPostTime = useSmartRelativeTime(
+		post.timestamp,
+		post.formatTimeAgo
+	);
 	// Close dropdown when clicking outside
 	useEffect(() => {
 		const handleClickOutside = (event) => {
@@ -42,44 +51,52 @@ const Post = ({ post, onUpdatePost }) => {
 		};
 	}, []);
 
-	const handleLike = () => {
-		setIsLiked(!isLiked);
-		const newLikes = isLiked ? post.likes - 1 : post.likes + 1;
-		onUpdatePost({ ...post, likes: newLikes });
+	useEffect(() => {
+		setIsLiked(post.islikedbyUser);
+	}, [post.islikedbyUser]);
+
+	const handleLike = async () => {
+		let res = await CreateLike({
+			userId: user.account.id,
+			postId: post.id,
+		});
+		if (res && res.errCode === 0) {
+			setIsLiked(!isLiked);
+			const newLikes = isLiked ? post.likes - 1 : post.likes + 1;
+			onUpdatePost({ ...post, likes: newLikes });
+		}
 	};
-	const handleAddComment = () => {
+	const handleAddComment = async () => {
 		if (commentText.trim()) {
-			const newComment = {
-				id: Date.now(),
-				User: {
-					fullName: "Current User",
-					username: "@currentuser",
-					profilePicture: "/api/placeholder/32/32",
-				},
+			const cmt = {
+				userId: user.account.id,
 				content: commentText,
-				likes: 0,
-				timestamp: "Just now",
-				isLiked: false,
+				postId: post.id,
+			};
+			let response = await CreateComment(cmt);
+			const commentTimestamp = post.formatTimeAgo(response.comment.updatedAt);
+			const newComment = {
+				...response.comment,
+				timestamp: commentTimestamp,
 			};
 			setComments((prev) => [...prev, newComment]);
 			setCommentText("");
 			onUpdatePost({ ...post, comments: comments.length + 1 });
 		}
 	};
-
-	const handleCommentLike = (commentId) => {
-		setComments((prev) =>
-			prev.map((comment) =>
-				comment.id === commentId
-					? {
-							...comment,
-							isLiked: !comment.isLiked,
-							likes: comment.isLiked ? comment.likes - 1 : comment.likes + 1,
-					  }
-					: comment
-			)
-		);
+	const HandleGetComment = async () => {
+		let resCmt = await GetAllComment(post.id);
+		if (resCmt && resCmt.errCode === 0) {
+			const formattedComments = resCmt.comments.map((comment) => ({
+				...comment,
+				timestamp: post.formatTimeAgo(comment.updatedAt),
+			}));
+			setComments(formattedComments);
+		}
 	};
+	useEffect(() => {
+		HandleGetComment();
+	}, []);
 
 	const handleShare = () => {
 		onUpdatePost({ ...post, shares: post.shares + 1 });
@@ -217,21 +234,10 @@ const Post = ({ post, onUpdatePost }) => {
 											{comment.User?.username}
 										</span>
 										<span className="comment-timestamp">
-											{comment.timestamp}
+											{formattedPostTime || comment.timestamp}
 										</span>
 									</div>
 									<p className="comment-text">{comment.content}</p>
-									<div className="comment-actions">
-										<button
-											className={`comment-like-btn ${
-												comment.isLiked ? "liked" : ""
-											}`}
-											onClick={() => handleCommentLike(comment.id)}
-										>
-											<ThumbsUp size={14} />
-											{comment.likes > 0 && <span>{comment.likes}</span>}
-										</button>
-									</div>
 								</div>
 							</div>
 						</div>

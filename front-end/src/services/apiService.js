@@ -158,9 +158,9 @@ const DeleteDish = (id) => {
 		});
 };
 
-const GetAllCategory = () => {
+const GetAllComment = (postId) => {
 	return axios
-		.get("/api/getAllCategory")
+		.get(`/api/getAllComment?postId=${postId}`)
 		.then((response) => {
 			return response;
 		})
@@ -202,9 +202,9 @@ const UpdateOrder = (data) => {
 		});
 };
 
-const CreateInvoice = (data) => {
+const CreateComment = (data) => {
 	return axios
-		.post("/api/create-invoice", data)
+		.post("/api/create-comment", data)
 		.then((response) => {
 			return response;
 		})
@@ -353,14 +353,25 @@ const GetCancellationsByOrderId = (orderId) => {
 			return response;
 		});
 };
-
+const CreateLike = (data) => {
+	return axios.post("/api/handle-like-post", data).then((response) => {
+		return response;
+	});
+};
+const HandleGetLikePost = (postId) => {
+	return axios.get(`/api/get-post-like?postId=${postId}`).then((response) => {
+		return response;
+	});
+};
 export {
+	HandleGetLikePost,
 	GetAllTable,
 	GetAllPost,
 	CreateNewPost,
+	CreateLike,
 	UpdateDish,
 	DeleteDish,
-	GetAllCategory,
+	GetAllComment,
 	CreateNewCustomer,
 	GetAllCustomer,
 	EditCustomer,
@@ -374,7 +385,7 @@ export {
 	GetAllOrderDetail,
 	UpdateOrderDetail,
 	UpdateOrder,
-	CreateInvoice,
+	CreateComment,
 	GetInvoice,
 	UpdateCustomer,
 	UpdateDiscount,

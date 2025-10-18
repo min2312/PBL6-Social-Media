@@ -630,52 +630,42 @@ let ReservationTable = (data) => {
 	});
 };
 
-let CreateOrder = (data) => {
+let CreateComment = (data) => {
 	return new Promise(async (resolve, reject) => {
 		try {
-			let check = await db.Order.findOne({
-				where: { tableId: data.table.id, status: "PENDING" },
+			let check = await db.Post.findOne({
+				where: { id: data.postId },
 			});
-			if (check) {
+			if (!check) {
 				resolve({
 					errCode: 1,
-					errMessage: "The table already has an order",
+					errMessage: "Post not found",
 				});
-			} else {
-				let newOrder = await db.Order.create({
-					tableId: data.table.id,
-					customerId: data.customer?.id || null,
-					userId: data.user.id,
-				});
-
-				let findnewOrder = await db.Order.findOne({
-					where: { id: newOrder.id },
-					include: [
-						{
-							model: db.User,
-							attributes: ["id", "fullName", "email", "role"],
-						},
-						{
-							model: db.Table,
-							attributes: ["id", "tableNumber"],
-						},
-						{
-							model: db.Customer,
-							attributes: ["id", "name", "phone"],
-						},
-					],
-				});
-
-				resolve({
-					errCode: 0,
-					errMessage: "Create new order successfully",
-					order: findnewOrder,
-				});
+				return;
 			}
+			let newComment = await db.Comment.create({
+				userId: data.userId,
+				postId: data.postId,
+				content: data.content,
+			});
+			let findNewComment = await db.Comment.findOne({
+				where: { id: newComment.id },
+				include: [
+					{
+						model: db.User,
+						attributes: ["id", "fullName", "profilePicture"],
+					},
+				],
+			});
+			resolve({
+				errCode: 0,
+				errMessage: "Create comment successfully",
+				comment: findNewComment,
+			});
 		} catch (e) {
 			reject({
 				errCode: 1,
-				errMessage: "Error creating reservation",
+				errMessage: "Error creating comment",
 			});
 		}
 	});
@@ -1115,14 +1105,66 @@ let GetAllPost = (postId) => {
 	});
 };
 
-let GetAllCategory = () => {
+let GetComment = (postId) => {
 	return new Promise(async (resolve, reject) => {
 		try {
-			let categories = await db.Dish.findAll({
-				attributes: ["Category"],
-				group: ["Category"],
+			let comments = await db.Comment.findAll({
+				where: { postId: postId },
+				include: [
+					{
+						model: db.User,
+						attributes: ["id", "fullName", "profilePicture"],
+					},
+				],
 			});
-			resolve(categories);
+			resolve(comments);
+		} catch (e) {
+			reject(e);
+		}
+	});
+};
+
+let CreateLike = (data) => {
+	return new Promise(async (resolve, reject) => {
+		try {
+			let check = await db.Like.findOne({
+				where: { userId: data.userId, postId: data.postId },
+			});
+			if (check) {
+				await db.Like.destroy({
+					where: { userId: data.userId, postId: data.postId },
+				});
+				resolve({
+					errCode: 0,
+					errMessage: "Unliked the post successfully",
+				});
+			} else {
+				await db.Like.create({
+					userId: data.userId,
+					postId: data.postId,
+				});
+				resolve({
+					errCode: 0,
+					errMessage: "Liked the post successfully",
+				});
+			}
+		} catch (e) {
+			console.log(e);
+			reject({
+				errCode: 1,
+				errMessage: "Error liking/unliking the post",
+			});
+		}
+	});
+};
+
+let GetLike = (postId) => {
+	return new Promise(async (resolve, reject) => {
+		try {
+			let likes = await db.Like.findAll({
+				where: { postId: postId },
+			});
+			resolve(likes);
 		} catch (e) {
 			reject(e);
 		}
@@ -1488,7 +1530,9 @@ module.exports = {
 	GetAllOrderDetail,
 	GetAllReservation,
 	GetAllPost,
-	GetAllCategory,
+	GetComment,
+	CreateLike,
+	GetLike,
 	GetAllCustomer,
 	CreateNewCustomer,
 	EditCustomer,
@@ -1496,7 +1540,7 @@ module.exports = {
 	CheckCustomer,
 	UpdateCustomer,
 	ReservationTable,
-	CreateOrder,
+	CreateComment,
 	updateOrder,
 	CreateOrderDetail,
 	updateOrderDetail,

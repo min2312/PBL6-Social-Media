@@ -28,12 +28,14 @@ let initWebRoutes = (app) => {
 		"/api/get-all-orderPending",
 		apiController.HandleGetAllOrderPending
 	);
+	router.get("/api/get-post-like", apiController.HandleGetLike);
+	router.post("/api/handle-like-post", apiController.HandleLikePost);
 	router.get("/api/getAllDiscounts", apiController.HandleGetAllDiscount);
 	router.post("/api/update-discounts", apiController.HandleUpdateDiscounts);
-	router.post("/api/create-discount", apiController.HandleCreateDiscount);
+	router.post("/api/create-comment", apiController.HandleCreateComment);
 	router.post("/api/delete-discount", apiController.HandleDeleteDiscount);
 	router.get("/api/getAllPost", apiController.HandleGetAllPost);
-	router.get("/api/getAllCategory", apiController.HandleGetAllCategory);
+	router.get("/api/getAllComment", apiController.HandleGetAllComment);
 	router.get("/api/account", userController.getUserAccount);
 	router.get("/api/accountAdmin", adminController.getAdminAccount);
 	router.get("/api/get-all-user", userController.HandleGetAllUser);
