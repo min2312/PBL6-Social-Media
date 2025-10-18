@@ -7,6 +7,7 @@ import Profile from "../pages/Profile/Profile";
 import ChatPage from "../pages/ChatPage/ChatPage";
 import Login from "../pages/Login/Login";
 import Register from "../pages/Register/Register";
+import Admin from "../pages/Admin/Admin";
 // import PrivateRoutesRole from "./PrivateRoutesRole";
 // import PrivateRoutes from "./PrivateRoutes";
 // import LoginAdmin from "../pages/Login/LoginAdmin";
@@ -44,6 +45,7 @@ const ClientRoute = () => {
 				<Route path="/messenger" component={ChatPage} />
 				<Route path="/login" component={Login} />
 				<Route path="/register" component={Register} />
+				<Route path="/admin" component={Admin} />
 				<Route path="*">404 Not Found</Route>
 				
 			</Switch>
