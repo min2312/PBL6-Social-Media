@@ -1,22 +1,47 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
 	MoreHorizontal,
 	ThumbsUp,
 	MessageSquare,
 	Share,
 	Send,
+	Edit,
+	Trash2,
 } from "lucide-react";
 import "./Post.css";
 import useSmartRelativeTime from "../../hook/useSmartRelativeTime";
+import EditPost from "../EditPost/EditPost";
+import DeletePost from "../DeletePost/DeletePost";
+
 const Post = ({ post, onUpdatePost }) => {
 	const [isLiked, setIsLiked] = useState(false);
 	const [showComments, setShowComments] = useState(post.comments.length > 0);
 	const [commentText, setCommentText] = useState("");
 	const [comments, setComments] = useState(post.comments || []);
+	const [showDropdown, setShowDropdown] = useState(false);
+	const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+	const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+	const dropdownRef = useRef(null);
+
 	const formattedTime = useSmartRelativeTime(
 		post.timestamp,
 		post.formatTimeAgo
 	);
+
+	// Close dropdown when clicking outside
+	useEffect(() => {
+		const handleClickOutside = (event) => {
+			if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+				setShowDropdown(false);
+			}
+		};
+
+		document.addEventListener("mousedown", handleClickOutside);
+		return () => {
+			document.removeEventListener("mousedown", handleClickOutside);
+		};
+	}, []);
+
 	const handleLike = () => {
 		setIsLiked(!isLiked);
 		const newLikes = isLiked ? post.likes - 1 : post.likes + 1;
@@ -60,6 +85,28 @@ const Post = ({ post, onUpdatePost }) => {
 		onUpdatePost({ ...post, shares: post.shares + 1 });
 	};
 
+	const handleEditPost = () => {
+		setShowDropdown(false);
+		setIsEditModalOpen(true);
+	};
+
+	const handleDeletePost = () => {
+		setShowDropdown(false);
+		setIsDeleteModalOpen(true);
+	};
+
+	const handleConfirmDelete = (postToDelete) => {
+		// TODO: Implement actual delete functionality
+		console.log("Deleting post:", postToDelete.id);
+		// You can call an API here to delete the post
+		// For now, we'll just log it
+	};
+
+	const toggleDropdown = (e) => {
+		e.stopPropagation();
+		setShowDropdown(!showDropdown);
+	};
+
 	return (
 		<div className="post-card">
 			{/* Post Header */}
@@ -81,9 +128,26 @@ const Post = ({ post, onUpdatePost }) => {
 				</div>
 				<div className="post-meta">
 					<span className="post-timestamp">{formattedTime}</span>
-					<button className="post-menu-btn">
-						<MoreHorizontal size={16} />
-					</button>
+					<div className="post-menu-wrapper" ref={dropdownRef}>
+						<button className="post-menu-btn" onClick={toggleDropdown}>
+							<MoreHorizontal size={16} />
+						</button>
+						{showDropdown && (
+							<div className="post-dropdown-menu">
+								<button className="dropdown-item" onClick={handleEditPost}>
+									<Edit size={16} />
+									<span>Edit Post</span>
+								</button>
+								<button
+									className="dropdown-item delete-item"
+									onClick={handleDeletePost}
+								>
+									<Trash2 size={16} />
+									<span>Delete Post</span>
+								</button>
+							</div>
+						)}
+					</div>
 				</div>
 			</div>
 
@@ -196,6 +260,22 @@ const Post = ({ post, onUpdatePost }) => {
 					</div>
 				</div>
 			)}
+
+			{/* Edit Post Modal */}
+			<EditPost
+				isOpen={isEditModalOpen}
+				onClose={() => setIsEditModalOpen(false)}
+				post={post}
+				onUpdatePost={onUpdatePost}
+			/>
+
+			{/* Delete Post Modal */}
+			<DeletePost
+				isOpen={isDeleteModalOpen}
+				onClose={() => setIsDeleteModalOpen(false)}
+				onConfirm={handleConfirmDelete}
+				post={post}
+			/>
 		</div>
 	);
 };

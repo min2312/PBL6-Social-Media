@@ -13,7 +13,6 @@ import { UserContext } from "../../Context/UserProvider";
 const Profile = () => {
 	const [activeTab, setActiveTab] = useState("posts");
 	const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-	const [isFollowing, setIsFollowing] = useState(false);
 	const { user } = useContext(UserContext);
 	const isoString = user.account.createdAt;
 	const date = new Date(isoString);
@@ -32,8 +31,7 @@ const Profile = () => {
 		website: user ? user.account.website : "https://esmeralda.dev",
 		joinDate: user ? formatted : "March 2020",
 		posts: 245,
-		followers: 1240,
-		following: 320,
+		avatar: user ? user.account.avatar : null,
 	});
 
 	const [editForm, setEditForm] = useState({
@@ -41,7 +39,10 @@ const Profile = () => {
 		bio: profileData.bio,
 		location: profileData.location,
 		website: profileData.website,
+		avatar: profileData.avatar,
 	});
+
+	const [avatarPreview, setAvatarPreview] = useState(null);
 
 	const [userPosts, setUserPosts] = useState([
 		{
@@ -95,7 +96,9 @@ const Profile = () => {
 			bio: profileData.bio,
 			location: profileData.location,
 			website: profileData.website,
+			avatar: profileData.avatar,
 		});
+		setAvatarPreview(null);
 		setIsEditModalOpen(true);
 	};
 
@@ -105,20 +108,37 @@ const Profile = () => {
 			...editForm,
 		}));
 		setIsEditModalOpen(false);
-	};
-
-	const handleFollow = () => {
-		setIsFollowing(!isFollowing);
-		setProfileData((prev) => ({
-			...prev,
-			followers: isFollowing ? prev.followers - 1 : prev.followers + 1,
-		}));
+		setAvatarPreview(null);
 	};
 
 	const handleUpdatePost = (updatedPost) => {
 		setUserPosts((prev) =>
 			prev.map((post) => (post.id === updatedPost.id ? updatedPost : post))
 		);
+	};
+
+	const handleAvatarChange = (e) => {
+		const file = e.target.files[0];
+		if (file) {
+			const reader = new FileReader();
+			reader.onload = (e) => {
+				const imageUrl = e.target.result;
+				setAvatarPreview(imageUrl);
+				setEditForm((prev) => ({
+					...prev,
+					avatar: imageUrl,
+				}));
+			};
+			reader.readAsDataURL(file);
+		}
+	};
+
+	const handleRemoveAvatar = () => {
+		setAvatarPreview(null);
+		setEditForm((prev) => ({
+			...prev,
+			avatar: null,
+		}));
 	};
 
 	const renderPosts = () => {
@@ -172,7 +192,14 @@ const Profile = () => {
 			<div className="profile-header">
 				<div className="cover-photo"></div>
 				<div className="profile-info">
-					<div className="profile-avatar"></div>
+					<div
+						className="profile-avatar"
+						style={{
+							backgroundImage: profileData.avatar ? `url(${profileData.avatar})` : 'none',
+							backgroundSize: 'cover',
+							backgroundPosition: 'center'
+						}}
+					></div>
 					<div className="profile-details">
 						<h1 className="profile-name">{profileData.fullName}</h1>
 						<p className="profile-username">{profileData.username}</p>
@@ -203,32 +230,18 @@ const Profile = () => {
 							<button className="edit-profile-btn" onClick={handleEditProfile}>
 								Edit Profile
 							</button>
-							<button
-								className={`follow-btn ${isFollowing ? "following" : ""}`}
-								onClick={handleFollow}
-							>
-								{isFollowing ? "Following" : "Follow"}
-							</button>
 						</div>
 					</div>
 				</div>
 			</div>
 
 			{/* Profile Stats */}
-			<div className="profile-stats">
+			{/* <div className="profile-stats">
 				<div className="stat-item">
 					<p className="stat-number">{profileData.posts}</p>
 					<p className="stat-label">Posts</p>
 				</div>
-				<div className="stat-item">
-					<p className="stat-number">{profileData.followers}</p>
-					<p className="stat-label">Followers</p>
-				</div>
-				<div className="stat-item">
-					<p className="stat-number">{profileData.following}</p>
-					<p className="stat-label">Following</p>
-				</div>
-			</div>
+			</div> */}
 
 			{/* Profile Tabs */}
 			<div className="profile-tabs">
@@ -277,6 +290,45 @@ const Profile = () => {
 
 						<div className="edit-modal-body">
 							<form className="edit-form">
+								<div className="form-group">
+									<label className="form-label">Profile Picture</label>
+									<div className="avatar-upload-section">
+										<div
+											className="avatar-preview"
+											style={{
+												backgroundImage: (avatarPreview || editForm.avatar) ? `url(${avatarPreview || editForm.avatar})` : 'none',
+												backgroundSize: 'cover',
+												backgroundPosition: 'center'
+											}}
+										>
+											{!avatarPreview && !editForm.avatar && (
+												<span className="avatar-placeholder">No Image</span>
+											)}
+										</div>
+										<div className="avatar-controls">
+											<input
+												type="file"
+												id="avatar-upload"
+												accept="image/*"
+												onChange={handleAvatarChange}
+												className="avatar-input"
+											/>
+											<label htmlFor="avatar-upload" className="upload-btn">
+												Choose Image
+											</label>
+											{(avatarPreview || editForm.avatar) && (
+												<button
+													type="button"
+													onClick={handleRemoveAvatar}
+													className="remove-avatar-btn"
+												>
+													Remove
+												</button>
+											)}
+										</div>
+									</div>
+								</div>
+
 								<div className="form-group">
 									<label className="form-label">Name</label>
 									<input

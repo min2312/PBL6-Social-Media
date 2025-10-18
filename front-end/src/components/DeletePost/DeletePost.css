@@ -1,0 +1,159 @@
+.delete-post-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.delete-post-modal {
+  background-color: #1f2937;
+  border-radius: 0.75rem;
+  width: 90%;
+  max-width: 500px;
+  border: 1px solid #ef4444;
+}
+
+.delete-post-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #374151;
+}
+
+.delete-warning {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.warning-icon {
+  color: #ef4444;
+}
+
+.delete-post-header h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #ef4444;
+  margin: 0;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  color: #9ca3af;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 0.25rem;
+  transition: background-color 0.2s;
+}
+
+.close-btn:hover {
+  background-color: #374151;
+}
+
+.delete-post-body {
+  padding: 1.5rem;
+}
+
+.delete-message {
+  color: #d1d5db;
+  margin: 0 0 1rem 0;
+  line-height: 1.5;
+}
+
+.post-preview {
+  background-color: #374151;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  border-left: 3px solid #ef4444;
+}
+
+.preview-content {
+  color: #f3f4f6;
+  margin: 0 0 0.5rem 0;
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+.preview-images {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.image-count {
+  color: #9ca3af;
+  font-size: 0.75rem;
+  background-color: #4b5563;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+}
+
+.delete-post-footer {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid #374151;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+.cancel-btn {
+  background: none;
+  border: 1px solid #4b5563;
+  color: #9ca3af;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cancel-btn:hover {
+  background-color: #374151;
+  color: white;
+}
+
+.delete-btn {
+  background-color: #ef4444;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: background-color 0.2s;
+}
+
+.delete-btn:hover {
+  background-color: #dc2626;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .delete-post-modal {
+    width: 95%;
+  }
+  
+  .delete-post-header,
+  .delete-post-body,
+  .delete-post-footer {
+    padding: 1rem;
+  }
+  
+  .delete-warning {
+    gap: 0.5rem;
+  }
+  
+  .delete-post-header h2 {
+    font-size: 1.125rem;
+  }
+}
