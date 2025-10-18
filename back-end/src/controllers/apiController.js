@@ -342,12 +342,52 @@ let HandleGetAllPost = async (req, res) => {
 	});
 };
 
-let HandleGetAllCategory = async (req, res) => {
-	let categories = await apiService.GetAllCategory();
+let HandleGetAllComment = async (req, res) => {
+	let postId = req.query.postId;
+	if (!postId) {
+		return res.status(200).json({
+			errCode: 1,
+			errMessage: "Missing required parameter",
+			comments: [],
+		});
+	}
+	let comments = await apiService.GetComment(postId);
 	return res.status(200).json({
 		errCode: 0,
 		errMessage: "OK",
-		categories: categories,
+		comments: comments,
+	});
+};
+
+let HandleLikePost = async (req, res) => {
+	let data = req.body;
+	if (!data) {
+		return res.status(200).json({
+			errCode: 1,
+			errMessage: "Missing required parameter",
+		});
+	}
+	let result = await apiService.CreateLike(data);
+	return res.status(200).json({
+		errCode: result.errCode,
+		errMessage: result.errMessage,
+	});
+};
+
+let HandleGetLike = async (req, res) => {
+	let postId = req.query.postId;
+	if (!postId) {
+		return res.status(200).json({
+			errCode: 1,
+			errMessage: "Missing required parameter",
+			likes: [],
+		});
+	}
+	let likes = await apiService.GetLike(postId);
+	return res.status(200).json({
+		errCode: 0,
+		errMessage: "OK",
+		likes: likes,
 	});
 };
 
@@ -478,7 +518,7 @@ let HandleGetAllDiscount = async (req, res) => {
 	});
 };
 
-let HandleCreateDiscount = async (req, res) => {
+let HandleCreateComment = async (req, res) => {
 	let data = req.body;
 	if (!data) {
 		return res.status(200).json({
@@ -486,11 +526,11 @@ let HandleCreateDiscount = async (req, res) => {
 			errMessage: "Missing required parameter",
 		});
 	}
-	let result = await apiService.CreateDiscount(data);
+	let result = await apiService.CreateComment(data);
 	return res.status(200).json({
 		errCode: result.errCode,
 		errMessage: result.errMessage,
-		discount: result.discount,
+		comment: result.comment,
 	});
 };
 
@@ -614,10 +654,12 @@ module.exports = {
 	HandleGetAllOrder,
 	HandleGetAllReservation,
 	HandleCreatePost,
+	HandleLikePost,
+	HandleGetLike,
 	HandleEditDish,
 	HandleDeleteDish,
 	HandleGetAllPost,
-	HandleGetAllCategory,
+	HandleGetAllComment,
 	HandleCreateOrderDetail,
 	HandleGetAllOrderDetail,
 	HandleUpdateOrderDetail,
@@ -627,7 +669,7 @@ module.exports = {
 	HandleGetInvoice,
 	HandleUpdateDiscount,
 	HandleGetAllDiscount,
-	HandleCreateDiscount,
+	HandleCreateComment,
 	HandleUpdateDiscounts,
 	HandleDeleteDiscount,
 	handlePaymentZaloPay,

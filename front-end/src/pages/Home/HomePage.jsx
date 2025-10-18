@@ -2,7 +2,11 @@ import React, { useContext, useEffect, useState } from "react";
 import AddPost from "../../components/AddPost/AddPost";
 import Post from "../../components/Post/Post";
 import "./Home.css";
-import { CreateNewPost, GetAllPost } from "../../services/apiService";
+import {
+	CreateNewPost,
+	GetAllPost,
+	HandleGetLikePost,
+} from "../../services/apiService";
 import { toast } from "react-toastify";
 import { UserContext } from "../../Context/UserProvider";
 const HomePage = () => {
@@ -17,14 +21,23 @@ const HomePage = () => {
 			}
 			let response = await GetAllPost("ALL");
 			if (response && response.errCode === 0) {
-				const formattedPosts = response.post.map((post) => ({
-					...post,
-					images: post.imageUrl,
-					likes: 0,
-					comments: [],
-					shares: 0,
-					timestamp: post.updatedAt,
-				}));
+				const formattedPosts = await Promise.all(
+					response.post.map(async (post) => ({
+						...post,
+						images: post.imageUrl,
+						likes: await HandleGetLikePost(post.id).then((res) =>
+							res && res.errCode === 0 ? res.likes.length : 0
+						),
+						islikedbyUser: await HandleGetLikePost(post.id).then((res) =>
+							res && res.errCode === 0
+								? res.likes.some((like) => like.userId === user.account.id)
+								: false
+						),
+						comments: [],
+						shares: 0,
+						timestamp: post.updatedAt,
+					}))
+				);
 				setPosts(formattedPosts);
 				toast.success("Load Post Success");
 			} else {
