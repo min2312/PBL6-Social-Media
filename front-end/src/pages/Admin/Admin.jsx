@@ -5,10 +5,7 @@ import {
     TrendingUp,
     AlertCircle,
     Search,
-    MoreVertical,
-    Edit,
     Trash2,
-    Eye,
     Ban,
     CheckCircle,
 } from "lucide-react";
@@ -18,6 +15,7 @@ const Admin = () => {
     const [activeTab, setActiveTab] = useState("users");
     const [searchQuery, setSearchQuery] = useState("");
     const [statusFilter, setStatusFilter] = useState("all");
+    const [selectedUserId, setSelectedUserId] = useState(null);
 
     // Mock data cho users
     const [users, setUsers] = useState([
@@ -163,6 +161,18 @@ const Admin = () => {
         }
     };
 
+    // View user's posts
+    const handleViewUserPosts = (userId) => {
+        setSelectedUserId(userId);
+        setActiveTab("posts");
+        setSearchQuery(""); // Clear search when viewing specific user's posts
+    };
+
+    // Clear selected user filter
+    const handleClearUserFilter = () => {
+        setSelectedUserId(null);
+    };
+
     // Filter data based on search
     const filteredUsers = users.filter(
         (user) => {
@@ -179,10 +189,21 @@ const Admin = () => {
     );
 
     const filteredPosts = posts.filter(
-        (post) =>
-            post.userName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            post.content.toLowerCase().includes(searchQuery.toLowerCase())
+        (post) => {
+            // Filter by selected user if any
+            const matchesUser = selectedUserId ? post.userId === selectedUserId : true;
+            
+            // Filter by search query
+            const matchesSearch = 
+                post.userName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                post.content.toLowerCase().includes(searchQuery.toLowerCase());
+            
+            return matchesUser && matchesSearch;
+        }
     );
+
+    // Get selected user info for display
+    const selectedUser = selectedUserId ? users.find(u => u.id === selectedUserId) : null;
 
     return (
         <div className="admin-dashboard">
@@ -300,6 +321,7 @@ const Admin = () => {
                                 <th>Trust Score</th>
                                 <th>Posts</th>
                                 <th>Joined</th>
+                                <th>Posts</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -335,6 +357,15 @@ const Admin = () => {
                                     <td>{user.posts}</td>
                                     <td>{new Date(user.createdAt).toLocaleDateString()}</td>
                                     <td>
+                                        <button
+                                            className="action-btn view"
+                                            onClick={() => handleViewUserPosts(user.id)}
+                                            title="View User's Posts"
+                                        >
+                                            <FileText size={16} />
+                                        </button>
+                                    </td>
+                                    <td>
                                         <div className="action-buttons">
                                             {user.status === "active" ? (
                                                 <button
@@ -368,8 +399,28 @@ const Admin = () => {
                     </table>
                 </div>
             ) : (
-                <div className="posts-grid">
-                    {filteredPosts.map((post) => (
+                <div className="posts-section">
+                    {selectedUser && (
+                        <div className="posts-filter-info">
+                            <div className="filter-user-info">
+                                <span>Showing posts by: <strong>{selectedUser.fullName}</strong></span>
+                            </div>
+                            <button 
+                                className="clear-filter-btn"
+                                onClick={handleClearUserFilter}
+                            >
+                                ✕ Clear Filter
+                            </button>
+                        </div>
+                    )}
+                    <div className="posts-grid">
+                    {filteredPosts.length === 0 ? (
+                        <div className="no-posts-message">
+                            <FileText size={48} />
+                            <p>No posts found</p>
+                        </div>
+                    ) : (
+                        filteredPosts.map((post) => (
                         <div key={post.id} className="admin-post-card">
                             <div className="post-header">
                                 <div className="post-user">
@@ -427,7 +478,8 @@ const Admin = () => {
                                 </button>
                             </div>
                         </div>
-                    ))}
+                    )))}
+                    </div>
                 </div>
             )}
         </div>

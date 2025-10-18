@@ -431,6 +431,84 @@
     flex-wrap: wrap;
 }
 
+/* View Posts Button */
+.action-btn.view {
+    border-color: #2563eb;
+    color: #2563eb;
+}
+
+.action-btn.view:hover {
+    background: #2563eb20;
+}
+
+/* Posts Filter Info */
+.posts-section {
+    width: 100%;
+}
+
+.posts-filter-info {
+    background: #1f2937;
+    border: 1px solid #374151;
+    border-radius: 0.75rem;
+    padding: 1rem 1.5rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.filter-user-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #9ca3af;
+}
+
+.filter-user-info strong {
+    color: #fff;
+}
+
+.clear-filter-btn {
+    background: #ef4444;
+    border: none;
+    color: #fff;
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    cursor: pointer;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.clear-filter-btn:hover {
+    background: #dc2626;
+}
+
+/* No Posts Message */
+.no-posts-message {
+    text-align: center;
+    padding: 3rem;
+    color: #9ca3af;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+.no-posts-message svg {
+    opacity: 0.5;
+}
+
+.no-posts-message p {
+    font-size: 1.125rem;
+    margin: 0;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .admin-dashboard {
@@ -455,5 +533,10 @@
 
     .posts-grid {
         grid-template-columns: 1fr;
+    }
+
+    .posts-filter-info {
+        flex-direction: column;
+        align-items: flex-start;
     }
 }
