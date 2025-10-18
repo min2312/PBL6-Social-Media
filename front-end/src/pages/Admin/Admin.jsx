@@ -17,6 +17,7 @@ import "./Admin.css";
 const Admin = () => {
     const [activeTab, setActiveTab] = useState("users");
     const [searchQuery, setSearchQuery] = useState("");
+    const [statusFilter, setStatusFilter] = useState("all");
 
     // Mock data cho users
     const [users, setUsers] = useState([
@@ -164,9 +165,17 @@ const Admin = () => {
 
     // Filter data based on search
     const filteredUsers = users.filter(
-        (user) =>
-            user.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            user.email.toLowerCase().includes(searchQuery.toLowerCase())
+        (user) => {
+            const matchesSearch = 
+                user.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                user.email.toLowerCase().includes(searchQuery.toLowerCase());
+            
+            const matchesStatus = 
+                statusFilter === "all" || 
+                user.status === statusFilter;
+            
+            return matchesSearch && matchesStatus;
+        }
     );
 
     const filteredPosts = posts.filter(
@@ -243,7 +252,7 @@ const Admin = () => {
                 </button>
             </div>
 
-            {/* Search Bar */}
+            {/* Search Bar and Filters */}
             <div className="search-section">
                 <div className="search-bar">
                     <Search size={20} />
@@ -254,6 +263,28 @@ const Admin = () => {
                         onChange={(e) => setSearchQuery(e.target.value)}
                     />
                 </div>
+                {activeTab === "users" && (
+                    <div className="filter-buttons">
+                        <button
+                            className={`filter-btn ${statusFilter === "all" ? "active" : ""}`}
+                            onClick={() => setStatusFilter("all")}
+                        >
+                            All
+                        </button>
+                        <button
+                            className={`filter-btn ${statusFilter === "active" ? "active" : ""}`}
+                            onClick={() => setStatusFilter("active")}
+                        >
+                            Active
+                        </button>
+                        <button
+                            className={`filter-btn ${statusFilter === "suspended" ? "active" : ""}`}
+                            onClick={() => setStatusFilter("suspended")}
+                        >
+                            Suspended
+                        </button>
+                    </div>
+                )}
             </div>
 
             {/* Content */}
