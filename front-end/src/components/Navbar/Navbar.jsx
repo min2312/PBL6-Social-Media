@@ -21,8 +21,9 @@ const Navbar = ({ title = "HomePage" }) => {
 
 	const handleSearch = (e) => {
 		e.preventDefault();
-		// Handle search functionality
-		console.log("Searching for:", searchValue);
+		if (searchValue.trim()) {
+			history.push(`/search?q=${encodeURIComponent(searchValue.trim())}`);
+		}
 	};
 
 	const handleLogout = async () => {

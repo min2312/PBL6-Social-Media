@@ -9,6 +9,7 @@ import Login from "../pages/Login/Login";
 import Register from "../pages/Register/Register";
 import Admin from "../pages/Admin/Admin";
 import Settings from "../pages/Settings/Settings";
+import SearchResult from "../pages/SearchResult/SearchResult";
 
 // import PrivateRoutesRole from "./PrivateRoutesRole";
 // import PrivateRoutes from "./PrivateRoutes";
@@ -49,6 +50,7 @@ const ClientRoute = () => {
 				<Route path="/register" component={Register} />
 				<Route path="/admin" component={Admin} />
 				<Route path="/settings" component={Settings} />
+				<Route path="/search" component={SearchResult} />
 				<Route path="*">404 Not Found</Route>
 				
 			</Switch>
