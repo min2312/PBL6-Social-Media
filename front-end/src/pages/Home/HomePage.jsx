@@ -7,16 +7,17 @@ import {
 	GetAllPost,
 	HandleGetLikePost,
 } from "../../services/apiService";
+import { useHistory } from "react-router-dom/cjs/react-router-dom.min";
 import { toast } from "react-toastify";
 import { UserContext } from "../../Context/UserProvider";
 const HomePage = () => {
 	const [isAddPostOpen, setIsAddPostOpen] = useState(false);
 	const [posts, setPosts] = useState([]);
 	const { user } = useContext(UserContext);
+	const history = useHistory();
 	const HandleGetAllPost = async () => {
 		try {
-			if (!user) {
-				toast.error("You must be logged in to view posts");
+			if (user && user.isAuthenticated === false) {
 				return;
 			}
 			let response = await GetAllPost("ALL");
@@ -89,14 +90,16 @@ const HomePage = () => {
 			const formData = new FormData();
 			formData.append("userId", user?.account.id);
 			formData.append("content", postData?.content);
-			postData.imageUrl.forEach((img) => {
-				formData.append("image", img);
-			});
+			if (postData.imageUrl && postData.imageUrl.length > 0) {
+				postData.imageUrl.forEach((img) => {
+					formData.append("image", img);
+				});
+			}
 			const newPost = await CreateNewPost(formData);
 			if (newPost && newPost.errCode === 0) {
 				const formattedPost = await {
 					...newPost.post,
-					images: JSON.parse(newPost.post.imageUrl),
+					images: JSON.parse(newPost.post.imageUrl) || [],
 					likes: 0,
 					comments: [],
 					shares: 0,
@@ -119,7 +122,7 @@ const HomePage = () => {
 		);
 	};
 
-	return (
+	return user && user.isAuthenticated ? (
 		<div className="content-wrapper">
 			{/* New Post Input - Click to open modal */}
 			<div className="new-post" onClick={() => setIsAddPostOpen(true)}>
@@ -150,6 +153,208 @@ const HomePage = () => {
 				onClose={() => setIsAddPostOpen(false)}
 				onSubmit={handleAddPost}
 			/>
+		</div>
+	) : (
+		<div
+			className="logged-out-wrapper"
+			style={{
+				display: "flex",
+				justifyContent: "center",
+				alignItems: "center",
+				minHeight: "100vh",
+				background: "linear-gradient(135deg, #1e293b 0%, #334155 100%)",
+				padding: "20px",
+			}}
+		>
+			<div
+				className="logged-out-card"
+				style={{
+					maxWidth: 480,
+					width: "100%",
+					padding: "48px 40px",
+					borderRadius: 20,
+					boxShadow: "0 20px 60px rgba(0,0,0,0.3)",
+					textAlign: "center",
+					background: "#2d3748",
+					transform: "translateY(-20px)",
+					border: "1px solid #4a5568",
+				}}
+			>
+				<div
+					style={{
+						width: 80,
+						height: 80,
+						borderRadius: "50%",
+						background: "linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)",
+						display: "flex",
+						alignItems: "center",
+						justifyContent: "center",
+						margin: "0 auto 24px",
+						fontSize: "36px",
+						color: "white",
+					}}
+				>
+					👋
+				</div>
+				<h1
+					style={{
+						margin: 0,
+						marginBottom: 12,
+						fontSize: "32px",
+						fontWeight: "700",
+						color: "#ffffff",
+					}}
+				>
+					Welcome to Social
+				</h1>
+				<p
+					style={{
+						color: "#a0aec0",
+						marginBottom: 32,
+						fontSize: "18px",
+						lineHeight: "1.6",
+						fontWeight: "400",
+					}}
+				>
+					Connect with friends, share your moments, and discover amazing content
+					from people around the world.
+				</p>
+				<div
+					style={{
+						display: "flex",
+						flexDirection: "column",
+						gap: 16,
+						marginBottom: 24,
+					}}
+				>
+					<div
+						onClick={() => {
+							history.push("/login");
+						}}
+						className="btn primary-btn"
+						style={{
+							padding: "16px 32px",
+							borderRadius: 12,
+							background: "linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)",
+							color: "#fff",
+							textDecoration: "none",
+							fontSize: "16px",
+							fontWeight: "600",
+							transition: "all 0.3s ease",
+							border: "none",
+							boxShadow: "0 4px 15px rgba(79, 70, 229, 0.3)",
+						}}
+						onMouseOver={(e) => {
+							e.target.style.transform = "translateY(-2px)";
+							e.target.style.boxShadow = "0 6px 20px rgba(79, 70, 229, 0.4)";
+						}}
+						onMouseOut={(e) => {
+							e.target.style.transform = "translateY(0)";
+							e.target.style.boxShadow = "0 4px 15px rgba(79, 70, 229, 0.3)";
+						}}
+					>
+						Sign In to Your Account
+					</div>
+					<div
+						onClick={() => {
+							history.push("/register");
+						}}
+						className="btn outline-btn"
+						style={{
+							padding: "16px 32px",
+							borderRadius: 12,
+							border: "2px solid #4f46e5",
+							color: "#4f46e5",
+							textDecoration: "none",
+							fontSize: "16px",
+							fontWeight: "600",
+							background: "transparent",
+							transition: "all 0.3s ease",
+						}}
+						onMouseOver={(e) => {
+							e.target.style.background = "#4f46e5";
+							e.target.style.color = "white";
+							e.target.style.transform = "translateY(-2px)";
+						}}
+						onMouseOut={(e) => {
+							e.target.style.background = "transparent";
+							e.target.style.color = "#4f46e5";
+							e.target.style.transform = "translateY(0)";
+						}}
+					>
+						Create New Account
+					</div>
+				</div>
+				<div
+					style={{
+						display: "flex",
+						alignItems: "center",
+						gap: 24,
+						justifyContent: "center",
+						marginTop: 32,
+						paddingTop: 24,
+						borderTop: "1px solid #4a5568",
+					}}
+				>
+					<div style={{ textAlign: "center" }}>
+						<div
+							style={{
+								fontSize: "24px",
+								marginBottom: 8,
+							}}
+						>
+							💬
+						</div>
+						<div
+							style={{
+								fontSize: "14px",
+								color: "#a0aec0",
+								fontWeight: "500",
+							}}
+						>
+							Connect
+						</div>
+					</div>
+					<div style={{ textAlign: "center" }}>
+						<div
+							style={{
+								fontSize: "24px",
+								marginBottom: 8,
+							}}
+						>
+							📸
+						</div>
+						<div
+							style={{
+								fontSize: "14px",
+								color: "#a0aec0",
+								fontWeight: "500",
+							}}
+						>
+							Share
+						</div>
+					</div>
+					<div style={{ textAlign: "center" }}>
+						<div
+							style={{
+								fontSize: "24px",
+								marginBottom: 8,
+							}}
+						>
+							🌟
+						</div>
+						<div
+							style={{
+								fontSize: "14px",
+								color: "#a0aec0",
+								fontWeight: "500",
+							}}
+						>
+							Discover
+						</div>
+					</div>
+				</div>
+			</div>
 		</div>
 	);
 };

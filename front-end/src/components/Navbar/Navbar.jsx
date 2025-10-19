@@ -117,10 +117,15 @@ const Navbar = ({ title = "HomePage" }) => {
 						</div>
 					</div>
 				) : (
-					<a href="/login" className="navbar-button login-btn">
+					<div
+						onClick={() => {
+							history.push("/login");
+						}}
+						className="navbar-button login-btn"
+					>
 						<LogIn size={18} />
 						<span>Login</span>
-					</a>
+					</div>
 				)}
 			</div>
 		</div>

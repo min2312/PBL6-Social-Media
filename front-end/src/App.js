@@ -31,9 +31,9 @@ function App() {
 					</div>
 				) : (
 					<div className="app-layout">
-						<Sidebar />
+						{user && user.isAuthenticated && <Sidebar />}
 						<div className="main-content">
-							<Navbar title="Bird Social" />
+							{user && user.isAuthenticated && <Navbar title="Bird Social" />}
 							<div className="content-area">
 								<ClientRoute />
 							</div>
