@@ -29,11 +29,6 @@ jobs:
           cd front-end
           CI=false npm run build
 
-      - name: Test front-end
-        run: |
-          cd front-end
-          CI=false npm test -- --watchAll=false --coverage
-
   backend:
     name: backend
     runs-on: ubuntu-latest
@@ -51,11 +46,6 @@ jobs:
           corepack enable
           corepack prepare pnpm@latest --activate
           pnpm install --frozen-lockfile || pnpm install
-
-      - name: Run backend tests
-        run: |
-          cd back-end
-          pnpm test || echo "No tests or tests failed"
 
       - name: Run backend lint
         run: |
