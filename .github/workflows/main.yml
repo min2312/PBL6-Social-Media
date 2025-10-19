@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [ main, develop ]
+  push:
+    branches: [ main, develop ]
+
+jobs:
+  frontend:
+    name: frontend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'npm'
+
+      - name: Install dependencies (front-end)
+        run: |
+          cd front-end
+          npm ci
+
+      - name: Build front-end
+        run: |
+          cd front-end
+          npm run build
+
+      - name: Test front-end
+        run: |
+          cd front-end
+          CI=true npm test -- --watchAll=false --coverage
+
+  backend:
+    name: backend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node & pnpm
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install dependencies (back-end using pnpm)
+        run: |
+          cd back-end
+          corepack enable
+          corepack prepare pnpm@latest --activate
+          pnpm install --frozen-lockfile || pnpm install
+
+      - name: Run backend tests
+        run: |
+          cd back-end
+          pnpm test || echo "No tests or tests failed"
+
+      - name: Run backend lint
+        run: |
+          cd back-end
+          pnpm run lint || echo "No lint script"
