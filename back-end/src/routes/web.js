@@ -81,6 +81,17 @@ let initWebRoutes = (app) => {
 	router.post("/payment/ZaloPay", apiController.handlePaymentZaloPay);
 	router.post("/payment/CheckZaloPay", apiController.handleCheckZaloPay);
 	router.post("/callback", apiController.handleCallBackZaloPay);
+
+	//ADMIN
+	router.get("/api/admin/get-all-users", adminController.HandleGetAllUsers);
+	router.post("/api/admin/suspend-user", adminController.HandleSuspendUser);
+	router.post("/api/admin/activate-user", adminController.HandleActivateUser);
+	router.delete("/api/admin/delete-user", adminController.HandleDeleteUser);
+	router.get("/api/admin/get-all-posts", adminController.HandleGetAllPosts);
+	router.post("/api/admin/block-post", adminController.HandleBlockPost);
+	router.post("/api/admin/unblock-post", adminController.HandleUnblockPost);
+	router.delete("/api/admin/delete-post", adminController.HandleDeletePost);
+	router.get("/api/admin/statistics", adminController.HandleGetStatistics);
 	// router.get(
 	// 	"/auth/google",
 	// 	passport.authenticate("google", { scope: ["profile", "email"] })
