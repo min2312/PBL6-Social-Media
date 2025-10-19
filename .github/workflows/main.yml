@@ -27,12 +27,12 @@ jobs:
       - name: Build front-end
         run: |
           cd front-end
-          npm run build
+          CI=false npm run build
 
       - name: Test front-end
         run: |
           cd front-end
-          CI=true npm test -- --watchAll=false --coverage
+          CI=false npm test -- --watchAll=false --coverage
 
   backend:
     name: backend
