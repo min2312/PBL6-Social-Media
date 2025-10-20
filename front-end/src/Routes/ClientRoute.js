@@ -10,6 +10,7 @@ import Register from "../pages/Register/Register";
 import Admin from "../pages/Admin/Admin";
 import Settings from "../pages/Settings/Settings";
 import SearchResult from "../pages/SearchResult/SearchResult";
+import FriendList from "../pages/FriendList/FriendList";
 
 // import PrivateRoutesRole from "./PrivateRoutesRole";
 // import PrivateRoutes from "./PrivateRoutes";
@@ -48,6 +49,7 @@ const ClientRoute = () => {
 				<Route path="/messenger" component={ChatPage} />
 				<Route path="/login" component={Login} />
 				<Route path="/register" component={Register} />
+				<Route path="/friends" component={FriendList} />
 				<Route path="/admin" component={Admin} />
 				<Route path="/settings" component={Settings} />
 				<Route path="/search" component={SearchResult} />

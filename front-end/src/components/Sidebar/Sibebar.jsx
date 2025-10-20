@@ -1,5 +1,5 @@
 import React, { useContext } from "react";
-import { Home, MessageCircle, Heart, Settings } from "lucide-react";
+import { Home, MessageCircle, Heart, Settings, Users } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import "./Sidebar.css";
 import { UserContext } from "../../Context/UserProvider";
@@ -15,6 +15,7 @@ const Sidebar = () => {
 			label: "Messenger",
 			path: "/messenger",
 		},
+		{ id: "friends", icon: Users, label: "Friends", path: "/friends" },
 		{ id: "favorites", icon: Heart, label: "Favorites", path: "/favorites" },
 		{ id: "settings", icon: Settings, label: "Settings", path: "/settings" },
 	];
@@ -23,10 +24,14 @@ const Sidebar = () => {
 		<div className="sidebar">
 			<div className="sidebar-content">
 				<div className="logo-section">
-					<div className="logo-icon">
-						<span>B</span>
+					{user && user.isAuthenticated ? (
+					<div className="user-profile">
+						<Link to="/profile" className="profile-button">
+							<div className="user-avatar"></div>
+							<span>{user?.account?.fullName}</span>
+						</Link>
 					</div>
-					<span className="logo-text">Bird</span>
+				) : null}
 				</div>
 
 				<nav className="sidebar-nav">
@@ -46,14 +51,7 @@ const Sidebar = () => {
 						);
 					})}
 				</nav>
-				{user && user.isAuthenticated ? (
-					<div className="user-profile">
-						<Link to="/profile" className="profile-button">
-							<div className="user-avatar"></div>
-							<span>{user?.account?.fullName}</span>
-						</Link>
-					</div>
-				) : null}
+				
 			</div>
 		</div>
 	);
