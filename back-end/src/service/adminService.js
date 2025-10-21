@@ -190,6 +190,9 @@ const deleteUser = async (userId) => {
 const getAllPosts = async () => {
     try {
         const posts = await db.Post.findAll({
+            // where: {
+            //     isDeleted: false,
+            // },
             include: [
                 {
                     model: db.User,
@@ -200,16 +203,29 @@ const getAllPosts = async () => {
         });
 
         // Format data
-        const formattedPosts = posts.map((post) => ({
-            id: post.id,
-            content: post.content,
-            images: post.images,
-            isBlocked: post.isBlocked || false,
-            createdAt: post.createdAt,
-            userId: post.User.id,
-            userName: post.User.fullName,
-            userEmail: post.User.email,
-        }));
+        const formattedPosts = posts.map((post) => {
+            let images = [];
+            try {
+                if (typeof post.imageUrl === "string") {
+                    images = JSON.parse(post.imageUrl);
+                } else if (Array.isArray(post.imageUrl)) {
+                    images = post.imageUrl;
+                }
+            } catch (err) {
+                console.warn("Invalid imageUrl JSON:", post.imageUrl);
+            }
+
+            return {
+                id: post.id,
+                content: post.content,
+                imageUrl: images,
+                isDeleted: post.isDeleted || false,
+                createdAt: post.createdAt,
+                userId: post.User.id,
+                userName: post.User.fullName,
+                userEmail: post.User.email,
+            };
+        });
 
         return formattedPosts;
     } catch (error) {
@@ -232,7 +248,7 @@ const blockPost = async (postId) => {
         }
 
         await db.Post.update(
-            { isBlocked: true },
+            { isDeleted: true }, 
             { where: { id: postId } }
         );
 
@@ -263,7 +279,7 @@ const unblockPost = async (postId) => {
         }
 
         await db.Post.update(
-            { isBlocked: false },
+            { isDeleted: false },
             { where: { id: postId } }
         );
 
@@ -321,7 +337,7 @@ const getStatistics = async () => {
         });
         const totalPosts = await db.Post.count();
         const blockedPosts = await db.Post.count({
-            where: { isBlocked: true },
+            where: { isDeleted: true },
         });
 
         return {

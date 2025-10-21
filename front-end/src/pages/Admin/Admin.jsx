@@ -159,18 +159,19 @@ const Admin = () => {
     };
 
     // Post actions
-    const handleToggleBlockPost = async (postId, isBlocked) => {
+    const handleToggleBlockPost = async (postId, isDeleted) => {
         try {
-            const response = isBlocked 
+            // Nếu đang deleted (blocked) → gọi unblock, ngược lại → gọi block
+            const response = isDeleted 
                 ? await unblockPost(postId) 
                 : await blockPost(postId);
             
             if (response && response.errCode === 0) {
-                toast.success(`Post ${isBlocked ? 'unblocked' : 'blocked'} successfully`);
+                toast.success(`Post ${isDeleted ? 'unblocked' : 'blocked'} successfully`);
                 await fetchPosts();
                 await fetchStatistics();
             } else {
-                toast.error(response?.errMessage || `Failed to ${isBlocked ? 'unblock' : 'block'} post`);
+                toast.error(response?.errMessage || `Failed to ${isDeleted ? 'unblock' : 'block'} post`);
             }
         } catch (error) {
             console.error("Error updating post:", error);
@@ -474,25 +475,25 @@ const Admin = () => {
                                                 </p>
                                             </div>
                                         </div>
-                                        <span className={`status-badge ${post.isBlocked ? 'blocked' : 'active'}`}>
-                                            {post.isBlocked ? 'Blocked' : 'Active'}
+                                        <span className={`status-badge ${post.isDeleted ? 'blocked' : 'active'}`}>
+                                            {post.isDeleted ? 'Blocked' : 'Active'}
                                         </span>
                                     </div>
                                     <div className="post-content">
                                         <p>{post.content}</p>
-                                        {post.images && post.images.length > 0 && (
+                                        {post.imageUrl && post.imageUrl.length > 0 && (
                                             <div className="post-image">
-                                                <img src={post.images[0]} alt="Post" />
+                                                <img src={post.imageUrl[0]} alt="Post" />
                                             </div>
                                         )}
                                     </div>
 
                                     <div className="post-actions">
                                         <button
-                                            className={`action-btn ${post.isBlocked ? 'activate' : 'suspend'}`}
-                                            onClick={() => handleToggleBlockPost(post.id, post.isBlocked)}
+                                            className={`action-btn ${post.isDeleted ? 'activate' : 'suspend'}`}
+                                            onClick={() => handleToggleBlockPost(post.id, post.isDeleted)}
                                         >
-                                            {post.isBlocked ? (
+                                            {post.isDeleted ? (
                                                 <>
                                                     <CheckCircle size={16} />
                                                     Unblock
