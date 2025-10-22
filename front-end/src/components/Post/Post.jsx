@@ -16,10 +16,12 @@ import { UserContext } from "../../Context/UserProvider";
 import {
 	CreateComment,
 	CreateLike,
+	DeletePostConfirm,
 	GetAllComment,
 } from "../../services/apiService";
+import { toast } from "react-toastify";
 
-const Post = ({ post, onUpdatePost }) => {
+const Post = ({ post, onUpdatePost, onDeletePost }) => {
 	const [isLiked, setIsLiked] = useState(false);
 	const [showComments, setShowComments] = useState(post.comments.length > 0);
 	const [commentText, setCommentText] = useState("");
@@ -112,11 +114,14 @@ const Post = ({ post, onUpdatePost }) => {
 		setIsDeleteModalOpen(true);
 	};
 
-	const handleConfirmDelete = (postToDelete) => {
-		// TODO: Implement actual delete functionality
-		console.log("Deleting post:", postToDelete.id);
-		// You can call an API here to delete the post
-		// For now, we'll just log it
+	const handleConfirmDelete = async (postToDelete) => {
+		let response = await DeletePostConfirm(postToDelete.id);
+		if (response && response.errCode === 0) {
+			onDeletePost(postToDelete);
+			toast.success("Post deleted successfully!");
+		} else {
+			toast.error(response.errMessage || "Failed to delete post.");
+		}
 	};
 
 	const toggleDropdown = (e) => {

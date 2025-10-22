@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { X, Upload, Trash2 } from "lucide-react";
 import "./EditPost.css";
+import { UpdatePost } from "../../services/apiService";
+import { toast } from "react-toastify";
 
 const EditPost = ({ isOpen, onClose, post, onUpdatePost }) => {
 	const [editData, setEditData] = useState({
@@ -25,7 +27,7 @@ const EditPost = ({ isOpen, onClose, post, onUpdatePost }) => {
 			const reader = new FileReader();
 			reader.onload = (e) => {
 				const imageUrl = e.target.result;
-				setNewImages((prev) => [...prev, imageUrl]);
+				setNewImages((prev) => [...prev, { imageUrl, file }]);
 			};
 			reader.readAsDataURL(file);
 		});
@@ -42,14 +44,44 @@ const EditPost = ({ isOpen, onClose, post, onUpdatePost }) => {
 		setNewImages((prev) => prev.filter((_, i) => i !== index));
 	};
 
-	const handleSave = () => {
-		const updatedPost = {
+	const handleSave = async () => {
+		if (
+			!editData.content.trim() &&
+			newImages.length === 0 &&
+			editData.images.length === 0
+		) {
+			toast.error("Post cannot be empty!");
+			return;
+		}
+		let updatedPost = {
 			...post,
 			content: editData.content,
 			images: [...editData.images, ...newImages],
 		};
-		onUpdatePost(updatedPost);
-		onClose();
+		const formData = new FormData();
+		formData.append("id", post.id);
+		formData.append("content", updatedPost?.content);
+		if (updatedPost?.images && updatedPost.images.length > 0) {
+			updatedPost.images.forEach((img) => {
+				if (img.file) {
+					formData.append("image", img.file);
+				} else {
+					formData.append("existingImages", img);
+				}
+			});
+		}
+		let response = await UpdatePost(formData);
+		updatedPost = {
+			...post,
+			content: response.post.content,
+			images: JSON.parse(response.post.imageUrl) || [],
+		};
+
+		if (response && response.errCode === 0) {
+			toast.success("Post updated successfully!");
+			onUpdatePost(updatedPost);
+			onClose();
+		}
 	};
 
 	const handleCancel = () => {
@@ -89,7 +121,7 @@ const EditPost = ({ isOpen, onClose, post, onUpdatePost }) => {
 
 					<div className="form-group">
 						<label className="form-label">Images</label>
-						
+
 						{/* Existing Images */}
 						{editData.images.length > 0 && (
 							<div className="images-section">
@@ -117,7 +149,7 @@ const EditPost = ({ isOpen, onClose, post, onUpdatePost }) => {
 								<div className="images-grid">
 									{newImages.map((image, index) => (
 										<div key={index} className="image-item">
-											<img src={image} alt={`New ${index}`} />
+											<img src={image.imageUrl} alt={`New ${index}`} />
 											<button
 												className="remove-image-btn"
 												onClick={() => handleRemoveNewImage(index)}

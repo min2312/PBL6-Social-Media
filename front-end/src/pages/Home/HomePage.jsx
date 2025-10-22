@@ -72,20 +72,13 @@ const HomePage = () => {
 		});
 	}
 	const handleAddPost = async (postData) => {
-		// const newPost = {
-		//   id: Date.now(),
-		//   User: {
-		//     fullName: 'Esmeralda',
-		//     username: '@esmeralda',
-		//     profilePicture: '/api/placeholder/40/40'
-		//   },
-		//   content: postData.caption,
-		//   images: postData.images.map(img => img.url),
-		//   likes: 0,
-		//   comments: [],
-		//   shares: 0,
-		//   timestamp: 'Just now'
-		// };
+		if (
+			postData.content === "" &&
+			(!postData.imageUrl || postData.imageUrl.length === 0)
+		) {
+			toast.error("Post cannot be empty");
+			return;
+		}
 		try {
 			const formData = new FormData();
 			formData.append("userId", user?.account.id);
@@ -122,6 +115,10 @@ const HomePage = () => {
 		);
 	};
 
+	const handleDeletePost = (postToDelete) => {
+		setPosts((prev) => prev.filter((post) => post.id !== postToDelete.id));
+	};
+
 	return user && user.isAuthenticated ? (
 		<div className="content-wrapper">
 			{/* New Post Input - Click to open modal */}
@@ -143,6 +140,7 @@ const HomePage = () => {
 						key={post.id}
 						post={{ ...post, formatTimeAgo }}
 						onUpdatePost={handleUpdatePost}
+						onDeletePost={handleDeletePost}
 					/>
 				))}
 			</div>

@@ -138,9 +138,10 @@ const CreateNewPost = (data) => {
 		});
 };
 
-const UpdateDish = (data) => {
+const UpdatePost = (data) => {
+	console.log("Updating post with data:", data);
 	return axios
-		.post("/api/update-dish", data)
+		.post("/api/update-post", data)
 		.then((response) => {
 			return response;
 		})
@@ -149,9 +150,9 @@ const UpdateDish = (data) => {
 		});
 };
 
-const DeleteDish = (id) => {
+const DeletePostConfirm = (id) => {
 	return axios
-		.post("/api/delete-dish", { id })
+		.post("/api/delete-post", { id })
 		.then((response) => response)
 		.catch((err) => {
 			console.log(err);
@@ -369,8 +370,8 @@ export {
 	GetAllPost,
 	CreateNewPost,
 	CreateLike,
-	UpdateDish,
-	DeleteDish,
+	UpdatePost,
+	DeletePostConfirm,
 	GetAllComment,
 	CreateNewCustomer,
 	GetAllCustomer,
