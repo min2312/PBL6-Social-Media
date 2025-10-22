@@ -84,47 +84,47 @@ const FriendList = () => {
 	};
 
 	const FriendCard = ({ person, type }) => (
-		<div className="friend-card">
-			<div className="friend-info">
-				<div className="friend-avatar">
+		<div className="fl-friend-card">
+			<div className="fl-friend-info">
+				<div className="fl-friend-avatar">
 					{person.avatar ? (
 						<img src={person.avatar} alt={person.fullName} />
 					) : (
-						<div className="avatar-placeholder">
+						<div className="fl-avatar-placeholder">
 							{person.fullName.charAt(0).toUpperCase()}
 						</div>
 					)}
 				</div>
-				<div className="friend-details">
-					<h3 className="friend-name">{person.fullName}</h3>
-					<span className="mutual-friends">
+				<div className="fl-friend-details">
+					<h3 className="fl-friend-name">{person.fullName}</h3>
+					<span className="fl-mutual-friends">
 						{person.mutualFriends} mutual friends
 					</span>
 					{type === "request" && (
-						<span className="request-date">Requested {person.requestDate}</span>
+						<span className="fl-request-date">Requested {person.requestDate}</span>
 					)}
 				</div>
 			</div>
-			<div className="friend-actions">
+			<div className="fl-friend-actions">
 				{type === "friend" ? (
 					<button
-						className="btn-secondary"
+						className="fl-btn-secondary"
 						onClick={() => handleRemoveFriend(person.id)}
 					>
 						<UserX size={16} />
 						Remove
 					</button>
 				) : (
-					<div className="request-actions">
+					<div className="fl-request-actions">
 						<button
-							className="btn-primary"
+							className="fl-btn-primary"
 							onClick={() => handleAcceptRequest(person.id)}
 						>
 							<UserCheck size={16} />
 							Accept
 						</button>
 						<button
-							className="btn-danger"
+							className="fl-btn-danger"
 							onClick={() => handleDeclineRequest(person.id)}
 						>
 							<UserX size={16} />
@@ -139,7 +139,7 @@ const FriendList = () => {
 	if (!user || !user.isAuthenticated) {
 		return (
 			<div className="content-wrapper">
-				<div className="auth-required">
+				<div className="fl-auth-required">
 					<p>Please log in to view your friends</p>
 				</div>
 			</div>
@@ -148,21 +148,21 @@ const FriendList = () => {
 
 	return (
 		<div className="content-wrapper">
-			<div className="friend-list-container">
-				<div className="friend-list-header">
+			<div className="fl-friend-list-container">
+				<div className="fl-friend-list-header">
 					<h1>
 						<Users size={24} />
 						Friends
 					</h1>
-					<div className="tab-navigation">
+					<div className="fl-tab-navigation">
 						<button
-							className={`tab-btn ${activeTab === "friends" ? "active" : ""}`}
+							className={`fl-tab-btn ${activeTab === "friends" ? "active" : ""}`}
 							onClick={() => setActiveTab("friends")}
 						>
 							All Friends ({friends.length})
 						</button>
 						<button
-							className={`tab-btn ${activeTab === "requests" ? "active" : ""}`}
+							className={`fl-tab-btn ${activeTab === "requests" ? "active" : ""}`}
 							onClick={() => setActiveTab("requests")}
 						>
 							Friend Requests ({friendRequests.length})
@@ -170,9 +170,9 @@ const FriendList = () => {
 					</div>
 				</div>
 
-				<div className="friend-list-content">
+				<div className="fl-friend-list-content">
 					{activeTab === "friends" ? (
-						<div className="friends-grid">
+						<div className="fl-friends-grid">
 							{friends.length > 0 ? (
 								friends.map(friend => (
 									<FriendCard
@@ -182,7 +182,7 @@ const FriendList = () => {
 									/>
 								))
 							) : (
-								<div className="empty-state">
+								<div className="fl-empty-state">
 									<Users size={48} />
 									<h3>No friends yet</h3>
 									<p>Start connecting with people to see them here!</p>
@@ -190,7 +190,7 @@ const FriendList = () => {
 							)}
 						</div>
 					) : (
-						<div className="requests-grid">
+						<div className="fl-requests-grid">
 							{friendRequests.length > 0 ? (
 								friendRequests.map(request => (
 									<FriendCard
@@ -200,7 +200,7 @@ const FriendList = () => {
 									/>
 								))
 							) : (
-								<div className="empty-state">
+								<div className="fl-empty-state">
 									<UserPlus size={48} />
 									<h3>No friend requests</h3>
 									<p>You're all caught up with friend requests!</p>
