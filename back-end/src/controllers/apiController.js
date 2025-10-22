@@ -273,13 +273,14 @@ let HandleCreatePost = async (req, res) => {
 	}
 };
 
-let HandleEditDish = async (req, res) => {
+let HandleEditPost = async (req, res) => {
 	let data = req.body;
-	let fileImage = req.file;
-	let urlImage = data.url_image;
+	let fileImages = req.files;
 	if (!data || Object.keys(data).length === 0) {
-		if (fileImage) {
-			await cloudinary.uploader.destroy(fileImage.filename);
+		if (fileImages) {
+			fileImages.forEach(async (fileImage) => {
+				await cloudinary.uploader.destroy(fileImage.filename);
+			});
 		}
 		return res.status(200).json({
 			errCode: 1,
@@ -287,30 +288,26 @@ let HandleEditDish = async (req, res) => {
 		});
 	}
 	try {
-		if (urlImage) {
-			const uploadResponse = await cloudinary.uploader.upload(urlImage, {
-				folder: "Restaurant",
-			});
-			data.image = uploadResponse.secure_url;
-		}
-		let result = await apiService.EditDish(data, fileImage);
+		let result = await apiService.EditPost(data, fileImages);
 		return res.status(200).json({
 			errCode: result.errCode,
 			errMessage: result.errMessage,
-			dish: result.dish,
+			post: result.post,
 		});
 	} catch (error) {
-		if (fileImage) {
-			await cloudinary.uploader.destroy(fileImage.filename);
+		if (fileImages) {
+			fileImages.forEach(async (fileImage) => {
+				await cloudinary.uploader.destroy(fileImage.filename);
+			});
 		}
 		return res.status(500).json({
 			errCode: 1,
-			errMessage: "Error creating dish",
+			errMessage: "Error creating post",
 		});
 	}
 };
 
-let HandleDeleteDish = async (req, res) => {
+let HandleDeletePost = async (req, res) => {
 	let id = req.body.id;
 	if (!id) {
 		return res.status(200).json({
@@ -318,7 +315,7 @@ let HandleDeleteDish = async (req, res) => {
 			errMessage: "Missing required parameter",
 		});
 	}
-	let result = await apiService.DeleteDish(id);
+	let result = await apiService.DeletePost(id);
 	return res.status(200).json({
 		errCode: result.errCode,
 		errMessage: result.errMessage,
@@ -656,8 +653,8 @@ module.exports = {
 	HandleCreatePost,
 	HandleLikePost,
 	HandleGetLike,
-	HandleEditDish,
-	HandleDeleteDish,
+	HandleEditPost,
+	HandleDeletePost,
 	HandleGetAllPost,
 	HandleGetAllComment,
 	HandleCreateOrderDetail,

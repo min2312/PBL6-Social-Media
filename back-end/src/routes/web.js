@@ -57,12 +57,12 @@ let initWebRoutes = (app) => {
 		uploadCloud.array("image"),
 		apiController.HandleCreatePost
 	);
-	// router.post(
-	// 	"/api/update-post",
-	// 	uploadCloud.array("image"),
-	// 	apiController.HandleEditPost
-	// );
-	// router.post("/api/delete-post", apiController.HandleDeletePost);
+	router.post(
+		"/api/update-post",
+		uploadCloud.array("image"),
+		apiController.HandleEditPost
+	);
+	router.post("/api/delete-post", apiController.HandleDeletePost);
 	router.post(
 		"/api/create-new-customer",
 		apiController.HandleCreateNewCustomer

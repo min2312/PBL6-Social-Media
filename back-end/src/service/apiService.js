@@ -969,81 +969,130 @@ let CreatePost = (data, fileImages) => {
 	});
 };
 
-let EditDish = (data, fileImage) => {
+let EditPost = (data, fileImage) => {
 	return new Promise(async (resolve, reject) => {
 		try {
-			let check = await db.Dish.findOne({
+			let check = await db.Post.findOne({
 				where: { id: data.id },
 			});
 			if (check) {
-				if (fileImage) {
-					const uploadPart = check.pic_link.split("/upload/")[1];
-					let parts = uploadPart.split("/");
-					if (parts[0].startsWith("v")) {
-						parts.shift();
-					}
-					const publicId = parts.join("/").split(".")[0];
-					await cloudinary.uploader.destroy(publicId);
+				let oldImages = Array.isArray(check.imageUrl)
+					? check.imageUrl
+					: JSON.parse(check.imageUrl || "[]");
+				let newImages = [];
+				if (Array.isArray(data.image) && data.image.length > 0) {
+					newImages = data.image; // mảng ảnh từ Cloudinary
+				} else if (fileImage && fileImage.length > 0) {
+					newImages = fileImage.map((f) => f.path);
 				}
+				if (
+					Array.isArray(data.existingImages) &&
+					data.existingImages.length > 0
+				) {
+					const existing = data.existingImages.map((img) => img.trim());
+					newImages = [...existing, ...newImages];
+				} else if (data.existingImages) {
+					newImages = [data.existingImages, ...newImages];
+				}
+				let removedImages = oldImages.filter((url) => !newImages.includes(url));
+				for (const imgUrl of removedImages) {
+					try {
+						const uploadPart = imgUrl.split("/upload/")[1];
+						let parts = uploadPart.split("/");
+						if (parts[0].startsWith("v")) parts.shift();
+						const publicId = parts.join("/").split(".")[0];
+						await cloudinary.uploader.destroy(publicId);
+					} catch (err) {
+						console.warn("Failed to delete old image:", imgUrl);
+					}
+				}
+				newImages = newImages.filter(
+					(img) => img && img !== "null" && img.trim() !== ""
+				);
+				const finalImageValue =
+					newImages.length > 0 ? JSON.stringify(newImages) : null;
 				await check.update({
-					name: data.name,
-					price: data.price,
-					Category: data.category,
-					pic_link: fileImage ? fileImage.path : check.pic_link,
+					content:
+						data.content === null || data.content === "" ? null : data.content,
+					videoUrl:
+						data.videoUrl === null || data.videoUrl === ""
+							? null
+							: data.videoUrl,
+					imageUrl: finalImageValue,
 				});
 				resolve({
 					errCode: 0,
-					errMessage: "Update dish successfully",
-					dish: check,
+					errMessage: "Update post successfully",
+					post: check,
 				});
 			} else {
-				if (fileImage) {
-					await cloudinary.uploader.destroy(fileImage.filename);
+				if (fileImage && fileImage.length > 0) {
+					await Promise.all(
+						fileImage.map((file) => cloudinary.uploader.destroy(file.filename))
+					);
 				}
 				resolve({
 					errCode: 1,
-					errMessage: "Dish not found",
+					errMessage: "The post not found",
 				});
 			}
 		} catch (e) {
-			if (fileImage) {
-				await cloudinary.uploader.destroy(fileImage.filename);
+			console.log(e);
+			if (fileImage && fileImage.length > 0) {
+				await Promise.all(
+					fileImage.map((file) => cloudinary.uploader.destroy(file.filename))
+				);
 			}
 			reject({
 				errCode: 1,
-				errMessage: "Error updating dish",
+				errMessage: "The post error",
 			});
 		}
 	});
 };
 
-let DeleteDish = (dishId) => {
+let DeletePost = (postId) => {
 	return new Promise(async (resolve, reject) => {
 		try {
-			let check = await db.Dish.findOne({
-				where: { id: dishId },
+			let check = await db.Post.findOne({
+				where: { id: postId },
 			});
 			if (check) {
-				if (check.pic_link) {
-					const uploadPart = check.pic_link.split("/upload/")[1];
-					let parts = uploadPart.split("/");
-					if (parts[0].startsWith("v")) {
-						parts.shift();
-					}
-					const publicId = parts.join("/").split(".")[0];
-					await cloudinary.uploader.destroy(publicId);
+				let imageArray = [];
+				if (check.imageUrl) {
+					imageArray = Array.isArray(check.imageUrl)
+						? check.imageUrl
+						: typeof check.imageUrl === "string"
+						? JSON.parse(check.imageUrl) // nếu trong DB lưu chuỗi JSON
+						: [];
 				}
-				await db.Dish.destroy({
-					where: { id: dishId },
+				// Lặp qua từng ảnh và xóa trên Cloudinary
+				for (const imgUrl of imageArray) {
+					try {
+						const uploadPart = imgUrl.split("/upload/")[1];
+						if (!uploadPart) continue;
+
+						let parts = uploadPart.split("/");
+						if (parts[0].startsWith("v")) parts.shift();
+
+						const publicId = parts.join("/").split(".")[0];
+						await cloudinary.uploader.destroy(publicId);
+						console.log("🗑️ Deleted:", publicId);
+					} catch (err) {
+						console.error("❌ Error deleting image:", imgUrl, err);
+					}
+				}
+				await db.Post.destroy({
+					where: { id: postId },
 				});
 				resolve({
 					errCode: 0,
-					errMessage: "Delete dish successfully",
+					errMessage: "Delete post successfully",
 				});
 			} else {
 				resolve({
 					errCode: 1,
-					errMessage: "Dish not found",
+					errMessage: "Post not found",
 				});
 			}
 		} catch (e) {
@@ -1545,8 +1594,8 @@ module.exports = {
 	CreateOrderDetail,
 	updateOrderDetail,
 	CreatePost,
-	EditDish,
-	DeleteDish,
+	EditPost,
+	DeletePost,
 	CreateInvoice,
 	GetInvoice,
 	GetAllInvoice,
