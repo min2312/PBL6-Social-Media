@@ -1111,6 +1111,9 @@ let GetAllPost = (postId) => {
 			let posts = "";
 			if (postId === "ALL") {
 				posts = await db.Post.findAll({
+					where: {
+						isDeleted: false
+					},
 					include: [
 						{
 							model: db.User,
