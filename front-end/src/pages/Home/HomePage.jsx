@@ -10,10 +10,12 @@ import {
 import { useHistory } from "react-router-dom/cjs/react-router-dom.min";
 import { toast } from "react-toastify";
 import { UserContext } from "../../Context/UserProvider";
+import { io } from "socket.io-client";
 const HomePage = () => {
 	const [isAddPostOpen, setIsAddPostOpen] = useState(false);
 	const [posts, setPosts] = useState([]);
 	const { user } = useContext(UserContext);
+	const [socket, setSocket] = useState(null);
 	const history = useHistory();
 	const HandleGetAllPost = async () => {
 		try {
@@ -40,7 +42,6 @@ const HomePage = () => {
 					}))
 				);
 				setPosts(formattedPosts);
-				toast.success("Load Post Success");
 			} else {
 				toast.error(response.errMessage);
 			}
@@ -52,6 +53,46 @@ const HomePage = () => {
 	useEffect(() => {
 		HandleGetAllPost();
 	}, []);
+
+	useEffect(() => {
+		if (!user || !user.token) {
+			return;
+		}
+
+		const newSocket = io(`${process.env.REACT_APP_API_URL}`, {
+			extraHeaders: {
+				Authorization: `Bearer ${user.token}`,
+			},
+		});
+
+		newSocket.on("connect", () => {
+			console.log("search connected to WebSocket:", newSocket.id);
+		});
+
+		newSocket.on("postUpdated", (updatedPost) => {
+			setPosts((prev) =>
+				prev.map((p) => (p.id === updatedPost.id ? updatedPost : p))
+			);
+		});
+
+		newSocket.on("postDeleted", (postToDelete) => {
+			setPosts((prev) => prev.filter((p) => p.id !== postToDelete.id));
+		});
+
+		newSocket.on("connect_error", (err) => {
+			console.error("Connection error:", err.message);
+		});
+
+		newSocket.on("disconnect", (reason) => {
+			console.warn("WebSocket disconnected:", reason);
+		});
+
+		setSocket(newSocket);
+
+		return () => {
+			newSocket.disconnect();
+		};
+	}, [user]);
 
 	function formatTimeAgo(dateString) {
 		const date = new Date(dateString);
@@ -110,12 +151,18 @@ const HomePage = () => {
 	};
 
 	const handleUpdatePost = (updatedPost) => {
+		if (socket) {
+			socket.emit("updatePost", updatedPost);
+		}
 		setPosts((prev) =>
 			prev.map((post) => (post.id === updatedPost.id ? updatedPost : post))
 		);
 	};
 
 	const handleDeletePost = (postToDelete) => {
+		if (socket) {
+			socket.emit("deletePost", postToDelete);
+		}
 		setPosts((prev) => prev.filter((post) => post.id !== postToDelete.id));
 	};
 

@@ -100,7 +100,10 @@ const Navbar = ({ title = "HomePage" }) => {
 										</div>
 									</div>
 									<div className="dropdown-divider"></div>
-									<a href="/profile" className="dropdown-item">
+									<a
+										href={`/profile/${user.account.id}`}
+										className="dropdown-item"
+									>
 										<Settings size={16} />
 										<span>Profile</span>
 									</a>
