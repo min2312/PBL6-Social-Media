@@ -5,6 +5,7 @@ import { checkUserJWT, CreateJWT } from "../middleware/JWT_Action";
 import passport from "passport";
 import apiController from "../controllers/apiController";
 import uploadCloud from "../middleware/Cloudinary_Multer";
+import socialController from "../controllers/socialController.js";
 import {
 	sendResetOTP,
 	verifyResetOTP,
@@ -28,6 +29,17 @@ let initWebRoutes = (app) => {
 		"/api/get-all-orderPending",
 		apiController.HandleGetAllOrderPending
 	);
+	router.get("/api/search", socialController.HandleSearch);
+	router.get(
+		"/api/get-all-friendships",
+		socialController.HandleGetAllFriendships
+	);
+	router.post(
+		"/api/friend-request/cancel",
+		socialController.HandleCancelFriendRequest
+	);
+	router.post("/api/friend-request", socialController.HandleSendFriendRequest);
+	router.post("/api/add-friend", socialController.HandleAddFriend);
 	router.get("/api/get-post-like", apiController.HandleGetLike);
 	router.post("/api/handle-like-post", apiController.HandleLikePost);
 	router.get("/api/getAllDiscounts", apiController.HandleGetAllDiscount);

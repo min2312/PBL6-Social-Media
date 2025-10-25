@@ -10,6 +10,7 @@ const EditPost = ({ isOpen, onClose, post, onUpdatePost }) => {
 		images: [],
 	});
 	const [newImages, setNewImages] = useState([]);
+	const [isSaving, setIsSaving] = useState(false);
 
 	useEffect(() => {
 		if (post) {
@@ -45,6 +46,7 @@ const EditPost = ({ isOpen, onClose, post, onUpdatePost }) => {
 	};
 
 	const handleSave = async () => {
+		if (isSaving) return;
 		if (
 			!editData.content.trim() &&
 			newImages.length === 0 &&
@@ -70,17 +72,22 @@ const EditPost = ({ isOpen, onClose, post, onUpdatePost }) => {
 				}
 			});
 		}
-		let response = await UpdatePost(formData);
-		updatedPost = {
-			...post,
-			content: response.post.content,
-			images: JSON.parse(response.post.imageUrl) || [],
-		};
+		setIsSaving(true);
+		try {
+			let response = await UpdatePost(formData);
+			updatedPost = {
+				...post,
+				content: response.post.content,
+				images: JSON.parse(response.post.imageUrl) || [],
+			};
 
-		if (response && response.errCode === 0) {
-			toast.success("Post updated successfully!");
-			onUpdatePost(updatedPost);
-			onClose();
+			if (response && response.errCode === 0) {
+				toast.success("Post updated successfully!");
+				onUpdatePost(updatedPost);
+				onClose();
+			}
+		} finally {
+			setIsSaving(false);
 		}
 	};
 
@@ -181,11 +188,15 @@ const EditPost = ({ isOpen, onClose, post, onUpdatePost }) => {
 				</div>
 
 				<div className="edit-post-footer">
-					<button className="cancel-btn" onClick={handleCancel}>
+					<button
+						className="cancel-btn"
+						onClick={handleCancel}
+						disabled={isSaving}
+					>
 						Cancel
 					</button>
-					<button className="save-btn" onClick={handleSave}>
-						Save Changes
+					<button className="save-btn" onClick={handleSave} disabled={isSaving}>
+						{isSaving ? "Saving..." : "Save Changes"}
 					</button>
 				</div>
 			</div>
