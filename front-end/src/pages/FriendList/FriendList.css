@@ -1,267 +1,279 @@
 .friend-list-container {
-  background-color: #1f2937;
-  border-radius: 0.5rem;
-  padding: 1.5rem;
-  margin-bottom: 1.5rem;
+	background-color: #1f2937;
+	border-radius: 0.5rem;
+	padding: 1.5rem;
+	margin-bottom: 1.5rem;
 }
 
 .friend-list-header {
-  margin-bottom: 2rem;
+	margin-bottom: 2rem;
 }
 
 .friend-list-header h1 {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: #ffffff;
-  font-size: 1.875rem;
-  font-weight: 700;
-  margin: 0 0 1.5rem 0;
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	color: #ffffff;
+	font-size: 1.875rem;
+	font-weight: 700;
+	margin: 0 0 1.5rem 0;
 }
 
 .tab-navigation {
-  display: flex;
-  gap: 0.5rem;
-  border-bottom: 1px solid #374151;
-  padding-bottom: 1rem;
+	display: flex;
+	gap: 0.5rem;
+	border-bottom: 1px solid #374151;
+	padding-bottom: 1rem;
 }
 
 .tab-btn {
-  padding: 0.75rem 1.5rem;
-  background: transparent;
-  border: none;
-  color: #9ca3af;
-  font-size: 1rem;
-  font-weight: 500;
-  cursor: pointer;
-  border-radius: 0.5rem;
-  transition: all 0.2s;
-  position: relative;
+	padding: 0.75rem 1.5rem;
+	background: transparent;
+	border: none;
+	color: #9ca3af;
+	font-size: 1rem;
+	font-weight: 500;
+	cursor: pointer;
+	border-radius: 0.5rem;
+	transition: all 0.2s;
+	position: relative;
 }
 
 .tab-btn:hover {
-  color: #ffffff;
-  background-color: #374151;
+	color: #ffffff;
+	background-color: #374151;
 }
 
 .tab-btn.active {
-  color: #ffffff;
-  background-color: #4f46e5;
+	color: #ffffff;
+	background-color: #4f46e5;
 }
 
 .friend-list-content {
-  margin-top: 1.5rem;
+	margin-top: 1.5rem;
 }
 
 .friends-grid,
 .requests-grid {
-  display: grid;
-  gap: 1rem;
-  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+	display: grid;
+	gap: 1rem;
+	grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
 }
 
 .friend-card {
-  background-color: #374151;
-  border-radius: 0.75rem;
-  padding: 1.25rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  transition: all 0.2s;
-  border: 1px solid transparent;
+	background-color: #374151;
+	border-radius: 0.75rem;
+	padding: 1.25rem;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	transition: all 0.2s;
+	border: 1px solid transparent;
 }
 
 .friend-card:hover {
-  background-color: #4b5563;
-  border-color: #6b7280;
-  transform: translateY(-2px);
+	background-color: #4b5563;
+	border-color: #6b7280;
+	transform: translateY(-2px);
 }
 
 .friend-info {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  flex: 1;
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+	flex: 1;
+}
+
+.friend-info.clickable {
+	cursor: pointer;
+	transition: all 0.2s;
+	border-radius: 0.5rem;
+	padding: 0.25rem;
+	margin: -0.25rem;
+}
+
+.friend-info.clickable:hover {
+	transform: scale(1.02);
 }
 
 .friend-avatar {
-  width: 3rem;
-  height: 3rem;
-  border-radius: 50%;
-  overflow: hidden;
-  flex-shrink: 0;
+	width: 3rem;
+	height: 3rem;
+	border-radius: 50%;
+	overflow: hidden;
+	flex-shrink: 0;
 }
 
 .friend-avatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
 }
 
 .avatar-placeholder {
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-weight: 600;
-  font-size: 1.25rem;
+	width: 100%;
+	height: 100%;
+	background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: white;
+	font-weight: 600;
+	font-size: 1.25rem;
 }
 
 .friend-details {
-  flex: 1;
+	flex: 1;
 }
 
 .friend-name {
-  color: #ffffff;
-  font-size: 1.125rem;
-  font-weight: 600;
-  margin: 0 0 0.25rem 0;
+	color: #ffffff;
+	font-size: 1.125rem;
+	font-weight: 600;
+	margin: 0 0 0.25rem 0;
 }
 
 .mutual-friends {
-  color: #6b7280;
-  font-size: 0.75rem;
-  display: block;
+	color: #6b7280;
+	font-size: 0.75rem;
+	display: block;
 }
 
 .request-date {
-  color: #6b7280;
-  font-size: 0.75rem;
-  display: block;
-  margin-top: 0.25rem;
+	color: #6b7280;
+	font-size: 0.75rem;
+	display: block;
+	margin-top: 0.25rem;
 }
 
 .friend-actions {
-  display: flex;
-  gap: 0.5rem;
+	display: flex;
+	gap: 0.5rem;
 }
 
 .request-actions {
-  display: flex;
-  gap: 0.5rem;
+	display: flex;
+	gap: 0.5rem;
 }
 
 .btn-primary,
 .btn-secondary,
 .btn-danger {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  border: none;
-  border-radius: 0.5rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-  white-space: nowrap;
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0.5rem 1rem;
+	border: none;
+	border-radius: 0.5rem;
+	font-size: 0.875rem;
+	font-weight: 500;
+	cursor: pointer;
+	transition: all 0.2s;
+	white-space: nowrap;
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
-  color: white;
+	background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+	color: white;
 }
 
 .btn-primary:hover {
-  background: linear-gradient(135deg, #4338ca 0%, #6d28d9 100%);
-  transform: translateY(-1px);
+	background: linear-gradient(135deg, #4338ca 0%, #6d28d9 100%);
+	transform: translateY(-1px);
 }
 
 .btn-secondary {
-  background-color: #6b7280;
-  color: white;
+	background-color: #6b7280;
+	color: white;
 }
 
 .btn-secondary:hover {
-  background-color: #5b6470;
-  transform: translateY(-1px);
+	background-color: #5b6470;
+	transform: translateY(-1px);
 }
 
 .btn-danger {
-  background-color: #dc2626;
-  color: white;
+	background-color: #dc2626;
+	color: white;
 }
 
 .btn-danger:hover {
-  background-color: #b91c1c;
-  transform: translateY(-1px);
+	background-color: #b91c1c;
+	transform: translateY(-1px);
 }
 
 .empty-state {
-  text-align: center;
-  padding: 3rem 2rem;
-  color: #9ca3af;
+	text-align: center;
+	padding: 3rem 2rem;
+	color: #9ca3af;
 }
 
 .empty-state svg {
-  margin-bottom: 1rem;
-  opacity: 0.5;
+	margin-bottom: 1rem;
+	opacity: 0.5;
 }
 
 .empty-state h3 {
-  color: #d1d5db;
-  font-size: 1.25rem;
-  font-weight: 600;
-  margin: 0 0 0.5rem 0;
+	color: #d1d5db;
+	font-size: 1.25rem;
+	font-weight: 600;
+	margin: 0 0 0.5rem 0;
 }
 
 .empty-state p {
-  font-size: 0.875rem;
-  margin: 0;
+	font-size: 0.875rem;
+	margin: 0;
 }
 
 .auth-required {
-  text-align: center;
-  padding: 3rem 2rem;
-  background-color: #1f2937;
-  border-radius: 0.5rem;
-  color: #9ca3af;
+	text-align: center;
+	padding: 3rem 2rem;
+	background-color: #1f2937;
+	border-radius: 0.5rem;
+	color: #9ca3af;
 }
 
 /* Responsive Design */
 @media (max-width: 768px) {
-  .friends-grid,
-  .requests-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .friend-card {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1rem;
-  }
-  
-  .friend-actions,
-  .request-actions {
-    width: 100%;
-    justify-content: flex-end;
-  }
-  
-  .tab-navigation {
-    flex-direction: column;
-  }
-  
-  .tab-btn {
-    text-align: left;
-  }
+	.friends-grid,
+	.requests-grid {
+		grid-template-columns: 1fr;
+	}
+
+	.friend-card {
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 1rem;
+	}
+
+	.friend-actions,
+	.request-actions {
+		width: 100%;
+		justify-content: flex-end;
+	}
+
+	.tab-navigation {
+		flex-direction: column;
+	}
+
+	.tab-btn {
+		text-align: left;
+	}
 }
 
 @media (max-width: 480px) {
-  .friend-list-container {
-    padding: 1rem;
-  }
-  
-  .friend-list-header h1 {
-    font-size: 1.5rem;
-  }
-  
-  .btn-primary,
-  .btn-secondary,
-  .btn-danger {
-    padding: 0.5rem 0.75rem;
-    font-size: 0.8rem;
-  }
+	.friend-list-container {
+		padding: 1rem;
+	}
+
+	.friend-list-header h1 {
+		font-size: 1.5rem;
+	}
+
+	.btn-primary,
+	.btn-secondary,
+	.btn-danger {
+		padding: 0.5rem 0.75rem;
+		font-size: 0.8rem;
+	}
 }

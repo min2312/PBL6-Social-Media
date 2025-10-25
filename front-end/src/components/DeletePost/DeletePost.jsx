@@ -1,13 +1,20 @@
-import React from "react";
+import React, { useState } from "react";
 import { X, Trash2, AlertTriangle } from "lucide-react";
 import "./DeletePost.css";
 
 const DeletePost = ({ isOpen, onClose, onConfirm, post }) => {
+	const [isDeleting, setIsDeleting] = useState(false);
 	if (!isOpen) return null;
 
-	const handleConfirm = () => {
-		onConfirm(post);
-		onClose();
+	const handleConfirm = async () => {
+		if (isDeleting) return;
+		setIsDeleting(true);
+		try {
+			await onConfirm(post);
+			onClose();
+		} finally {
+			setIsDeleting(false);
+		}
 	};
 
 	return (
@@ -25,20 +32,21 @@ const DeletePost = ({ isOpen, onClose, onConfirm, post }) => {
 
 				<div className="delete-post-body">
 					<p className="delete-message">
-						Are you sure you want to delete this post? This action cannot be undone.
+						Are you sure you want to delete this post? This action cannot be
+						undone.
 					</p>
-					
+
 					{/* Post preview */}
 					<div className="post-preview">
 						<p className="preview-content">
-							{post?.content && post.content.length > 100 
-								? `${post.content.substring(0, 100)}...` 
+							{post?.content && post.content.length > 100
+								? `${post.content.substring(0, 100)}...`
 								: post?.content}
 						</p>
 						{post?.images && post.images.length > 0 && (
 							<div className="preview-images">
 								<span className="image-count">
-									{post.images.length} image{post.images.length > 1 ? 's' : ''}
+									{post.images.length} image{post.images.length > 1 ? "s" : ""}
 								</span>
 							</div>
 						)}
@@ -46,12 +54,20 @@ const DeletePost = ({ isOpen, onClose, onConfirm, post }) => {
 				</div>
 
 				<div className="delete-post-footer">
-					<button className="cancel-btn" onClick={onClose}>
+					<button
+						className="cancel-btn"
+						onClick={onClose}
+						disabled={isDeleting}
+					>
 						Cancel
 					</button>
-					<button className="delete-btn" onClick={handleConfirm}>
+					<button
+						className="delete-btn"
+						onClick={handleConfirm}
+						disabled={isDeleting}
+					>
 						<Trash2 size={16} />
-						Delete Post
+						{isDeleting ? "Deleting..." : "Delete Post"}
 					</button>
 				</div>
 			</div>

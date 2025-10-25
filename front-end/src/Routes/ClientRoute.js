@@ -13,7 +13,7 @@ import SearchResult from "../pages/SearchResult/SearchResult";
 import FriendList from "../pages/FriendList/FriendList";
 
 // import PrivateRoutesRole from "./PrivateRoutesRole";
-// import PrivateRoutes from "./PrivateRoutes";
+import PrivateRoutes from "./PrivateRoutes";
 // import LoginAdmin from "../pages/Login/LoginAdmin";
 // import OrderMenu from "../pages/OrderMenu/OrderMenu";
 // import ResetPassword from "../pages/Login/ResetPassword";
@@ -45,16 +45,15 @@ const ClientRoute = () => {
 				<Route path="/" exact>
 					<HomePage />
 				</Route>
-				<Route path="/profile" component={Profile} />
-				<Route path="/messenger" component={ChatPage} />
+				<PrivateRoutes path="/profile/:id" component={Profile} />
+				<PrivateRoutes path="/messenger" component={ChatPage} />
 				<Route path="/login" component={Login} />
 				<Route path="/register" component={Register} />
-				<Route path="/friends" component={FriendList} />
+				<PrivateRoutes path="/friends" component={FriendList} />
 				<Route path="/admin" component={Admin} />
-				<Route path="/settings" component={Settings} />
-				<Route path="/search" component={SearchResult} />
+				<PrivateRoutes path="/settings" component={Settings} />
+				<PrivateRoutes path="/search" component={SearchResult} />
 				<Route path="*">404 Not Found</Route>
-				
 			</Switch>
 		</div>
 	);
