@@ -7,7 +7,14 @@ module.exports = (sequelize, DataTypes) => {
 			User.hasMany(models.Comment, { foreignKey: "userId" });
 			User.hasMany(models.Like, { foreignKey: "userId" });
 			User.hasMany(models.Share, { foreignKey: "userId" });
-			User.hasMany(models.Friendship, { foreignKey: "userId" });
+			User.hasMany(models.Friendship, {
+				foreignKey: "userId",
+				as: "SentRequests", // người gửi lời mời
+			});
+			User.hasMany(models.Friendship, {
+				foreignKey: "friendId",
+				as: "ReceivedRequests", // người nhận lời mời
+			});
 			User.hasMany(models.Message, { foreignKey: "senderId" });
 			User.hasMany(models.Notification, { foreignKey: "receiverId" });
 		}

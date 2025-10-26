@@ -1124,11 +1124,17 @@ let GetAllPost = (postId) => {
 			}
 			if (postId && postId !== "ALL") {
 				posts = await db.Post.findAll({
-					where: { id: postId },
+					where: { userId: postId },
 					include: [
 						{
 							model: db.User,
-							attributes: ["id", "fullName", "email", "profilePicture"],
+							attributes: [
+								"id",
+								"fullName",
+								"email",
+								"profilePicture",
+								"createdAt",
+							],
 						},
 					],
 				});

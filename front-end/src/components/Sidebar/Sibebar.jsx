@@ -25,13 +25,16 @@ const Sidebar = () => {
 			<div className="sidebar-content">
 				<div className="logo-section">
 					{user && user.isAuthenticated ? (
-					<div className="user-profile">
-						<Link to="/profile" className="profile-button">
-							<div className="user-avatar"></div>
-							<span>{user?.account?.fullName}</span>
-						</Link>
-					</div>
-				) : null}
+						<div className="user-profile">
+							<Link
+								to={`/profile/${user.account.id}`}
+								className="profile-button"
+							>
+								<div className="user-avatar"></div>
+								<span>{user?.account?.fullName}</span>
+							</Link>
+						</div>
+					) : null}
 				</div>
 
 				<nav className="sidebar-nav">
@@ -51,7 +54,6 @@ const Sidebar = () => {
 						);
 					})}
 				</nav>
-				
 			</div>
 		</div>
 	);

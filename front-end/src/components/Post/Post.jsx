@@ -150,26 +150,28 @@ const Post = ({ post, onUpdatePost, onDeletePost }) => {
 				</div>
 				<div className="post-meta">
 					<span className="post-timestamp">{formattedTime}</span>
-					<div className="post-menu-wrapper" ref={dropdownRef}>
-						<button className="post-menu-btn" onClick={toggleDropdown}>
-							<MoreHorizontal size={16} />
-						</button>
-						{showDropdown && (
-							<div className="post-dropdown-menu">
-								<button className="dropdown-item" onClick={handleEditPost}>
-									<Edit size={16} />
-									<span>Edit Post</span>
-								</button>
-								<button
-									className="dropdown-item delete-item"
-									onClick={handleDeletePost}
-								>
-									<Trash2 size={16} />
-									<span>Delete Post</span>
-								</button>
-							</div>
-						)}
-					</div>
+					{user?.account?.id === post.User?.id && (
+						<div className="post-menu-wrapper" ref={dropdownRef}>
+							<button className="post-menu-btn" onClick={toggleDropdown}>
+								<MoreHorizontal size={16} />
+							</button>
+							{showDropdown && (
+								<div className="post-dropdown-menu">
+									<button className="dropdown-item" onClick={handleEditPost}>
+										<Edit size={16} />
+										<span>Edit Post</span>
+									</button>
+									<button
+										className="dropdown-item delete-item"
+										onClick={handleDeletePost}
+									>
+										<Trash2 size={16} />
+										<span>Delete Post</span>
+									</button>
+								</div>
+							)}
+						</div>
+					)}
 				</div>
 			</div>
 

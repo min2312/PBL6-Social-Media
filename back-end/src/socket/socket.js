@@ -18,32 +18,16 @@ const initSocket = (server) => {
 	io.on("connection", (socket) => {
 		console.log("Client connected:", socket.id, "User:", socket.user);
 
-		socket.on("updateTable", async (data) => {
-			await handleUpdateTable(data);
+		socket.on("updatePost", (updatedPost) => {
+			io.emit("postUpdated", updatedPost);
 		});
 
-		socket.on("updateOrder", (data) => {
-			io.emit("orderUpdated", data);
+		socket.on("deletePost", (postToDelete) => {
+			io.emit("postDeleted", postToDelete);
 		});
 
-		socket.on("sendOrder", (data) => {
-			io.emit("receiveOrder", data);
-		});
-
-		socket.on("chefCountUpdated", (data) => {
-			io.emit("chefCountUpdated", data);
-		});
-		socket.on("aiResults", (data) => {
-			io.emit("aiResults", data);
-		});
-		// Add handler for order status updates
-		socket.on("orderStatusUpdate", (data) => {
-			io.emit("orderStatusUpdate", data);
-		});
-
-		// Add handler for dish cancellation
-		socket.on("dishCancelled", (data) => {
-			io.emit("dishCancelled", data);
+		socket.on("sendFriendRequest", ({ data, toUserId, friendshipStatus }) => {
+			io.emit("friendRequestReceived", { data, toUserId, friendshipStatus });
 		});
 
 		socket.on("disconnect", (reason) => {

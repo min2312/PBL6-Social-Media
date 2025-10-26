@@ -16,6 +16,8 @@ let HandleLogin = async (req, res) => {
 		res.cookie("jwt", userdata.DT.access_token, {
 			httpOnly: true,
 			maxAge: process.env.maxAgeCookie,
+			secure: true,
+			sameSite: "none",
 		});
 	}
 	return res.status(200).json({

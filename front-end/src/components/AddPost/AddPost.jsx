@@ -6,6 +6,7 @@ import { UserContext } from "../../Context/UserProvider";
 const AddPost = ({ isOpen, onClose, onSubmit }) => {
 	const [caption, setCaption] = useState("");
 	const [images, setImages] = useState([]);
+	const [isSubmitting, setIsSubmitting] = useState(false);
 	const fileInputRef = useRef(null);
 	const maxLength = 280;
 	const { user } = useContext(UserContext);
@@ -35,20 +36,25 @@ const AddPost = ({ isOpen, onClose, onSubmit }) => {
 	};
 
 	// Chuẩn hóa dữ liệu gửi lên cho đúng với bảng posts
-	const handleSubmit = () => {
+	const handleSubmit = async () => {
+		if (isSubmitting) return;
 		if (caption.trim() || images.length > 0) {
-			// Lấy mảng file gốc (nếu có)
-			const imageFiles = images.map((img) => img.file);
-			onSubmit({
-				userId: user?.id,
-				content: caption.trim(),
-				imageUrl: imageFiles.length > 0 ? imageFiles : null, // gửi mảng file hoặc null
-			});
-
-			// Reset form
-			setCaption("");
-			setImages([]);
-			onClose();
+			setIsSubmitting(true);
+			try {
+				// Lấy mảng file gốc (nếu có)
+				const imageFiles = images.map((img) => img.file);
+				await onSubmit({
+					userId: user?.id,
+					content: caption.trim(),
+					imageUrl: imageFiles.length > 0 ? imageFiles : null, // gửi mảng file hoặc null
+				});
+				// Reset form
+				setCaption("");
+				setImages([]);
+				onClose();
+			} finally {
+				setIsSubmitting(false);
+			}
 		}
 	};
 
@@ -151,9 +157,9 @@ const AddPost = ({ isOpen, onClose, onSubmit }) => {
 					<button
 						className="post-submit-btn"
 						onClick={handleSubmit}
-						disabled={!canPost}
+						disabled={!canPost || isSubmitting}
 					>
-						Post
+						{isSubmitting ? "Posting..." : "Post"}
 					</button>
 				</div>
 			</div>
