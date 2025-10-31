@@ -252,14 +252,6 @@ const ChatPage = () => {
           </div>
         </div>
 
-        {/* Message Requests */}
-        <div className="message-requests">
-          <div className="requests-header">
-            <h3 className="requests-title">Message requests</h3>
-            <span className="requests-badge">3</span>
-          </div>
-        </div>
-
         {/* Conversations List */}
         <div className="conversations-list">
           {filteredConversations.map((conversation) => (
@@ -271,7 +263,6 @@ const ChatPage = () => {
               <div className="conversation-info">
                 <div className="conversation-avatar">
                   <img src={conversation.avatar} alt={conversation.name} />
-                  {conversation.isOnline && <div className="online-indicator" />}
                 </div>
                 <div className="conversation-details">
                   <div className="conversation-header">
@@ -281,11 +272,6 @@ const ChatPage = () => {
                   <p className="conversation-preview">{conversation.lastMessage}</p>
                 </div>
               </div>
-              {conversation.unread > 0 && (
-                <div className="unread-indicator">
-                  <span>{conversation.unread}</span>
-                </div>
-              )}
             </div>
           ))}
         </div>
