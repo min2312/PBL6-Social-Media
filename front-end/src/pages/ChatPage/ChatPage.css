@@ -1,7 +1,7 @@
 .chat-page {
   display: flex;
   height: calc(100vh - 140px);
-  background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+  background: linear-gradient(135deg, #111827 0%, #0f172a 100%);
   max-width: none;
   margin: 0;
   padding: 20px;
