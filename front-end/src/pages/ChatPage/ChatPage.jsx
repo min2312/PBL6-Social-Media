@@ -20,8 +20,6 @@ const ChatPage = () => {
       avatar: 'https://ui-avatars.com/api/?name=John+Doe&background=4f46e5&color=fff',
       lastMessage: 'Hey! How are you doing today?',
       lastMessageTime: '2m',
-      isOnline: true,
-      unread: 2,
       userId: 2
     },
     {
@@ -31,8 +29,6 @@ const ChatPage = () => {
       avatar: 'https://ui-avatars.com/api/?name=Jane+Smith&background=10b981&color=fff',
       lastMessage: 'Thanks for the help yesterday!',
       lastMessageTime: '1h',
-      isOnline: false,
-      unread: 0,
       userId: 3
     },
     {
@@ -42,8 +38,6 @@ const ChatPage = () => {
       avatar: 'https://ui-avatars.com/api/?name=Mike+Johnson&background=f59e0b&color=fff',
       lastMessage: 'Let\'s meet up tomorrow',
       lastMessageTime: '3h',
-      isOnline: true,
-      unread: 1,
       userId: 4
     },
     {
@@ -53,8 +47,6 @@ const ChatPage = () => {
       avatar: 'https://ui-avatars.com/api/?name=Sarah+Wilson&background=ef4444&color=fff',
       lastMessage: 'Great work on the project!',
       lastMessageTime: '1d',
-      isOnline: false,
-      unread: 0,
       userId: 5
     },
     {
@@ -64,8 +56,6 @@ const ChatPage = () => {
       avatar: 'https://ui-avatars.com/api/?name=Alex+Brown&background=8b5cf6&color=fff',
       lastMessage: 'Can you review this document?',
       lastMessageTime: '2d',
-      isOnline: true,
-      unread: 0,
       userId: 6
     },
     {
@@ -75,8 +65,6 @@ const ChatPage = () => {
       avatar: 'https://ui-avatars.com/api/?name=Emma+Davis&background=06b6d4&color=fff',
       lastMessage: 'See you at the meeting!',
       lastMessageTime: '3d',
-      isOnline: false,
-      unread: 0,
       userId: 7
     }
   ]);
