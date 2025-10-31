@@ -46,7 +46,7 @@ const ClientRoute = () => {
 					<HomePage />
 				</Route>
 				<PrivateRoutes path="/profile/:id" component={Profile} />
-				<PrivateRoutes path="/messenger" component={ChatPage} />
+				{/* <PrivateRoutes path="/messenger" component={ChatPage} /> */}
 				<Route path="/login" component={Login} />
 				<Route path="/register" component={Register} />
 				<PrivateRoutes path="/friends" component={FriendList} />
