@@ -51,13 +51,14 @@
 
 /* Chat Sidebar */
 .chat-sidebar {
-  width: 400px;
+  width: 300px;
   background: #1f2937;
   border: 1px solid #374151;
   border-radius: 25px;
   display: flex;
   flex-direction: column;
-  min-width: 400px;
+  min-width: 300px;
+  max-width: 300px;
   height: 100%;
   overflow: hidden;
   position: relative;
@@ -69,6 +70,7 @@
   padding: 30px 25px 20px 25px;
   border-bottom: 1px solid #374151;
   flex-shrink: 0;
+  overflow: hidden;
 }
 
 .chat-title {
@@ -81,10 +83,14 @@
 
 .chat-search {
   position: relative;
+  width: 100%;
+  max-width: 100%;
 }
 
 .search-input {
   width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
   background: #374151;
   border: 1px solid #4b5563;
   border-radius: 25px;
