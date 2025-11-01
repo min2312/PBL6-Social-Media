@@ -8,15 +8,23 @@ import {
 } from "react-router-dom/cjs/react-router-dom.min";
 import { LogOutUser } from "../../services/userService";
 import { toast } from "react-toastify";
+import Notification from "../Notification/Notification";
 
 const Navbar = ({ title = "HomePage" }) => {
 	const [showUserMenu, setShowUserMenu] = useState(false);
+	const [showNotifications, setShowNotifications] = useState(false);
 	const [searchValue, setSearchValue] = useState("");
 	const { user, logoutContext } = useContext(UserContext);
 	const history = useHistory();
 	const location = useLocation();
+	const handleNotificationToggle = () => {
+		setShowNotifications(prev => !prev);
+		setShowUserMenu(false); // Close user menu when opening notifications
+	};
+
 	const handleUserMenuToggle = () => {
 		setShowUserMenu(!showUserMenu);
+		setShowNotifications(false); // Close notifications when opening user menu
 	};
 
 	const handleSearch = (e) => {
@@ -73,10 +81,23 @@ const Navbar = ({ title = "HomePage" }) => {
 				{/* Right Actions */}
 				{user && user.isAuthenticated ? (
 					<div className="navbar-actions">
-						<button className="navbar-button notification-btn">
-							<Bell size={20} />
-							<span className="notification-badge">3</span>
-						</button>
+						<div className="notification-container">
+							<button
+								className="navbar-button notification-btn"
+								onMouseDown={(e) => e.stopPropagation()}
+								onClick={handleNotificationToggle}
+							>
+								<Bell size={20} />
+								<span className="notification-badge">3</span>
+							</button>
+
+							{showNotifications && (
+								<Notification
+									isOpen={showNotifications}
+									onClose={() => setShowNotifications(false)}
+								/>
+							)}
+						</div>
 
 						<div className="user-menu-container">
 							<button

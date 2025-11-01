@@ -19,14 +19,14 @@
 	margin: 0 0 1.5rem 0;
 }
 
-.tab-navigation {
+.friend-tab-navigation {
 	display: flex;
 	gap: 0.5rem;
 	border-bottom: 1px solid #374151;
 	padding-bottom: 1rem;
 }
 
-.tab-btn {
+.friend-tab-btn {
 	padding: 0.75rem 1.5rem;
 	background: transparent;
 	border: none;
@@ -39,12 +39,12 @@
 	position: relative;
 }
 
-.tab-btn:hover {
+.friend-tab-btn:hover {
 	color: #ffffff;
 	background-color: #374151;
 }
 
-.tab-btn.active {
+.friend-tab-btn--active {
 	color: #ffffff;
 	background-color: #4f46e5;
 }
@@ -53,8 +53,7 @@
 	margin-top: 1.5rem;
 }
 
-.friends-grid,
-.requests-grid {
+.friend-grid {
 	display: grid;
 	gap: 1rem;
 	grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
@@ -110,7 +109,7 @@
 	object-fit: cover;
 }
 
-.avatar-placeholder {
+.friend-avatar-placeholder {
 	width: 100%;
 	height: 100%;
 	background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
@@ -133,13 +132,13 @@
 	margin: 0 0 0.25rem 0;
 }
 
-.mutual-friends {
+.friend-mutual-friends {
 	color: #6b7280;
 	font-size: 0.75rem;
 	display: block;
 }
 
-.request-date {
+.friend-request-date {
 	color: #6b7280;
 	font-size: 0.75rem;
 	display: block;
@@ -151,14 +150,12 @@
 	gap: 0.5rem;
 }
 
-.request-actions {
+.friend-request-actions {
 	display: flex;
 	gap: 0.5rem;
 }
 
-.btn-primary,
-.btn-secondary,
-.btn-danger {
+.friend-btn {
 	display: flex;
 	align-items: center;
 	gap: 0.5rem;
@@ -172,60 +169,60 @@
 	white-space: nowrap;
 }
 
-.btn-primary {
+.friend-btn--primary {
 	background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
 	color: white;
 }
 
-.btn-primary:hover {
+.friend-btn--primary:hover {
 	background: linear-gradient(135deg, #4338ca 0%, #6d28d9 100%);
 	transform: translateY(-1px);
 }
 
-.btn-secondary {
+.friend-btn--secondary {
 	background-color: #6b7280;
 	color: white;
 }
 
-.btn-secondary:hover {
+.friend-btn--secondary:hover {
 	background-color: #5b6470;
 	transform: translateY(-1px);
 }
 
-.btn-danger {
+.friend-btn--danger {
 	background-color: #dc2626;
 	color: white;
 }
 
-.btn-danger:hover {
+.friend-btn--danger:hover {
 	background-color: #b91c1c;
 	transform: translateY(-1px);
 }
 
-.empty-state {
+.friend-empty-state {
 	text-align: center;
 	padding: 3rem 2rem;
 	color: #9ca3af;
 }
 
-.empty-state svg {
+.friend-empty-state svg {
 	margin-bottom: 1rem;
 	opacity: 0.5;
 }
 
-.empty-state h3 {
+.friend-empty-state h3 {
 	color: #d1d5db;
 	font-size: 1.25rem;
 	font-weight: 600;
 	margin: 0 0 0.5rem 0;
 }
 
-.empty-state p {
+.friend-empty-state p {
 	font-size: 0.875rem;
 	margin: 0;
 }
 
-.auth-required {
+.friend-auth-required {
 	text-align: center;
 	padding: 3rem 2rem;
 	background-color: #1f2937;
@@ -235,8 +232,7 @@
 
 /* Responsive Design */
 @media (max-width: 768px) {
-	.friends-grid,
-	.requests-grid {
+	.friend-grid {
 		grid-template-columns: 1fr;
 	}
 
@@ -247,16 +243,16 @@
 	}
 
 	.friend-actions,
-	.request-actions {
+	.friend-request-actions {
 		width: 100%;
 		justify-content: flex-end;
 	}
 
-	.tab-navigation {
+	.friend-tab-navigation {
 		flex-direction: column;
 	}
 
-	.tab-btn {
+	.friend-tab-btn {
 		text-align: left;
 	}
 }
@@ -270,9 +266,7 @@
 		font-size: 1.5rem;
 	}
 
-	.btn-primary,
-	.btn-secondary,
-	.btn-danger {
+	.friend-btn {
 		padding: 0.5rem 0.75rem;
 		font-size: 0.8rem;
 	}
