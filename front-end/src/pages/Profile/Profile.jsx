@@ -15,10 +15,12 @@ import { UserContext } from "../../Context/UserProvider";
 import { useParams, useHistory } from "react-router-dom";
 import { GetAllPost, HandleGetLikePost } from "../../services/apiService";
 import { GetAllUser } from "../../services/userService";
+import { io } from "socket.io-client";
 
 const Profile = () => {
 	const [activeTab, setActiveTab] = useState("posts");
 	const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+	const [socket, setSocket] = useState(null);
 	const { user } = useContext(UserContext);
 	const { id } = useParams();
 	const history = useHistory();
@@ -57,6 +59,44 @@ const Profile = () => {
 		if (diffHours < 24) return `${diffHours}h ago`;
 		return date.toLocaleString("en-US", { day: "numeric", month: "short" });
 	};
+
+	useEffect(() => {
+		if (!user || !user.token) {
+			return;
+		}
+
+		const newSocket = io(`${process.env.REACT_APP_API_URL}`, {
+			extraHeaders: {
+				Authorization: `Bearer ${user.token}`,
+			},
+		});
+
+		newSocket.on("connect", () => {});
+
+		newSocket.on("postUpdated", (updatedPost) => {
+			setUserPosts((prev) =>
+				prev.map((p) => (p.id === updatedPost.id ? updatedPost : p))
+			);
+		});
+
+		newSocket.on("postDeleted", (postToDelete) => {
+			setUserPosts((prev) => prev.filter((p) => p.id !== postToDelete.id));
+		});
+
+		newSocket.on("connect_error", (err) => {
+			console.error("Connection error:", err.message);
+		});
+
+		newSocket.on("disconnect", (reason) => {
+			console.warn("WebSocket disconnected:", reason);
+		});
+
+		setSocket(newSocket);
+
+		return () => {
+			newSocket.disconnect();
+		};
+	}, [user]);
 
 	useEffect(() => {
 		const fetchProfile = async () => {
@@ -209,11 +249,17 @@ const Profile = () => {
 	};
 
 	const handleUpdatePost = (updatedPost) => {
+		if (socket) {
+			socket.emit("updatePost", updatedPost);
+		}
 		setUserPosts((prev) =>
 			prev.map((post) => (post.id === updatedPost.id ? updatedPost : post))
 		);
 	};
 	const handleDeletePost = (postToDelete) => {
+		if (socket) {
+			socket.emit("deletePost", postToDelete);
+		}
 		setUserPosts((prev) => prev.filter((post) => post.id !== postToDelete.id));
 	};
 	const handleAvatarChange = (e) => {

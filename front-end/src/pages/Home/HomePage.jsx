@@ -11,12 +11,17 @@ import { useHistory } from "react-router-dom/cjs/react-router-dom.min";
 import { toast } from "react-toastify";
 import { UserContext } from "../../Context/UserProvider";
 import { io } from "socket.io-client";
+import { checkNSFWContent } from "../../services/aiService";
+import { AlertTriangle, X } from "lucide-react";
 const HomePage = () => {
 	const [isAddPostOpen, setIsAddPostOpen] = useState(false);
 	const [posts, setPosts] = useState([]);
 	const { user } = useContext(UserContext);
 	const [socket, setSocket] = useState(null);
 	const history = useHistory();
+	const [isCheckingNSFW, setIsCheckingNSFW] = useState(false);
+	const [nsfwModalOpen, setNsfwModalOpen] = useState(false);
+	const [nsfwResults, setNsfwResults] = useState([]);
 	const HandleGetAllPost = async () => {
 		try {
 			if (user && user.isAuthenticated === false) {
@@ -120,15 +125,55 @@ const HomePage = () => {
 			toast.error("Post cannot be empty");
 			return;
 		}
+
+		// BƯỚC 1: Check NSFW TRƯỚC nếu có ảnh
+		if (postData.imageUrl && postData.imageUrl.length > 0) {
+			setIsCheckingNSFW(true);
+			try {
+				// Tạo FormData riêng cho NSFW check
+				const nsfwFormData = new FormData();
+				postData.imageUrl.forEach((img) => {
+					nsfwFormData.append("image", img);
+				});
+
+				const nsfwCheck = await checkNSFWContent(nsfwFormData);
+				setIsCheckingNSFW(false);
+
+				if (nsfwCheck && nsfwCheck.length > 0) {
+					const nsfwImages = nsfwCheck.filter(
+						(result) =>
+							result.label &&
+							(result.label.toLowerCase().includes("nsfw") ||
+								result.label.toLowerCase().includes("porn") ||
+								result.label.toLowerCase().includes("sexy"))
+					);
+
+					if (nsfwImages.length > 0) {
+						setNsfwResults(nsfwImages);
+						setNsfwModalOpen(true);
+						return;
+					}
+				}
+			} catch (error) {
+				setIsCheckingNSFW(false);
+				console.error("NSFW check failed:", error);
+				toast.error("Content check failed. Please try again.");
+				return;
+			}
+		}
+
 		try {
 			const formData = new FormData();
 			formData.append("userId", user?.account.id);
 			formData.append("content", postData?.content);
+
+			// Thêm ảnh vào FormData cho post
 			if (postData.imageUrl && postData.imageUrl.length > 0) {
 				postData.imageUrl.forEach((img) => {
 					formData.append("image", img);
 				});
 			}
+
 			const newPost = await CreateNewPost(formData);
 			if (newPost && newPost.errCode === 0) {
 				const formattedPost = await {
@@ -166,6 +211,66 @@ const HomePage = () => {
 		setPosts((prev) => prev.filter((post) => post.id !== postToDelete.id));
 	};
 
+	const NSFWModal = () => {
+		return (
+			<div
+				className="nsfw-modal-overlay"
+				onClick={() => setNsfwModalOpen(false)}
+			>
+				<div
+					className="nsfw-modal-content"
+					onClick={(e) => e.stopPropagation()}
+				>
+					<div className="nsfw-modal-header">
+						<div className="nsfw-warning-icon">
+							<AlertTriangle size={32} color="#ef4444" />
+						</div>
+						<h2>Content Not Allowed</h2>
+						<button
+							className="nsfw-close-btn"
+							onClick={() => setNsfwModalOpen(false)}
+						>
+							<X size={20} />
+						</button>
+					</div>
+					<div className="nsfw-modal-body">
+						<p>
+							We detected inappropriate content in your images. Please review
+							our community guidelines:
+						</p>
+						<ul className="nsfw-violations">
+							{nsfwResults.map((result, index) => (
+								<li key={index}>
+									<strong>{result.filename || `Image ${index + 1}`}:</strong>
+									<span className="violation-label">{result.label}</span>
+									<span className="confidence">
+										({result.confidence}% confidence)
+									</span>
+								</li>
+							))}
+						</ul>
+						<div className="nsfw-guidelines">
+							<h4>Community Guidelines:</h4>
+							<ul>
+								<li>No adult content or sexually explicit material</li>
+								<li>No violent or disturbing imagery</li>
+								<li>Keep content appropriate for all audiences</li>
+							</ul>
+						</div>
+					</div>
+					<div className="nsfw-modal-footer">
+						<button
+							className="nsfw-understand-btn"
+							onClick={() => setNsfwModalOpen(false)}
+						>
+							I Understand
+						</button>
+					</div>
+				</div>
+			</div>
+		);
+	};
+
 	return user && user.isAuthenticated ? (
 		<div className="content-wrapper">
 			{/* New Post Input - Click to open modal */}
@@ -197,7 +302,12 @@ const HomePage = () => {
 				isOpen={isAddPostOpen}
 				onClose={() => setIsAddPostOpen(false)}
 				onSubmit={handleAddPost}
+				isLoading={isCheckingNSFW}
+				loadingText="Checking content..."
 			/>
+
+			{/* NSFW Warning Modal */}
+			{nsfwModalOpen && <NSFWModal />}
 		</div>
 	) : (
 		<div

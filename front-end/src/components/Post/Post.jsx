@@ -20,12 +20,14 @@ import {
 	GetAllComment,
 } from "../../services/apiService";
 import { toast } from "react-toastify";
+import { io } from "socket.io-client";
 
 const Post = ({ post, onUpdatePost, onDeletePost }) => {
 	const [isLiked, setIsLiked] = useState(false);
 	const [showComments, setShowComments] = useState(post.comments.length > 0);
 	const [commentText, setCommentText] = useState("");
 	const [comments, setComments] = useState(post.comments || []);
+	const [socket, setSocket] = useState(null);
 	const [showDropdown, setShowDropdown] = useState(false);
 	const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 	const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -36,9 +38,56 @@ const Post = ({ post, onUpdatePost, onDeletePost }) => {
 		post.formatTimeAgo
 	);
 	const formattedPostTime = useSmartRelativeTime(
-		post.timestamp,
+		post.comments.timestamp,
 		post.formatTimeAgo
 	);
+	useEffect(() => {
+		if (!user || !user.token) {
+			return;
+		}
+
+		const newSocket = io(`${process.env.REACT_APP_API_URL}`, {
+			extraHeaders: {
+				Authorization: `Bearer ${user.token}`,
+			},
+		});
+
+		newSocket.on("connect", () => {});
+
+		newSocket.on("postUpdated", (updatedPost) => {
+			console.log("updatedPost:", updatedPost);
+			console.log("Received postUpdated event:", updatedPost.comments);
+			if (
+				updatedPost.comments &&
+				updatedPost.comments.length > 0 &&
+				updatedPost.id === post.id &&
+				updatedPost.comments[0].User.id !== user.account.id
+			) {
+				const commentTimestamp = post.formatTimeAgo(
+					updatedPost.comments[0].updatedAt
+				);
+				const newComment = {
+					...updatedPost.comments[0],
+					timestamp: commentTimestamp,
+				};
+				setComments((prev) => [...prev, newComment]);
+			}
+		});
+
+		newSocket.on("connect_error", (err) => {
+			console.error("Connection error:", err.message);
+		});
+
+		newSocket.on("disconnect", (reason) => {
+			console.warn("WebSocket disconnected:", reason);
+		});
+
+		setSocket(newSocket);
+
+		return () => {
+			newSocket.disconnect();
+		};
+	}, [user]);
 	// Close dropdown when clicking outside
 	useEffect(() => {
 		const handleClickOutside = (event) => {
@@ -83,7 +132,7 @@ const Post = ({ post, onUpdatePost, onDeletePost }) => {
 			};
 			setComments((prev) => [...prev, newComment]);
 			setCommentText("");
-			onUpdatePost({ ...post, comments: comments.length + 1 });
+			onUpdatePost({ ...post, comments: [newComment] });
 		}
 	};
 	const HandleGetComment = async () => {
