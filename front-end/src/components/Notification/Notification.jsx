@@ -1,63 +1,15 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import "./Notification.css";
+import { useNotifications } from "../../Context/NotificationContext";
 
 const Notification = ({ isOpen, onClose }) => {
 	const dropdownRef = useRef(null);
+	const { notifications = [], unread = 0 } = useNotifications();
 
-	// Mock notification data - replace with actual API call
-	const [notifications] = useState([
-		{
-			id: 1,
-			avatar: "J",
-			name: "John Doe",
-			content: "liked your post",
-			time: "5 min ago",
-			isRead: false,
-		},
-		{
-			id: 2,
-			avatar: "S",
-			name: "Sarah Wilson",
-			content: "commented on your photo",
-			time: "15 min ago",
-			isRead: false,
-		},
-		{
-			id: 3,
-			avatar: "M",
-			name: "Mike Johnson",
-			content: "started following you",
-			time: "1 h ago",
-			isRead: true,
-		},
-		{
-			id: 4,
-			avatar: "A",
-			name: "Anna Smith",
-			content: "shared your post",
-			time: "2 h ago",
-			isRead: true,
-		},
-		{
-			id: 5,
-			avatar: "D",
-			name: "David Brown",
-			content: "mentioned you in a comment",
-			time: "3 h ago",
-			isRead: false,
-		},
-		{
-			id: 6,
-			avatar: "L",
-			name: "Lisa Taylor",
-			content: "liked your comment",
-			time: "5 h ago",
-			isRead: true,
-		},
-	]);
-
-	const displayedNotifications = notifications.slice(0, 5);
-	const hasMore = notifications.length > 5;
+	const displayedNotifications = Array.isArray(notifications)
+		? notifications
+		: [];
+	// removed: const hasMore = Array.isArray(notifications) && notifications.length > 5;
 
 	useEffect(() => {
 		const handleClickOutside = (event) => {
@@ -75,6 +27,18 @@ const Notification = ({ isOpen, onClose }) => {
 		};
 	}, [isOpen, onClose]);
 
+	const formatTime = (dateStr) => {
+		if (!dateStr) return "";
+		const diffMs = Date.now() - new Date(dateStr).getTime();
+		const mins = Math.floor(diffMs / 60000);
+		if (mins < 1) return "just now";
+		if (mins < 60) return `${mins} min ago`;
+		const hours = Math.floor(mins / 60);
+		if (hours < 24) return `${hours} h ago`;
+		const days = Math.floor(hours / 24);
+		return `${days} d ago`;
+	};
+
 	return (
 		<div
 			className="notif-dropdown"
@@ -83,34 +47,44 @@ const Notification = ({ isOpen, onClose }) => {
 		>
 			<div className="notif-header">
 				<h3>Notifications</h3>
-			</div>
-			
-			<div className="notif-list">
-				{displayedNotifications.map((notification) => (
-					<div 
-						key={notification.id} 
-						className={`notif-item ${!notification.isRead ? 'notif-item--unread' : ''}`}
-					>
-						<div className="notif-avatar">
-							{notification.avatar}
-						</div>
-						<div className="notif-content">
-							<div className="notif-text">
-								<span className="notif-name">{notification.name}</span>
-								<span className="notif-action">{notification.content}</span>
-							</div>
-							<div className="notif-time">{notification.time}</div>
-						</div>
-						{!notification.isRead && <div className="notif-unread-indicator"></div>}
-					</div>
-				))}
+				{/* {unread > 0 && <span className="notif-unread-badge">{unread}</span>} */}
 			</div>
 
-			{hasMore && (
-				<div className="notif-footer">
-					<button className="notif-see-more-btn">See more</button>
-				</div>
-			)}
+			<div className="notif-list">
+				{displayedNotifications.map((n) => {
+					const sender = n?.sender;
+					const avatarUrl = sender?.profilePicture;
+					const name = sender?.fullName || "Someone";
+					const actionText = n?.content || n?.title || "";
+					const timeText = formatTime(n?.createdAt);
+					const isUnread = n?.isRead === false;
+
+					return (
+						<div key={n.id} className={`notif-item ${isUnread ? "notif-item--unread" : ""}`}>
+							<div className="notif-avatar">
+								{avatarUrl ? (
+									<img src={avatarUrl} alt={name} className="notif-avatar-img" />
+								) : (
+									(name?.[0] || "?").toUpperCase()
+								)}
+							</div>
+							<div className="notif-content">
+								<div className="notif-text">
+									<span className="notif-name">{name}</span>
+									<span className="notif-action">{actionText}</span>
+								</div>
+								<div className="notif-time">{timeText}</div>
+							</div>
+							{isUnread && <div className="notif-unread-indicator"></div>}
+						</div>
+					);
+				})}
+				{displayedNotifications.length === 0 && (
+					<div className="notif-empty">No notifications</div>
+				)}
+			</div>
+
+			{/* removed "See more" footer */}
 		</div>
 	);
 };

@@ -2,6 +2,7 @@ import React, { useContext, useState } from "react";
 import { Search, Bell, Settings, LogOut, LogIn } from "lucide-react";
 import "./Navbar.css";
 import { UserContext } from "../../Context/UserProvider";
+import { useNotifications } from "../../Context/NotificationContext";
 import {
 	useHistory,
 	useLocation,
@@ -10,11 +11,13 @@ import { LogOutUser } from "../../services/userService";
 import { toast } from "react-toastify";
 import Notification from "../Notification/Notification";
 
+
 const Navbar = ({ title = "HomePage" }) => {
 	const [showUserMenu, setShowUserMenu] = useState(false);
 	const [showNotifications, setShowNotifications] = useState(false);
 	const [searchValue, setSearchValue] = useState("");
 	const { user, logoutContext } = useContext(UserContext);
+	const { notifications = [], unread = 0 } = useNotifications();
 	const history = useHistory();
 	const location = useLocation();
 	const handleNotificationToggle = () => {
@@ -88,7 +91,7 @@ const Navbar = ({ title = "HomePage" }) => {
 								onClick={handleNotificationToggle}
 							>
 								<Bell size={20} />
-								<span className="notification-badge">3</span>
+								<span className="notification-badge">{unread}</span>
 							</button>
 
 							{showNotifications && (

@@ -42,6 +42,7 @@ let initWebRoutes = (app) => {
 	router.post("/api/add-friend", socialController.HandleAddFriend);
 	router.get("/api/get-post-like", apiController.HandleGetLike);
 	router.post("/api/handle-like-post", apiController.HandleLikePost);
+	router.get("/api/get-notifications-by-user-id", apiController.HandleGetNotificationsByUserId);
 	router.get("/api/getAllDiscounts", apiController.HandleGetAllDiscount);
 	router.post("/api/update-discounts", apiController.HandleUpdateDiscounts);
 	router.post("/api/create-comment", apiController.HandleCreateComment);
