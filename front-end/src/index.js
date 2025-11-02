@@ -6,12 +6,15 @@ import reportWebVitals from "./reportWebVitals";
 import { store } from "./Redux/store";
 import { Provider } from "react-redux";
 import { UserProvider } from "./Context/UserProvider";
+import { NotificationProvider } from "./Context/NotificationContext";
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
 	<Provider store={store}>
 		<React.StrictMode>
 			<UserProvider>
+				<NotificationProvider>
 				<App />
+				</NotificationProvider>
 			</UserProvider>
 		</React.StrictMode>
 	</Provider>

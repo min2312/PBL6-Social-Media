@@ -208,7 +208,7 @@ const FriendList = () => {
 						{person.avatar ? (
 							<img src={person.avatar} alt={person.fullName} />
 						) : (
-							<div className="avatar-placeholder">
+							<div className="friend-avatar-placeholder">
 								{person.fullName.charAt(0).toUpperCase()}
 							</div>
 						)}
@@ -216,30 +216,30 @@ const FriendList = () => {
 					<div className="friend-details">
 						<h3 className="friend-name">{person.fullName}</h3>
 						{type === "request" && requestDate && (
-							<span className="request-date">Requested {requestDate}</span>
+							<span className="friend-request-date">Requested {requestDate}</span>
 						)}
 					</div>
 				</div>
 				<div className="friend-actions">
 					{type === "friend" ? (
 						<button
-							className="btn-secondary"
+							className="friend-btn friend-btn--secondary"
 							onClick={() => handleRemoveFriend(person.id)}
 						>
 							<UserX size={16} />
 							Remove
 						</button>
 					) : (
-						<div className="request-actions">
+						<div className="friend-request-actions">
 							<button
-								className="btn-primary"
+								className="friend-btn friend-btn--primary"
 								onClick={() => handleAcceptRequest(person.id)}
 							>
 								<UserCheck size={16} />
 								Accept
 							</button>
 							<button
-								className="btn-danger"
+								className="friend-btn friend-btn--danger"
 								onClick={() => handleDeclineRequest(person.id)}
 							>
 								<UserX size={16} />
@@ -254,7 +254,7 @@ const FriendList = () => {
 	if (!user || !user.isAuthenticated) {
 		return (
 			<div className="content-wrapper">
-				<div className="auth-required">
+				<div className="friend-auth-required">
 					<p>Please log in to view your friends</p>
 				</div>
 			</div>
@@ -269,15 +269,15 @@ const FriendList = () => {
 						<Users size={24} />
 						Friends
 					</h1>
-					<div className="tab-navigation">
+					<div className="friend-tab-navigation">
 						<button
-							className={`tab-btn ${activeTab === "friends" ? "active" : ""}`}
+							className={`friend-tab-btn ${activeTab === "friends" ? "friend-tab-btn--active" : ""}`}
 							onClick={() => setActiveTab("friends")}
 						>
 							All Friends ({friends.length})
 						</button>
 						<button
-							className={`tab-btn ${activeTab === "requests" ? "active" : ""}`}
+							className={`friend-tab-btn ${activeTab === "requests" ? "friend-tab-btn--active" : ""}`}
 							onClick={() => setActiveTab("requests")}
 						>
 							Friend Requests ({friendRequests.length})
@@ -287,13 +287,13 @@ const FriendList = () => {
 
 				<div className="friend-list-content">
 					{activeTab === "friends" ? (
-						<div className="friends-grid">
+						<div className="friend-grid">
 							{friends.length > 0 ? (
 								friends.map((friend) => (
 									<FriendCard key={friend.id} person={friend} type="friend" />
 								))
 							) : (
-								<div className="empty-state">
+								<div className="friend-empty-state">
 									<Users size={48} />
 									<h3>No friends yet</h3>
 									<p>Start connecting with people to see them here!</p>
@@ -301,7 +301,7 @@ const FriendList = () => {
 							)}
 						</div>
 					) : (
-						<div className="requests-grid">
+						<div className="friend-grid">
 							{friendRequests.length > 0 ? (
 								friendRequests.map((request) => (
 									<FriendCard
@@ -311,7 +311,7 @@ const FriendList = () => {
 									/>
 								))
 							) : (
-								<div className="empty-state">
+								<div className="friend-empty-state">
 									<UserPlus size={48} />
 									<h3>No friend requests</h3>
 									<p>You're all caught up with friend requests!</p>

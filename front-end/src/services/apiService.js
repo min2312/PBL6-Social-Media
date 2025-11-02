@@ -364,6 +364,14 @@ const HandleGetLikePost = (postId) => {
 		return response;
 	});
 };
+const GetNotificationsByUserId = (userId) => {
+	return axios
+		.get(`/api/get-notifications-by-user-id?userId=${userId}`)
+		.then((response) => response)
+		.catch((err) => {
+			console.log(err);
+		});
+};
 export {
 	HandleGetLikePost,
 	GetAllTable,
@@ -402,4 +410,5 @@ export {
 	DeleteDiscount,
 	CancelOrderDetail,
 	GetCancellationsByOrderId,
+	GetNotificationsByUserId,
 };

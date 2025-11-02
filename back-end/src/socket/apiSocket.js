@@ -1,7 +1,7 @@
 import { getIO } from "./socket";
 import db from "../models/index";
 import { ReservationTable } from "../service/apiService";
-import { response } from "express";
+import { GetNotificationsByUserId, GetNotificationUnreadCount } from "../service/apiService";
 const handleUpdateTable = async (data) => {
 	const io = getIO();
 
@@ -23,4 +23,26 @@ const handleUpdateTable = async (data) => {
 	}
 };
 
-export { handleUpdateTable };
+const handleNewNotification = async (userId) => {
+	const io = getIO();
+	if (!userId) {
+		console.warn("Invalid userId for notification:", userId);
+		return;
+	}
+	try {
+		const [fullList, unread] = await Promise.all([
+			GetNotificationsByUserId(userId),
+			GetNotificationUnreadCount(userId),
+		]);
+
+		// Client should have joined room `user_${userId}`
+		io.to(`user_${userId}`).emit("notificationUpdated", {
+			notifications: fullList,
+			unread,
+		});
+	} catch (err) {
+		console.warn("handleNewNotification failed:", err);
+	}
+};
+
+export { handleUpdateTable, handleNewNotification };

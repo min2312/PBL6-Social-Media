@@ -126,6 +126,10 @@
   justify-content: center;
 }
 
+.notification-container {
+  position: relative;
+}
+
 /* User Menu */
 .user-menu-container {
   position: relative;
@@ -276,6 +280,7 @@
     gap: 0.5rem;
   }
 }
+
 .dropdown-item.logout:hover {
   background-color: rgba(239, 68, 68, 0.1);
 }

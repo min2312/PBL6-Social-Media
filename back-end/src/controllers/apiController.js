@@ -635,6 +635,35 @@ let HandleGetCancellationsByOrderId = async (req, res) => {
 	});
 };
 
+let HandleGetNotificationsByUserId = async (req, res) => {
+	let userId = req.query.userId;
+	if (!userId) {
+		return res.status(200).json({
+			errCode: 1,
+			errMessage: "Missing required parameter",
+			notifications: [],
+			unread: 0,
+		});
+	}
+	try {
+		let notifications = await apiService.GetNotificationsByUserId(userId);
+		let unread = await apiService.GetNotificationUnreadCount(userId);
+		return res.status(200).json({
+			errCode: 0,
+			errMessage: "OK",
+			notifications: notifications,
+			unread: unread,
+		});
+	} catch (e) {
+		return res.status(500).json({
+			errCode: 1,
+			errMessage: "Error fetching notifications",
+			notifications: [],
+			unread: 0,
+		});
+	}
+};
+
 module.exports = {
 	HandleGetAllTable,
 	HandleCreateTable,
@@ -674,4 +703,5 @@ module.exports = {
 	handleCallBackZaloPay,
 	HandleCancelOrderDetail,
 	HandleGetCancellationsByOrderId,
+	HandleGetNotificationsByUserId,
 };

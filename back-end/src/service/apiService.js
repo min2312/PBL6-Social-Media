@@ -648,6 +648,27 @@ let CreateComment = (data) => {
 				postId: data.postId,
 				content: data.content,
 			});
+			// Create notification if commenter is not the post owner
+			try {
+				const postOwnerId = check.userId;
+				if (postOwnerId && Number(postOwnerId) !== Number(data.userId)) {
+					const sender = await db.User.findByPk(data.userId, {
+						attributes: ["fullName"],
+					});
+					await db.Notification.create({
+						receiverId: postOwnerId,
+						senderId: data.userId,
+						title: "New comment",
+						content: `${sender?.fullName || "Someone"} commented: ${String(data.content || "").slice(0, 100)}`,
+						url: `/post/${data.postId}`,
+						type: "COMMENT",
+						isRead: false,
+					});
+				}
+			} catch (notifyErr) {
+				console.warn("CreateComment notification failed:", notifyErr);
+			}
+
 			let findNewComment = await db.Comment.findOne({
 				where: { id: newComment.id },
 				include: [
@@ -1192,6 +1213,26 @@ let CreateLike = (data) => {
 				await db.Like.destroy({
 					where: { userId: data.userId, postId: data.postId },
 				});
+				// Remove like notification (if any)
+				try {
+					const post = await db.Post.findOne({
+						where: { id: data.postId },
+						attributes: ["userId"],
+					});
+					const postOwnerId = post?.userId;
+					if (postOwnerId && Number(postOwnerId) !== Number(data.userId)) {
+						await db.Notification.destroy({
+							where: {
+								receiverId: postOwnerId,
+								senderId: data.userId,
+								type: "LIKE",
+								url: `/post/${data.postId}`,
+							},
+						});
+					}
+				} catch (notifyErr) {
+					console.warn("Delete like notification failed:", notifyErr);
+				}
 				resolve({
 					errCode: 0,
 					errMessage: "Unliked the post successfully",
@@ -1201,6 +1242,29 @@ let CreateLike = (data) => {
 					userId: data.userId,
 					postId: data.postId,
 				});
+
+				// Create notification if liker is not the post owner
+				try {
+					const post = await db.Post.findOne({ where: { id: data.postId } });
+					const postOwnerId = post?.userId;
+					if (postOwnerId && Number(postOwnerId) !== Number(data.userId)) {
+						const sender = await db.User.findByPk(data.userId, {
+							attributes: ["fullName"],
+						});
+						await db.Notification.create({
+							receiverId: postOwnerId,
+							senderId: data.userId,
+							title: "New like",
+							content: `${sender?.fullName || "Someone"} liked your post`,
+							url: `/post/${data.postId}`,
+							type: "LIKE",
+							isRead: false,
+						});
+					}
+				} catch (notifyErr) {
+					console.warn("CreateLike notification failed:", notifyErr);
+				}
+
 				resolve({
 					errCode: 0,
 					errMessage: "Liked the post successfully",
@@ -1582,6 +1646,41 @@ let GetCancellationsByOrderId = (orderId) => {
 	});
 };
 
+let GetNotificationsByUserId = (userId) => {
+	return new Promise(async (resolve, reject) => {
+		try {
+			const notifications = await db.Notification.findAll({
+				where: { receiverId: userId },
+				include: [
+					{
+						model: db.User,
+						as: "sender",
+						attributes: ["id", "fullName", "profilePicture"],
+					},
+				],
+				order: [["createdAt", "DESC"]],
+			});
+			resolve(notifications);
+		} catch (e) {
+			reject(e);
+		}
+	});
+};
+
+// New: count unread notifications
+let GetNotificationUnreadCount = (userId) => {
+	return new Promise(async (resolve, reject) => {
+		try {
+			const count = await db.Notification.count({
+				where: { receiverId: userId, isRead: false },
+			});
+			resolve(count);
+		} catch (e) {
+			reject(e);
+		}
+	});
+};
+
 module.exports = {
 	GetAllTable,
 	GetAllOrder,
@@ -1623,4 +1722,6 @@ module.exports = {
 	DeleteDiscount,
 	CancelOrderDetail,
 	GetCancellationsByOrderId,
+	GetNotificationsByUserId,
+	GetNotificationUnreadCount,
 };
