@@ -62,6 +62,9 @@ const SearchResult = () => {
 	}
 
 	const handleDeletePost = (postToDelete) => {
+		if (socket) {
+			socket.emit("deletePost", postToDelete);
+		}
 		setSearchResultPosts((prev) =>
 			prev.filter((post) => post.id !== postToDelete.id)
 		);

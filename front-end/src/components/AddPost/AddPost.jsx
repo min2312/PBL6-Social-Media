@@ -3,7 +3,13 @@ import { X, ImagePlus, Trash2 } from "lucide-react";
 import "./AddPost.css";
 import { UserContext } from "../../Context/UserProvider";
 
-const AddPost = ({ isOpen, onClose, onSubmit }) => {
+const AddPost = ({
+	isOpen,
+	onClose,
+	onSubmit,
+	isLoading = false,
+	loadingText = "Posting...",
+}) => {
 	const [caption, setCaption] = useState("");
 	const [images, setImages] = useState([]);
 	const [isSubmitting, setIsSubmitting] = useState(false);
@@ -37,7 +43,7 @@ const AddPost = ({ isOpen, onClose, onSubmit }) => {
 
 	// Chuẩn hóa dữ liệu gửi lên cho đúng với bảng posts
 	const handleSubmit = async () => {
-		if (isSubmitting) return;
+		if (isSubmitting || isLoading) return;
 		if (caption.trim() || images.length > 0) {
 			setIsSubmitting(true);
 			try {
@@ -68,6 +74,7 @@ const AddPost = ({ isOpen, onClose, onSubmit }) => {
 
 	const remainingChars = maxLength - caption.length;
 	const canPost = (caption.trim() || images.length > 0) && remainingChars >= 0;
+	const currentlyLoading = isSubmitting || isLoading;
 
 	return (
 		<div className="modal-overlay" onClick={handleClose}>
@@ -157,9 +164,13 @@ const AddPost = ({ isOpen, onClose, onSubmit }) => {
 					<button
 						className="post-submit-btn"
 						onClick={handleSubmit}
-						disabled={!canPost || isSubmitting}
+						disabled={!canPost || currentlyLoading}
 					>
-						{isSubmitting ? "Posting..." : "Post"}
+						{currentlyLoading
+							? isLoading
+								? loadingText
+								: "Posting..."
+							: "Post"}
 					</button>
 				</div>
 			</div>
