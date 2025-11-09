@@ -372,6 +372,24 @@ const GetNotificationsByUserId = (userId) => {
 			console.log(err);
 		});
 };
+const UpdateComment = (data) => {
+	return axios
+		.post("/api/update-comment", data)
+		.then((response) => response)
+		.catch((err) => {
+			console.log(err);
+		});
+};
+
+const DeleteComment = (id) => {
+	return axios
+		.post("/api/delete-comment", { id })
+		.then((response) => response)
+		.catch((err) => {
+			console.log(err);
+		});
+};
+
 export {
 	HandleGetLikePost,
 	GetAllTable,
@@ -411,4 +429,6 @@ export {
 	CancelOrderDetail,
 	GetCancellationsByOrderId,
 	GetNotificationsByUserId,
+	UpdateComment,
+	DeleteComment,
 };

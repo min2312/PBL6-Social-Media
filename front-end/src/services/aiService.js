@@ -16,4 +16,16 @@ const checkNSFWContent = (formData) => {
 		});
 };
 
-export { checkNSFWContent };
+const checkToxicComment = (commentText) => {
+	return axios
+		.post("/ai/toxicity", { text: commentText })
+		.then((response) => {
+			return response;
+		})
+		.catch((err) => {
+			console.log("Toxic Comment Check Error:", err);
+			throw err;
+		});
+};
+
+export { checkNSFWContent, checkToxicComment };

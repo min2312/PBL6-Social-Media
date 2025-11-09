@@ -46,6 +46,8 @@ let initWebRoutes = (app) => {
 	router.get("/api/getAllDiscounts", apiController.HandleGetAllDiscount);
 	router.post("/api/update-discounts", apiController.HandleUpdateDiscounts);
 	router.post("/api/create-comment", apiController.HandleCreateComment);
+	router.post("/api/update-comment", apiController.HandleUpdateComment);
+	router.post("/api/delete-comment", apiController.HandleDeleteComment);
 	router.post("/api/delete-discount", apiController.HandleDeleteDiscount);
 	router.get("/api/getAllPost", apiController.HandleGetAllPost);
 	router.get("/api/getAllComment", apiController.HandleGetAllComment);
