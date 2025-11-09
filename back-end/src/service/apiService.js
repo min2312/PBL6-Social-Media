@@ -1681,6 +1681,103 @@ let GetNotificationUnreadCount = (userId) => {
 	});
 };
 
+let UpdateComment = (data) => {
+	return new Promise(async (resolve, reject) => {
+		try {
+			// data: { id, content, userId? }
+			if (!data?.id || typeof data.content !== "string") {
+				return resolve({
+					errCode: 1,
+					errMessage: "Missing required fields",
+				});
+			}
+			let comment = await db.Comment.findOne({
+				where: { id: data.id },
+			});
+			if (!comment) {
+				return resolve({
+					errCode: 1,
+					errMessage: "Comment not found",
+				});
+			}
+			// Optional: ownership check if userId provided
+			if (data.userId && Number(comment.userId) !== Number(data.userId)) {
+				return resolve({
+					errCode: 1,
+					errMessage: "Not authorized to edit this comment",
+				});
+			}
+
+			await comment.update({ content: data.content });
+
+			// Return updated comment with user info
+			const updated = await db.Comment.findOne({
+				where: { id: comment.id },
+				include: [
+					{
+						model: db.User,
+						attributes: ["id", "fullName", "profilePicture"],
+					},
+				],
+			});
+
+			return resolve({
+				errCode: 0,
+				errMessage: "Update comment successfully",
+				comment: updated,
+			});
+		} catch (e) {
+			console.log(e);
+			return reject({
+				errCode: 1,
+				errMessage: "Error updating comment",
+			});
+		}
+	});
+};
+
+let DeleteComment = (commentId, userId = null) => {
+	return new Promise(async (resolve, reject) => {
+		try {
+			if (!commentId) {
+				return resolve({
+					errCode: 1,
+					errMessage: "Missing comment id",
+				});
+			}
+			let comment = await db.Comment.findOne({
+				where: { id: commentId },
+			});
+			if (!comment) {
+				return resolve({
+					errCode: 1,
+					errMessage: "Comment not found",
+				});
+			}
+			// Optional: ownership check if userId provided
+			if (userId && Number(comment.userId) !== Number(userId)) {
+				return resolve({
+					errCode: 1,
+					errMessage: "Not authorized to delete this comment",
+				});
+			}
+
+			await comment.destroy();
+
+			return resolve({
+				errCode: 0,
+				errMessage: "Delete comment successfully",
+			});
+		} catch (e) {
+			console.log(e);
+			return reject({
+				errCode: 1,
+				errMessage: "Error deleting comment",
+			});
+		}
+	});
+};
+
 module.exports = {
 	GetAllTable,
 	GetAllOrder,
@@ -1724,4 +1821,6 @@ module.exports = {
 	GetCancellationsByOrderId,
 	GetNotificationsByUserId,
 	GetNotificationUnreadCount,
+	UpdateComment,
+	DeleteComment,
 };

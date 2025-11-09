@@ -2,6 +2,37 @@ import { or } from "sequelize";
 import apiService from "../service/apiService";
 const cloudinary = require("cloudinary").v2;
 
+let HandleUpdateDiscounts = async (req, res) => {
+	let data = req.body;
+	if (!data) {
+		return res.status(200).json({
+			errCode: 1,
+			errMessage: "Missing required parameter",
+		});
+	}
+	let result = await apiService.UpdateDiscounts(data);
+	return res.status(200).json({
+		errCode: result.errCode,
+		errMessage: result.errMessage,
+		discount: result.discount,
+	});
+};
+
+let HandleDeleteDiscount = async (req, res) => {
+	let id = req.body.id;
+	if (!id) {
+		return res.status(200).json({
+			errCode: 1,
+			errMessage: "Missing required parameter",
+		});
+	}
+	let result = await apiService.DeleteDiscount(id);
+	return res.status(200).json({
+		errCode: result.errCode,
+		errMessage: result.errMessage,
+	});
+};
+
 let HandleGetAllTable = async (req, res) => {
 	let id = req.query.id;
 	if (!id) {
@@ -531,35 +562,49 @@ let HandleCreateComment = async (req, res) => {
 	});
 };
 
-let HandleUpdateDiscounts = async (req, res) => {
-	let data = req.body;
-	if (!data) {
+let HandleUpdateComment = async (req, res) => {
+	const data = req.body;
+	if (!data || !data.id || typeof data.content !== "string") {
 		return res.status(200).json({
 			errCode: 1,
 			errMessage: "Missing required parameter",
 		});
 	}
-	let result = await apiService.UpdateDiscounts(data);
-	return res.status(200).json({
-		errCode: result.errCode,
-		errMessage: result.errMessage,
-		discount: result.discount,
-	});
+	try {
+		const result = await apiService.UpdateComment(data);
+		return res.status(200).json({
+			errCode: result.errCode,
+			errMessage: result.errMessage,
+			comment: result.comment,
+		});
+	} catch (e) {
+		return res.status(500).json({
+			errCode: 1,
+			errMessage: "Error updating comment",
+		});
+	}
 };
 
-let HandleDeleteDiscount = async (req, res) => {
-	let id = req.body.id;
+let HandleDeleteComment = async (req, res) => {
+	const { id, userId } = req.body || {};
 	if (!id) {
 		return res.status(200).json({
 			errCode: 1,
 			errMessage: "Missing required parameter",
 		});
 	}
-	let result = await apiService.DeleteDiscount(id);
-	return res.status(200).json({
-		errCode: result.errCode,
-		errMessage: result.errMessage,
-	});
+	try {
+		const result = await apiService.DeleteComment(id, userId);
+		return res.status(200).json({
+			errCode: result.errCode,
+			errMessage: result.errMessage,
+		});
+	} catch (e) {
+		return res.status(500).json({
+			errCode: 1,
+			errMessage: "Error deleting comment",
+		});
+	}
 };
 
 let handlePaymentZaloPay = async (req, res) => {
@@ -704,4 +749,6 @@ module.exports = {
 	HandleCancelOrderDetail,
 	HandleGetCancellationsByOrderId,
 	HandleGetNotificationsByUserId,
+	HandleUpdateComment,
+	HandleDeleteComment,
 };
