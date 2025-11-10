@@ -45,6 +45,16 @@
   color: #9ca3af;
 }
 
+.post-timestamp.clickable {
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.post-timestamp.clickable:hover {
+  color: #3b82f6;
+  text-decoration: underline;
+}
+
 .post-menu-wrapper {
   position: relative;
 }
@@ -132,6 +142,16 @@
   color: white;
   font-size: 4rem;
   opacity: 0.5;
+}
+
+.clickable-image {
+  cursor: pointer;
+  transition: transform 0.2s, filter 0.2s;
+}
+
+.clickable-image:hover {
+  transform: scale(1.02);
+  filter: brightness(1.1);
 }
 
 /* Post Actions Styles */

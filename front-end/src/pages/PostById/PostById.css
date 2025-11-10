@@ -1,0 +1,57 @@
+.post-by-id-container {
+	max-width: 800px;
+	margin: 0 auto;
+	padding: 20px;
+	min-height: 100vh;
+}
+
+.post-by-id-header {
+	margin-bottom: 20px;
+}
+
+.back-btn {
+	background: #f3f4f6;
+	border: none;
+	padding: 8px 16px;
+	border-radius: 6px;
+	cursor: pointer;
+	font-size: 14px;
+	color: #374151;
+	transition: background-color 0.2s;
+}
+
+.back-btn:hover {
+	background: #e5e7eb;
+}
+
+.post-by-id-content {
+	width: 100%;
+}
+
+.loading, .error {
+	text-align: center;
+	padding: 40px 20px;
+}
+
+.loading {
+	color: #6b7280;
+}
+
+.error {
+	color: #dc2626;
+}
+
+.error p {
+	margin-bottom: 16px;
+	font-size: 16px;
+}
+
+@media (max-width: 768px) {
+	.post-by-id-container {
+		padding: 10px;
+	}
+	
+	.post-by-id-header {
+		margin-bottom: 15px;
+	}
+}
