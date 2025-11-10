@@ -13,6 +13,7 @@ import useSmartRelativeTime from "../../hook/useSmartRelativeTime";
 import EditPost from "../EditPost/EditPost";
 import DeletePost from "../DeletePost/DeletePost";
 import { UserContext } from "../../Context/UserProvider";
+import { useHistory } from "react-router-dom";
 import {
 	CreateComment,
 	CreateLike,
@@ -24,6 +25,7 @@ import {
 import { checkToxicComment } from "../../services/aiService";
 import { toast } from "react-toastify";
 import { io } from "socket.io-client";
+import ImageViewer from "../ImageViewer/ImageViewer";
 
 const Post = ({ post, onUpdatePost, onDeletePost }) => {
 	const [isLiked, setIsLiked] = useState(false);
@@ -42,8 +44,11 @@ const Post = ({ post, onUpdatePost, onDeletePost }) => {
 	const [editedCommentText, setEditedCommentText] = useState("");
 	const [showDeleteCommentModal, setShowDeleteCommentModal] = useState(false);
 	const [commentToDelete, setCommentToDelete] = useState(null);
+	const [isImageViewerOpen, setIsImageViewerOpen] = useState(false);
+	const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 	const dropdownRef = useRef(null);
 	const { user } = useContext(UserContext);
+	const history = useHistory();
 	const formattedTime = useSmartRelativeTime(
 		post.timestamp,
 		post.formatTimeAgo
@@ -290,6 +295,15 @@ const Post = ({ post, onUpdatePost, onDeletePost }) => {
 		setCommentToDelete(null);
 	};
 
+	const handleTimestampClick = () => {
+		history.push(`/post/${post.id}`);
+	};
+
+	const handleImageClick = (index) => {
+		setSelectedImageIndex(index);
+		setIsImageViewerOpen(true);
+	};
+
 	return (
 		<div className="post-card">
 			{/* Post Header */}
@@ -310,7 +324,7 @@ const Post = ({ post, onUpdatePost, onDeletePost }) => {
 					</div>
 				</div>
 				<div className="post-meta">
-					<span className="post-timestamp">{formattedTime}</span>
+					<span className="post-timestamp clickable" onClick={handleTimestampClick}>{formattedTime}</span>
 					{user?.account?.id === post.User?.id && (
 						<div className="post-menu-wrapper" ref={dropdownRef}>
 							<button className="post-menu-btn" onClick={toggleDropdown}>
@@ -343,7 +357,11 @@ const Post = ({ post, onUpdatePost, onDeletePost }) => {
 			{post.images && post.images.length > 0 && (
 				<div className="post-images">
 					{post.images.map((image, index) => (
-						<div key={index} className="post-image">
+						<div 
+							key={index} 
+							className="post-image clickable-image"
+							onClick={() => handleImageClick(index)}
+						>
 							<img
 								src={image}
 								alt="post"
@@ -574,6 +592,14 @@ const Post = ({ post, onUpdatePost, onDeletePost }) => {
 					</div>
 				</div>
 			)}
+
+			{/* Image Viewer Modal */}
+			<ImageViewer
+				isOpen={isImageViewerOpen}
+				onClose={() => setIsImageViewerOpen(false)}
+				images={post.images || []}
+				initialIndex={selectedImageIndex}
+			/>
 		</div>
 	);
 };
