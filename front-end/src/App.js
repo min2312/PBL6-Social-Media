@@ -6,7 +6,6 @@ import Footer from "./components/Footer/Footer";
 import Sidebar from "./components/Sidebar/Sibebar";
 import { Oval } from "react-loader-spinner";
 import { UserContext } from "./Context/UserProvider";
-
 import { BrowserRouter as Router } from "react-router-dom";
 import { Bounce, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -52,7 +51,7 @@ function App() {
 				pauseOnFocusLoss
 				draggable
 				pauseOnHover
-				theme="light"
+				theme="dark"
 				transition={Bounce}
 			/>
 		</Fragment>

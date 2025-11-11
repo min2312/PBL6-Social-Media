@@ -314,7 +314,7 @@ const Post = ({ post, onUpdatePost, onDeletePost }) => {
 	};
 
 	return (
-		<div className="post-card">
+		<div className="post-card" data-post-id={post.id}>
 			{/* Post Header */}
 			<div className="post-header">
 				<div className="post-user-info">
