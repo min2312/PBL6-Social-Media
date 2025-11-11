@@ -43,7 +43,7 @@ let CreateComment = (data) => {
 					await db.Notification.create({
 						receiverId: postOwnerId,
 						senderId: data.userId,
-						title: "New comment",
+						title: `New comment ${newComment.id}`,
 						content: `${sender?.fullName || "Someone"} commented: ${String(data.content || "").slice(0, 100)}`,
 						url: `/post/${data.postId}`,
 						type: "COMMENT",
@@ -534,6 +534,28 @@ let DeleteComment = (commentId, userId = null) => {
 				});
 			}
 
+			// Remove specific comment notification by title with comment ID
+			try {
+				const post = await db.Post.findOne({
+					where: { id: comment.postId },
+					attributes: ["userId"],
+				});
+				const postOwnerId = post?.userId;
+				if (postOwnerId && Number(postOwnerId) !== Number(comment.userId)) {
+					await db.Notification.destroy({
+						where: {
+							receiverId: postOwnerId,
+							senderId: comment.userId,
+							type: "COMMENT",
+							title: `New comment ${commentId}`,
+							url: `/post/${comment.postId}`,
+						},
+					});
+				}
+			} catch (notifyErr) {
+				console.warn("Delete comment notification failed:", notifyErr);
+			}
+
 			await comment.destroy();
 
 			return resolve({
@@ -648,6 +670,44 @@ let GetPostByPostId = (postId) => {
 	});
 };
 
+let UpdateNotificationReadStatus = (notificationId, isRead = true) => {
+	return new Promise(async (resolve, reject) => {
+		try {
+			if (!notificationId) {
+				return resolve({
+					errCode: 1,
+					errMessage: "Missing notification ID",
+				});
+			}
+
+			let notification = await db.Notification.findOne({
+				where: { id: notificationId },
+			});
+
+			if (!notification) {
+				return resolve({
+					errCode: 1,
+					errMessage: "Notification not found",
+				});
+			}
+
+			await notification.update({ isRead: isRead });
+
+			return resolve({
+				errCode: 0,
+				errMessage: "Update notification read status successfully",
+				notification: notification,
+			});
+		} catch (e) {
+			console.log(e);
+			return reject({
+				errCode: 1,
+				errMessage: "Error updating notification read status",
+			});
+		}
+	});
+};
+
 module.exports = {
 	GetAllPost,
 	GetComment,
@@ -662,4 +722,5 @@ module.exports = {
 	UpdateComment,
 	DeleteComment,
 	GetPostByPostId,
+	UpdateNotificationReadStatus,
 };

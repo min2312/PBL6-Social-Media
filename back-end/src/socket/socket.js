@@ -30,10 +30,14 @@ const initSocket = (server) => {
 			io.emit("friendRequestReceived", { data, toUserId, friendshipStatus });
 		});
 
+		socket.on("notification", ({ userId }) => {
+			io.emit("notificationReceived", { userId });
+		});
+		
 		socket.on("joinRoom", (roomId) => {
-      socket.join(roomId);
-      console.log(`User joined room ${roomId}`);
-    });
+      	socket.join(roomId);
+      	console.log(`User joined room ${roomId}`);
+    	});
 
 		socket.on("disconnect", (reason) => {
 			console.log(`Client disconnected: ${socket.id}, Reason: ${reason}`);

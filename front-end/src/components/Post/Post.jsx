@@ -135,6 +135,9 @@ const Post = ({ post, onUpdatePost, onDeletePost }) => {
 			setIsLiked(!isLiked);
 			const newLikes = isLiked ? post.likes - 1 : post.likes + 1;
 			onUpdatePost({ ...post, likes: newLikes });
+			if (socket) {
+            socket.emit("notification", { userId: post.userId });
+        }
 		}
 	};
 	const handleAddComment = async () => {
@@ -168,6 +171,9 @@ const Post = ({ post, onUpdatePost, onDeletePost }) => {
 		setComments((prev) => [...prev, newComment]);
 		setCommentText("");
 		onUpdatePost({ ...post, comments: [newComment] });
+		if (socket) {
+            socket.emit("notification", { userId: post.userId });
+        }
 		setIsCheckingToxic(false);
 	};
 	const HandleGetComment = async () => {
@@ -203,6 +209,9 @@ const Post = ({ post, onUpdatePost, onDeletePost }) => {
 		if (response && response.errCode === 0) {
 			onDeletePost(postToDelete);
 			toast.success("Post deleted successfully!");
+			if (socket) {
+            socket.emit("notification", { userId: post.userId });
+        }
 		} else {
 			toast.error(response.errMessage || "Failed to delete post.");
 		}

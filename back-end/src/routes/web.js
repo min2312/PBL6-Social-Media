@@ -33,6 +33,7 @@ let initWebRoutes = (app) => {
 	router.get("/api/get-post-like", apiController.HandleGetLike);
 	router.post("/api/handle-like-post", apiController.HandleLikePost);
 	router.get("/api/get-notifications-by-user-id", apiController.HandleGetNotificationsByUserId);
+	router.post("/api/update-notification-read-status", apiController.HandleUpdateNotificationReadStatus);
 	router.post("/api/create-comment", apiController.HandleCreateComment);
 	router.post("/api/update-comment", apiController.HandleUpdateComment);
 	router.post("/api/delete-comment", apiController.HandleDeleteComment);

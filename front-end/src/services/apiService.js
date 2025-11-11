@@ -107,6 +107,14 @@ const GetPostByPostId = (postId) => {
 			console.log(err);
 		});
 };
+const UpdateNotificationReadStatus = (id, isRead = true) => {
+	return axios
+		.post("/api/update-notification-read-status", { id, isRead })
+		.then((response) => response)
+		.catch((err) => {
+			console.log(err);
+		});
+};
 
 export {
 	HandleGetLikePost,
@@ -121,4 +129,5 @@ export {
 	UpdateComment,
 	DeleteComment,
 	GetPostByPostId,
+	UpdateNotificationReadStatus,
 };

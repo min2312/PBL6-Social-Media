@@ -271,6 +271,29 @@ let HandleGetPostByPostId = async (req, res) => {
 	}
 };
 
+let HandleUpdateNotificationReadStatus = async (req, res) => {
+	const { id, isRead } = req.body;
+	if (!id) {
+		return res.status(200).json({
+			errCode: 1,
+			errMessage: "Missing required parameter",
+		});
+	}
+	try {
+		const result = await apiService.UpdateNotificationReadStatus(id, isRead);
+		return res.status(200).json({
+			errCode: result.errCode,
+			errMessage: result.errMessage,
+			notification: result.notification,
+		});
+	} catch (e) {
+		return res.status(500).json({
+			errCode: 1,
+			errMessage: "Error updating notification read status",
+		});
+	}
+};
+
 module.exports = {
 	HandleCreatePost,
 	HandleLikePost,
@@ -284,4 +307,5 @@ module.exports = {
 	HandleUpdateComment,
 	HandleDeleteComment,
 	HandleGetPostByPostId,
+	HandleUpdateNotificationReadStatus,
 };
