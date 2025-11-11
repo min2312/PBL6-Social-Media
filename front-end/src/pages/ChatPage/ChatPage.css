@@ -131,6 +131,46 @@
   padding: 10px 0;
 }
 
+/* Loading, Error, and Empty States */
+.loading-state, .error-state, .empty-friends-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+  color: #9ca3af;
+  margin: 20px 15px;
+  border-radius: 15px;
+  background: rgba(31, 41, 55, 0.3);
+  border: 1px solid rgba(75, 85, 99, 0.2);
+}
+
+.loading-state p {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.error-state p {
+  margin: 0;
+  font-size: 16px;
+  color: #f87171;
+}
+
+.empty-friends-state p:first-child {
+  margin: 0 0 8px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.empty-friends-state p:last-child {
+  margin: 0;
+  font-size: 14px;
+  color: #9ca3af;
+}
+
 .conversation-item {
   padding: 18px 25px;
   margin: 8px 15px;

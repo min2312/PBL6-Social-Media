@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useContext } from 'react';
 import { Search, MessageCircle, MoreHorizontal, Phone, Video, Info, Send, Smile, Paperclip } from 'lucide-react';
 import { UserContext } from '../../Context/UserProvider';
+import { getAllFriendships } from '../../services/socialService';
 import './ChatPage.css';
 
 const ChatPage = () => {
@@ -8,128 +9,66 @@ const ChatPage = () => {
   const [activeConversation, setActiveConversation] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [newMessage, setNewMessage] = useState('');
+  const [conversations, setConversations] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const messagesEndRef = useRef(null);
   const messagesContainerRef = useRef(null);
 
-  // Mock conversations data
-  const [conversations] = useState([
-    {
-      id: 1,
-      name: 'John Doe',
-      username: '@johndoe',
-      avatar: 'https://ui-avatars.com/api/?name=John+Doe&background=4f46e5&color=fff',
-      lastMessage: 'Hey! How are you doing today?',
-      lastMessageTime: '2m',
-      userId: 2
-    },
-    {
-      id: 2,
-      name: 'Jane Smith',
-      username: '@janesmith',
-      avatar: 'https://ui-avatars.com/api/?name=Jane+Smith&background=10b981&color=fff',
-      lastMessage: 'Thanks for the help yesterday!',
-      lastMessageTime: '1h',
-      userId: 3
-    },
-    {
-      id: 3,
-      name: 'Mike Johnson',
-      username: '@mikej',
-      avatar: 'https://ui-avatars.com/api/?name=Mike+Johnson&background=f59e0b&color=fff',
-      lastMessage: 'Let\'s meet up tomorrow',
-      lastMessageTime: '3h',
-      userId: 4
-    },
-    {
-      id: 4,
-      name: 'Sarah Wilson',
-      username: '@sarahw',
-      avatar: 'https://ui-avatars.com/api/?name=Sarah+Wilson&background=ef4444&color=fff',
-      lastMessage: 'Great work on the project!',
-      lastMessageTime: '1d',
-      userId: 5
-    },
-    {
-      id: 5,
-      name: 'Alex Brown',
-      username: '@alexb',
-      avatar: 'https://ui-avatars.com/api/?name=Alex+Brown&background=8b5cf6&color=fff',
-      lastMessage: 'Can you review this document?',
-      lastMessageTime: '2d',
-      userId: 6
-    },
-    {
-      id: 6,
-      name: 'Emma Davis',
-      username: '@emmad',
-      avatar: 'https://ui-avatars.com/api/?name=Emma+Davis&background=06b6d4&color=fff',
-      lastMessage: 'See you at the meeting!',
-      lastMessageTime: '3d',
-      userId: 7
-    }
-  ]);
+  // Load friends from API
+  useEffect(() => {
+    const loadFriends = async () => {
+      if (!user?.account?.id) {
+        console.log('No user account id found:', user);
+        return;
+      }
+      
+      console.log('Loading friends for user ID:', user.account.id);
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await getAllFriendships(user.account.id);
+        console.log('API Response:', response);
+        
+        if (response && response.errCode === 0) {
+          const friends = response.friendships || [];
+          console.log('Friends data:', friends);
+          
+          // Chỉ lấy những người bạn đã kết bạn thành công
+          const acceptedFriends = friends.filter(friend => friend.friendshipStatus === 'friends');
+          console.log('Accepted friends:', acceptedFriends);
+          
+          // Chuyển đổi format dữ liệu phù hợp với component
+          const formattedConversations = acceptedFriends.map((friend, index) => ({
+            id: friend.id,
+            name: friend.fullName || 'Unknown User',
+            username: `@${friend.email?.split('@')[0] || 'unknown'}`,
+            avatar: friend.profilePicture || `https://ui-avatars.com/api/?name=${encodeURIComponent(friend.fullName || 'User')}&background=4f46e5&color=fff`,
+            lastMessage: 'Start a conversation...',
+            lastMessageTime: 'now',
+            userId: friend.id,
+            isOnline: false // Có thể thêm logic kiểm tra online status sau
+          }));
+          
+          console.log('Formatted conversations:', formattedConversations);
+          setConversations(formattedConversations);
+        } else {
+          console.log('API returned error or no data:', response);
+          setError(response?.errMessage || 'Failed to load friends');
+        }
+      } catch (err) {
+        console.error('Error loading friends:', err);
+        setError('Error loading friends: ' + err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  // Mock messages data
-  const [messagesData] = useState({
-    1: [
-      {
-        id: 1,
-        text: 'Hey! How are you doing today?',
-        time: '10:30 AM',
-        isOwn: false,
-        sender: 'John Doe',
-        avatar: 'https://ui-avatars.com/api/?name=John+Doe&background=4f46e5&color=fff',
-        timestamp: new Date(Date.now() - 2 * 60 * 1000)
-      },
-      {
-        id: 2,
-        text: 'I\'m doing great! Just finished working on the new project.',
-        time: '10:32 AM',
-        isOwn: true,
-        sender: user?.account?.fullName || 'You',
-        timestamp: new Date(Date.now() - 1 * 60 * 1000)
-      },
-      {
-        id: 3,
-        text: 'That sounds awesome! What kind of project is it?',
-        time: '10:33 AM',
-        isOwn: false,
-        sender: 'John Doe',
-        avatar: 'https://ui-avatars.com/api/?name=John+Doe&background=4f46e5&color=fff',
-        timestamp: new Date(Date.now() - 30 * 1000)
-      }
-    ],
-    2: [
-      {
-        id: 1,
-        text: 'Thanks for the help yesterday!',
-        time: '9:15 AM',
-        isOwn: false,
-        sender: 'Jane Smith',
-        avatar: 'https://ui-avatars.com/api/?name=Jane+Smith&background=10b981&color=fff',
-        timestamp: new Date(Date.now() - 60 * 60 * 1000)
-      },
-      {
-        id: 2,
-        text: 'No problem! Happy to help anytime.',
-        time: '9:20 AM',
-        isOwn: true,
-        sender: user?.account?.fullName || 'You',
-        timestamp: new Date(Date.now() - 55 * 60 * 1000)
-      }
-    ],
-    3: [
-      {
-        id: 1,
-        text: 'Let\'s meet up tomorrow',
-        time: '7:45 AM',
-        isOwn: false,
-        sender: 'Mike Johnson',
-        avatar: 'https://ui-avatars.com/api/?name=Mike+Johnson&background=f59e0b&color=fff',
-        timestamp: new Date(Date.now() - 3 * 60 * 60 * 1000)
-      }
-    ]
-  });
+    loadFriends();
+  }, [user?.account?.id]);
+
+  // Mock messages data (sẽ được thay thế bằng API thực trong tương lai)
+  const [messagesData] = useState({});
 
   const [messages, setMessages] = useState([]);
 
@@ -242,26 +181,41 @@ const ChatPage = () => {
 
         {/* Conversations List */}
         <div className="conversations-list">
-          {filteredConversations.map((conversation) => (
-            <div
-              key={conversation.id}
-              className={`conversation-item ${activeConversation?.id === conversation.id ? 'active' : ''}`}
-              onClick={() => handleSelectConversation(conversation)}
-            >
-              <div className="conversation-info">
-                <div className="conversation-avatar">
-                  <img src={conversation.avatar} alt={conversation.name} />
-                </div>
-                <div className="conversation-details">
-                  <div className="conversation-header">
-                    <h4 className="conversation-name">{conversation.name}</h4>
-                    <span className="conversation-time">{conversation.lastMessageTime}</span>
+          {loading ? (
+            <div className="loading-state">
+              <p>Loading friends...</p>
+            </div>
+          ) : error ? (
+            <div className="error-state">
+              <p>Error: {error}</p>
+            </div>
+          ) : filteredConversations.length === 0 ? (
+            <div className="empty-friends-state">
+              <p>No friends found</p>
+              <p>Add some friends to start chatting!</p>
+            </div>
+          ) : (
+            filteredConversations.map((conversation) => (
+              <div
+                key={conversation.id}
+                className={`conversation-item ${activeConversation?.id === conversation.id ? 'active' : ''}`}
+                onClick={() => handleSelectConversation(conversation)}
+              >
+                <div className="conversation-info">
+                  <div className="conversation-avatar">
+                    <img src={conversation.avatar} alt={conversation.name} />
                   </div>
-                  <p className="conversation-preview">{conversation.lastMessage}</p>
+                  <div className="conversation-details">
+                    <div className="conversation-header">
+                      <h4 className="conversation-name">{conversation.name}</h4>
+                      <span className="conversation-time">{conversation.lastMessageTime}</span>
+                    </div>
+                    <p className="conversation-preview">{conversation.lastMessage}</p>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </div>
 
