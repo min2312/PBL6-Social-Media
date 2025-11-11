@@ -16,7 +16,7 @@ const Sidebar = () => {
 			path: "/messenger",
 		},
 		{ id: "friends", icon: Users, label: "Friends", path: "/friends" },
-		{ id: "favorites", icon: Heart, label: "Favorites", path: "/favorites" },
+		// { id: "favorites", icon: Heart, label: "Favorites", path: "/favorites" },
 		{ id: "settings", icon: Settings, label: "Settings", path: "/settings" },
 	];
 
