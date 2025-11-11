@@ -175,6 +175,7 @@ let initWebRoutes = (app) => {
 		"/api/get-cancellations-by-order-id",
 		apiController.HandleGetCancellationsByOrderId
 	);
+	router.get("/api/messages", socialController.handleGetMessages);
 
 	return app.use("/", router);
 };
