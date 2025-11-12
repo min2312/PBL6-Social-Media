@@ -13,14 +13,19 @@ import useSmartRelativeTime from "../../hook/useSmartRelativeTime";
 import EditPost from "../EditPost/EditPost";
 import DeletePost from "../DeletePost/DeletePost";
 import { UserContext } from "../../Context/UserProvider";
+import { useHistory } from "react-router-dom";
 import {
 	CreateComment,
 	CreateLike,
 	DeletePostConfirm,
 	GetAllComment,
+	UpdateComment,
+	DeleteComment
 } from "../../services/apiService";
+import { checkToxicComment } from "../../services/aiService";
 import { toast } from "react-toastify";
 import { io } from "socket.io-client";
+import ImageViewer from "../ImageViewer/ImageViewer";
 
 const Post = ({ post, onUpdatePost, onDeletePost }) => {
 	const [isLiked, setIsLiked] = useState(false);
@@ -31,8 +36,19 @@ const Post = ({ post, onUpdatePost, onDeletePost }) => {
 	const [showDropdown, setShowDropdown] = useState(false);
 	const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 	const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+	const [isCheckingToxic, setIsCheckingToxic] = useState(false);
+	const [showToxicModal, setShowToxicModal] = useState(false);
+	const [toxicResult, setToxicResult] = useState(null);
+	const [activeCommentMenu, setActiveCommentMenu] = useState(null);
+	const [editingCommentId, setEditingCommentId] = useState(null);
+	const [editedCommentText, setEditedCommentText] = useState("");
+	const [showDeleteCommentModal, setShowDeleteCommentModal] = useState(false);
+	const [commentToDelete, setCommentToDelete] = useState(null);
+	const [isImageViewerOpen, setIsImageViewerOpen] = useState(false);
+	const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 	const dropdownRef = useRef(null);
 	const { user } = useContext(UserContext);
+	const history = useHistory();
 	const formattedTime = useSmartRelativeTime(
 		post.timestamp,
 		post.formatTimeAgo
@@ -93,6 +109,10 @@ const Post = ({ post, onUpdatePost, onDeletePost }) => {
 			if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
 				setShowDropdown(false);
 			}
+			// Close comment menus if clicking outside any menu
+			if (!event.target.closest(".comment-menu-wrapper")) {
+				setActiveCommentMenu(null);
+			}
 		};
 
 		document.addEventListener("mousedown", handleClickOutside);
@@ -114,25 +134,46 @@ const Post = ({ post, onUpdatePost, onDeletePost }) => {
 			setIsLiked(!isLiked);
 			const newLikes = isLiked ? post.likes - 1 : post.likes + 1;
 			onUpdatePost({ ...post, likes: newLikes });
+			if (socket) {
+            socket.emit("notification", { userId: post.userId });
+        }
 		}
 	};
 	const handleAddComment = async () => {
-		if (commentText.trim()) {
-			const cmt = {
-				userId: user.account.id,
-				content: commentText,
-				postId: post.id,
-			};
-			let response = await CreateComment(cmt);
-			const commentTimestamp = post.formatTimeAgo(response.comment.updatedAt);
-			const newComment = {
-				...response.comment,
-				timestamp: commentTimestamp,
-			};
-			setComments((prev) => [...prev, newComment]);
-			setCommentText("");
-			onUpdatePost({ ...post, comments: [newComment] });
+		if (!commentText.trim()) return;
+		setIsCheckingToxic(true);
+		let toxicRes;
+		try {
+			toxicRes = await checkToxicComment(commentText);
+		} catch (e) {
+			console.error("Toxic check error:", e);
 		}
+		const isToxic =
+			(toxicRes?.label && toxicRes.label !== 0);
+		if (isToxic) {
+			setToxicResult(toxicRes);
+			setShowToxicModal(true);
+			setIsCheckingToxic(false);
+			return;
+		}
+		const cmt = {
+			userId: user.account.id,
+			content: commentText,
+			postId: post.id,
+		};
+		let response = await CreateComment(cmt);
+		const commentTimestamp = post.formatTimeAgo(response.comment.updatedAt);
+		const newComment = {
+			...response.comment,
+			timestamp: commentTimestamp,
+		};
+		setComments((prev) => [...prev, newComment]);
+		setCommentText("");
+		onUpdatePost({ ...post, comments: [newComment] });
+		if (socket) {
+            socket.emit("notification", { userId: post.userId });
+        }
+		setIsCheckingToxic(false);
 	};
 	const HandleGetComment = async () => {
 		let resCmt = await GetAllComment(post.id);
@@ -167,6 +208,9 @@ const Post = ({ post, onUpdatePost, onDeletePost }) => {
 		if (response && response.errCode === 0) {
 			onDeletePost(postToDelete);
 			toast.success("Post deleted successfully!");
+			if (socket) {
+            socket.emit("notification", { userId: post.userId });
+        }
 		} else {
 			toast.error(response.errMessage || "Failed to delete post.");
 		}
@@ -175,6 +219,97 @@ const Post = ({ post, onUpdatePost, onDeletePost }) => {
 	const toggleDropdown = (e) => {
 		e.stopPropagation();
 		setShowDropdown(!showDropdown);
+	};
+
+	const handleSaveEditedComment = async () => {
+		if (!editedCommentText.trim()) return;
+		setIsCheckingToxic(true);
+		let toxicRes;
+		try {
+			toxicRes = await checkToxicComment(editedCommentText);
+		} catch (e) {
+			console.error("Toxic check error (edit):", e);
+		}
+		const isToxic = (toxicRes?.label && toxicRes.label !== 0);
+		if (isToxic) {
+			setToxicResult(toxicRes);
+			setShowToxicModal(true);
+			setIsCheckingToxic(false);
+			return;
+		}
+		try {
+			const res = await UpdateComment({
+				id: editingCommentId,
+				content: editedCommentText,
+				userId: user.account.id,
+			});
+			if (res && res.errCode === 0) {
+				const updated = res.comment;
+				const commentTimestamp = post.formatTimeAgo(updated.updatedAt);
+				setComments(prev =>
+					prev.map(c =>
+						c.id === editingCommentId
+							? { ...updated, timestamp: commentTimestamp }
+							: c
+					)
+				);
+				toast.success("Comment updated");
+			} else {
+				toast.error(res?.errMessage || "Update failed");
+			}
+		} catch (e) {
+			console.error("Update comment error:", e);
+			toast.error("Update failed");
+		} finally {
+			setEditingCommentId(null);
+			setEditedCommentText("");
+			setIsCheckingToxic(false);
+		}
+	};
+
+	const handleCancelEdit = () => {
+		setEditingCommentId(null);
+		setEditedCommentText("");
+	};
+
+	// Open delete confirmation modal instead of deleting immediately
+	const handleDeleteComment = (comment) => {
+		setActiveCommentMenu(null);
+		setCommentToDelete(comment);
+		setShowDeleteCommentModal(true);
+	};
+
+	const confirmDeleteComment = async () => {
+		if (!commentToDelete) return;
+		try {
+			const res = await DeleteComment(commentToDelete.id);
+			if (res && res.errCode === 0) {
+				setComments((prev) => prev.filter((c) => c.id !== commentToDelete.id));
+				toast.success("Comment deleted");
+			} else {
+				toast.error(res?.errMessage || "Delete failed");
+			}
+		} catch (e) {
+			console.error("Delete comment error:", e);
+			toast.error("Delete failed");
+		} finally {
+			setShowDeleteCommentModal(false);
+			setCommentToDelete(null);
+		}
+	};
+
+	const cancelDeleteComment = () => {
+		setShowDeleteCommentModal(false);
+		setCommentToDelete(null);
+	};
+
+	const handleTimestampClick = () => {
+		history.push(`/post/${post.id}`);
+	};
+
+	const handleImageClick = (index) => {
+		setSelectedImageIndex(index);
+		setIsImageViewerOpen(true);
 	};
 
 	return (
@@ -197,7 +332,7 @@ const Post = ({ post, onUpdatePost, onDeletePost }) => {
 					</div>
 				</div>
 				<div className="post-meta">
-					<span className="post-timestamp">{formattedTime}</span>
+					<span className="post-timestamp clickable" onClick={handleTimestampClick}>{formattedTime}</span>
 					{user?.account?.id === post.User?.id && (
 						<div className="post-menu-wrapper" ref={dropdownRef}>
 							<button className="post-menu-btn" onClick={toggleDropdown}>
@@ -230,7 +365,11 @@ const Post = ({ post, onUpdatePost, onDeletePost }) => {
 			{post.images && post.images.length > 0 && (
 				<div className="post-images">
 					{post.images.map((image, index) => (
-						<div key={index} className="post-image">
+						<div 
+							key={index} 
+							className="post-image clickable-image"
+							onClick={() => handleImageClick(index)}
+						>
 							<img
 								src={image}
 								alt="post"
@@ -291,8 +430,75 @@ const Post = ({ post, onUpdatePost, onDeletePost }) => {
 										<span className="comment-timestamp">
 											{formattedPostTime || comment.timestamp}
 										</span>
+										{user?.account?.id === comment.User?.id && (
+											<div className="comment-menu-wrapper">
+												<button
+													className="comment-menu-btn"
+													onClick={(e) => {
+														e.stopPropagation();
+														setActiveCommentMenu(
+															activeCommentMenu === comment.id ? null : comment.id
+														);
+													}}
+												>
+													<MoreHorizontal size={14} />
+												</button>
+												{activeCommentMenu === comment.id && (
+													<div className="comment-dropdown-menu">
+														{editingCommentId !== comment.id && (
+															<button
+																className="dropdown-item"
+																onClick={() => {
+																	setEditingCommentId(comment.id);
+																	setEditedCommentText(comment.content);
+																	setActiveCommentMenu(null);
+																}}
+															>
+																<span>Edit Comment</span>
+															</button>
+														)}
+														<button
+															className="dropdown-item delete-item"
+															onClick={() => handleDeleteComment(comment)}
+														>
+															<span>Delete Comment</span>
+														</button>
+													</div>
+												)}
+											</div>
+										)}
 									</div>
-									<p className="comment-text">{comment.content}</p>
+									{editingCommentId === comment.id ? (
+										<div className="comment-edit-area">
+											<input
+												className="comment-edit-input"
+												value={editedCommentText}
+												onChange={(e) => setEditedCommentText(e.target.value)}
+												onKeyDown={(e) => {
+													if (e.key === "Enter") handleSaveEditedComment();
+													if (e.key === "Escape") handleCancelEdit();
+												}}
+												autoFocus
+											/>
+											<div className="comment-edit-actions">
+												<button
+													className="comment-edit-btn save"
+													onClick={handleSaveEditedComment}
+													disabled={!editedCommentText.trim()}
+												>
+													Save
+												</button>
+												<button
+													className="comment-edit-btn cancel"
+													onClick={handleCancelEdit}
+												>
+													Cancel
+												</button>
+											</div>
+										</div>
+									) : (
+										<p className="comment-text">{comment.content}</p>
+									)}
 								</div>
 							</div>
 						</div>
@@ -336,6 +542,71 @@ const Post = ({ post, onUpdatePost, onDeletePost }) => {
 				onClose={() => setIsDeleteModalOpen(false)}
 				onConfirm={handleConfirmDelete}
 				post={post}
+			/>
+
+			{isCheckingToxic && (
+				<div className="post-modal-overlay">
+					<div className="post-modal">
+						<p>Checking comment for toxicity...</p>
+					</div>
+				</div>
+			)}
+
+			{showToxicModal && (
+				<div className="post-modal-overlay">
+					<div className="post-modal post-modal-danger">
+						<p>This comment appears to contain toxic content. Please edit it.</p>
+						{toxicResult?.details && (
+							<small style={{ color: "#ef4444" }}>
+								{JSON.stringify(toxicResult.details)}
+							</small>
+						)}
+						<div className="post-modal-actions">
+							<button
+								className="post-modal-btn"
+								onClick={() => {
+									setShowToxicModal(false);
+									setToxicResult(null);
+								}}
+							>
+								Close
+							</button>
+						</div>
+					</div>
+				</div>
+			)}
+
+			{/* Delete Comment Confirm Modal */}
+			{showDeleteCommentModal && (
+				<div className="post-modal-overlay">
+					<div className="post-modal">
+						<p>Are you sure you want to delete this comment?</p>
+						{commentToDelete?.content && (
+							<small style={{ color: "#9ca3af", display: "block", marginTop: 8 }}>
+								{commentToDelete.content}
+							</small>
+						)}
+						<div className="post-modal-actions">
+							<button className="post-modal-btn" onClick={cancelDeleteComment}>
+								Cancel
+							</button>
+							<button
+								className="post-modal-btn danger"
+								onClick={confirmDeleteComment}
+							>
+								Delete
+							</button>
+						</div>
+					</div>
+				</div>
+			)}
+
+			{/* Image Viewer Modal */}
+			<ImageViewer
+				isOpen={isImageViewerOpen}
+				onClose={() => setIsImageViewerOpen(false)}
+				images={post.images || []}
+				initialIndex={selectedImageIndex}
 			/>
 		</div>
 	);

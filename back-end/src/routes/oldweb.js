@@ -19,6 +19,16 @@ let initWebRoutes = (app) => {
 	router.post("/api/admin_login", adminController.HandleLoginAdmin);
 	router.post("/api/logout", userController.HandleLogOut);
 	router.post("/api/logoutAdmin", adminController.HandleLogOut);
+	router.get("/api/get-all-table", apiController.HandleGetAllTable);
+	router.get("/api/get-all-order", apiController.HandleGetAllOrder);
+	router.get("/api/get-invoice", apiController.HandleGetInvoice);
+	router.get("/api/get-all-invoice", apiController.HandleGetAllInvoice);
+	router.get("/api/get-all-orderDetail", apiController.HandleGetAllOrderDetail);
+	router.get("/api/get-all-reservation", apiController.HandleGetAllReservation);
+	router.get(
+		"/api/get-all-orderPending",
+		apiController.HandleGetAllOrderPending
+	);
 	router.get("/api/search", socialController.HandleSearch);
 	router.get(
 		"/api/get-all-friendships",
@@ -33,19 +43,30 @@ let initWebRoutes = (app) => {
 	router.get("/api/get-post-like", apiController.HandleGetLike);
 	router.post("/api/handle-like-post", apiController.HandleLikePost);
 	router.get("/api/get-notifications-by-user-id", apiController.HandleGetNotificationsByUserId);
-	router.post("/api/update-notification-read-status", apiController.HandleUpdateNotificationReadStatus);
+	router.get("/api/getAllDiscounts", apiController.HandleGetAllDiscount);
+	router.post("/api/update-discounts", apiController.HandleUpdateDiscounts);
 	router.post("/api/create-comment", apiController.HandleCreateComment);
 	router.post("/api/update-comment", apiController.HandleUpdateComment);
 	router.post("/api/delete-comment", apiController.HandleDeleteComment);
+	router.post("/api/delete-discount", apiController.HandleDeleteDiscount);
 	router.get("/api/getAllPost", apiController.HandleGetAllPost);
-	router.get("/api/get-post-by-id", apiController.HandleGetPostByPostId);
 	router.get("/api/getAllComment", apiController.HandleGetAllComment);
 	router.get("/api/account", userController.getUserAccount);
 	router.get("/api/accountAdmin", adminController.getAdminAccount);
 	router.get("/api/get-all-user", userController.HandleGetAllUser);
 	router.put("/api/edit-user", userController.HandleEditUser);
 	router.post("/api/create-new-user", userController.HandleCreateNewUser);
-
+	router.post("/api/create-new-order", apiController.HandleCreateNewOrder);
+	router.post("/api/order-status", apiController.HandleUpdateOrder);
+	router.post("/api/create-invoice", apiController.HandleCreateInvoice);
+	router.post(
+		"/api/update-order-status",
+		apiController.HandleUpdateOrderDetail
+	);
+	router.post(
+		"/api/create-new-orderDetail",
+		apiController.HandleCreateOrderDetail
+	);
 	router.post(
 		"/api/create-new-post",
 		uploadCloud.array("image"),
@@ -57,11 +78,24 @@ let initWebRoutes = (app) => {
 		apiController.HandleEditPost
 	);
 	router.post("/api/delete-post", apiController.HandleDeletePost);
-
-
+	router.post(
+		"/api/create-new-customer",
+		apiController.HandleCreateNewCustomer
+	);
+	router.post("/api/delete-customer", apiController.HandleDeleteCustomer);
+	router.get("/api/get-all-customer", apiController.HandleGetAllCustomer);
+	router.post("/api/edit-customer", apiController.HandleEditCustomer);
+	router.post("/api/check-customer", apiController.HandleCheckCustomer);
+	router.post("/api/update-customer", apiController.HandleUpdateCustomer);
+	router.post("/api/update-discount", apiController.HandleUpdateDiscount);
+	router.post("/api/create-new-table", apiController.HandleCreateTable);
+	router.post("/api/update-table", apiController.HandleUpdateTable);
+	router.post("/api/delete-table", apiController.HandleDeleteTable);
 	router.delete("/api/delete-user", userController.HandleDeleteUser);
 	// router.post("/payment", apiController.HandlePaymentMoMo);
-
+	router.post("/payment/ZaloPay", apiController.handlePaymentZaloPay);
+	router.post("/payment/CheckZaloPay", apiController.handleCheckZaloPay);
+	router.post("/callback", apiController.handleCallBackZaloPay);
 
 	//ADMIN
 	router.get("/api/admin/get-all-users", adminController.HandleGetAllUsers);
@@ -143,7 +177,6 @@ let initWebRoutes = (app) => {
 		"/api/get-cancellations-by-order-id",
 		apiController.HandleGetCancellationsByOrderId
 	);
-	router.get("/api/messages", socialController.handleGetMessages);
 
 	return app.use("/", router);
 };

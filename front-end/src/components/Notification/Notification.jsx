@@ -1,16 +1,50 @@
-import React, { useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useContext } from "react";
+import { useHistory } from "react-router-dom";
 import "./Notification.css";
 import { useNotifications } from "../../Context/NotificationContext";
+import { UpdateNotificationReadStatus } from "../../services/apiService";
+import { UserContext } from "../../Context/UserProvider";
+import { io } from "socket.io-client";
 
 const Notification = ({ isOpen, onClose }) => {
 	const dropdownRef = useRef(null);
+	const history = useHistory();
+	const [socket, setSocket] = useState(null);
+	const { user } = useContext(UserContext);
 	const { notifications = [], unread = 0 } = useNotifications();
 
 	const displayedNotifications = Array.isArray(notifications)
 		? notifications
 		: [];
-	// removed: const hasMore = Array.isArray(notifications) && notifications.length > 5;
 
+	useEffect(() => {
+		if (!user || !user.token) {
+			return;
+		}
+
+		const newSocket = io(`${process.env.REACT_APP_API_URL}`, {
+			extraHeaders: {
+				Authorization: `Bearer ${user.token}`,
+			},
+		});
+
+		newSocket.on("connect", () => {});
+
+
+		newSocket.on("connect_error", (err) => {
+			console.error("Connection error:", err.message);
+		});
+
+		newSocket.on("disconnect", (reason) => {
+			console.warn("WebSocket disconnected:", reason);
+		});
+
+		setSocket(newSocket);
+
+		return () => {
+			newSocket.disconnect();
+		};
+	}, [user]);
 	useEffect(() => {
 		const handleClickOutside = (event) => {
 			if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -39,6 +73,26 @@ const Notification = ({ isOpen, onClose }) => {
 		return `${days} d ago`;
 	};
 
+	const handleNotificationClick = async (notification) => {
+		// Mark notification as read if it's unread
+		if (notification?.isRead === false) {
+			try {
+				await UpdateNotificationReadStatus(notification.id, true);
+				if (socket) {
+            	socket.emit("notification", { userId: notification.receiverId });
+        }
+			} catch (error) {
+				console.warn("Failed to mark notification as read:", error);
+			}
+			
+		}
+
+		if (notification?.url) {
+			history.push(notification.url);
+			onClose(); // Close the notification dropdown after navigation
+		}
+	};
+
 	return (
 		<div
 			className="notif-dropdown"
@@ -60,7 +114,11 @@ const Notification = ({ isOpen, onClose }) => {
 					const isUnread = n?.isRead === false;
 
 					return (
-						<div key={n.id} className={`notif-item ${isUnread ? "notif-item--unread" : ""}`}>
+						<div
+							key={n.id}
+							className={`notif-item ${isUnread ? "notif-item--unread" : ""} ${n?.url ? "notif-item--clickable" : ""}`}
+							onClick={() => handleNotificationClick(n)}
+						>
 							<div className="notif-avatar">
 								{avatarUrl ? (
 									<img src={avatarUrl} alt={name} className="notif-avatar-img" />

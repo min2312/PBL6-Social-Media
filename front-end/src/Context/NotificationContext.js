@@ -45,18 +45,15 @@ export const NotificationProvider = ({ children }) => {
     fetchData();
 
     // Initialize socket with token auth
-    socketRef.current = io("http://localhost:8081", {
-      transports: ["websocket"],
-      auth: { token: user.token },
-    });
+    const socket = io(`${process.env.REACT_APP_API_URL}`, {
+          extraHeaders: {
+            Authorization: `Bearer ${user.token}`,
+          },
+        });
 
-    const socket = socketRef.current;
 
     // Join user-specific room on connect
-    socket.on("connect", () => {
-      const roomId = `user_${user.account.id}`;
-      socket.emit("joinRoom", roomId);
-    });
+    socket.on("connect", () => {});
 
     // Listen for notifications updates { notifications, unread }
     const onNotificationUpdated = (payload) => {
@@ -68,12 +65,14 @@ export const NotificationProvider = ({ children }) => {
         setUnread(payload.unread);
       }
     };
-    socket.on("notificationUpdated", onNotificationUpdated);
+    socket.on("notificationReceived", (data) => {
+  // Fix: check data.userId thay vì userId
+  if (data?.userId !== user?.account?.id) return;
+  fetchData();
+});
 
     return () => {
-      socket.off("notificationUpdated", onNotificationUpdated);
       socket.disconnect();
-      socketRef.current = null;
     };
   }, [user?.account?.id, user?.token]);
 

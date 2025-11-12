@@ -11,6 +11,7 @@ import Admin from "../pages/Admin/Admin";
 import Settings from "../pages/Settings/Settings";
 import SearchResult from "../pages/SearchResult/SearchResult";
 import FriendList from "../pages/FriendList/FriendList";
+import PostById from "../pages/PostById/PostById";
 
 // import PrivateRoutesRole from "./PrivateRoutesRole";
 import PrivateRoutes from "./PrivateRoutes";
@@ -53,6 +54,7 @@ const ClientRoute = () => {
 				<Route path="/admin" component={Admin} />
 				<PrivateRoutes path="/settings" component={Settings} />
 				<PrivateRoutes path="/search" component={SearchResult} />
+				<PrivateRoutes path="/post/:postId" component={PostById} />
 				<Route path="*">404 Not Found</Route>
 			</Switch>
 		</div>

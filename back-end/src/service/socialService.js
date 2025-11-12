@@ -231,6 +231,25 @@ let AddFriend = (userId, friendId) => {
 				friendId: friendId,
 				status: "pending",
 			});
+
+			// Create friend request notification
+			try {
+				const sender = await db.User.findByPk(userId, {
+					attributes: ["fullName"],
+				});
+				await db.Notification.create({
+					receiverId: friendId,
+					senderId: userId,
+					title: "New friend request",
+					content: `${sender?.fullName || "Someone"} sent you a friend request`,
+					url: `/profile/${userId}`,
+					type: "FRIEND_REQUEST",
+					isRead: false,
+				});
+			} catch (notifyErr) {
+				console.warn("AddFriend notification failed:", notifyErr);
+			}
+
 			resolve({
 				errCode: 0,
 				errMessage: "Friend request sent successfully.",
