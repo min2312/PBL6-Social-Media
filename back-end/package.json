@@ -3,7 +3,12 @@
 	"version": "1.0.0",
 	"main": "server.js",
 	"scripts": {
-		"test": "echo \"Error: no test specified\" && exit 1",
+		"test": "jest",
+		"test:report": "jest --reporters=default --reporters=jest-html-reporter",
+		"test:cases": "SET CASE_LOG=1&& SET SHOW_IO=0&& jest --runInBand --reporters=default --reporters=jest-html-reporter",
+		"test:logs": "SET SHOW_IO=1&& jest --runInBand",
+		"test:logs:save": "SET SHOW_IO=1&& jest --runInBand > test-report/terminal.log 2>&1",
+		"logs:csv": "node scripts/parse_jest_logs_to_csv.js test-report/terminal.log test-report/terminal.csv",
 		"start": "nodemon --exec ./node_modules/.bin/babel-node src/server.js"
 	},
 	"author": "MINH",
@@ -40,6 +45,9 @@
 		"@babel/core": "^7.12.10",
 		"@babel/node": "^7.12.10",
 		"@babel/preset-env": "^7.12.10",
+		"babel-jest": "^29.7.0",
+		"jest": "^29.7.0",
+		"jest-html-reporter": "^3.10.2",
 		"nodemon": "^2.0.7"
 	}
 }
