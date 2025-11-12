@@ -32,11 +32,23 @@ const initSocket = (server) => {
 				`Received message from ${socket.user.id} to ${recipientId}:`,
 				message
 			);
-			await saveMessage(socket.user.id, recipientId, message);
-			io.to(recipientId.toString()).emit("receiveMessage", {
-				senderId: socket.user.id,
-				...message,
-			});
+			const result = await saveMessage(socket.user.id, recipientId, message);
+			
+			if (result.errCode === 0) {
+				// Emit to recipient with the saved message data including real ID
+				io.to(recipientId.toString()).emit("receiveMessage", {
+					senderId: socket.user.id,
+					messageId: result.message.id,
+					...message,
+				});
+				
+				// Send acknowledgment back to sender with real message ID
+				socket.emit("messageSaved", {
+					tempId: message.tempId,
+					realId: result.message.id,
+					message: result.message,
+				});
+			}
 		});
 
 		socket.on("updatePost", (updatedPost) => {
@@ -62,6 +74,15 @@ const initSocket = (server) => {
 
 		socket.on("disconnect", (reason) => {
 			console.log(`Client disconnected: ${socket.id}, Reason: ${reason}`);
+		});
+		
+		socket.on("editMessage", ({ messageId, newContent, recipientId }) => {
+			console.log(`Message ${messageId} edited by ${socket.user.id}, notifying ${recipientId}`);
+			io.to(recipientId.toString()).emit("messageEdited", {
+				messageId,
+				newContent,
+				senderId: socket.user.id,
+			});
 		});
 	});
 };

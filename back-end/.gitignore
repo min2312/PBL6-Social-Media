@@ -5,6 +5,11 @@
 
 .env
 .babelrc
+__tests__
+testUtils
+jest.config.cjs
+jest.setup.cjs
+jesthtmlreporter.config.json
 
 # undo
 #  npx sequelize-cli db:migrate:undo --name migrations-shares.js

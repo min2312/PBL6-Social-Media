@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useContext } from 'react';
-import { Search, MessageCircle, MoreHorizontal, Phone, Video, Info, Send, Smile, Paperclip } from 'lucide-react';
+import { Search, MessageCircle, MoreHorizontal, Phone, Video, Info, Send, Smile, Paperclip, Edit2, Check, X } from 'lucide-react';
 import { UserContext } from '../../Context/UserProvider';
-import { getAllFriendships, getMessages } from '../../services/socialService';
+import { getAllFriendships, getMessages, editMessage } from '../../services/socialService';
 import './ChatPage.css';
 import { io } from 'socket.io-client';
 
@@ -16,6 +16,8 @@ const ChatPage = () => {
   const messagesEndRef = useRef(null);
   const messagesContainerRef = useRef(null);
   const [socket, setSocket] = useState(null);
+  const [editingMessageId, setEditingMessageId] = useState(null);
+  const [editingText, setEditingText] = useState('');
 
   useEffect(() => {
 		if (!user || !user.token) {
@@ -35,21 +37,67 @@ const ChatPage = () => {
 		});
 
 		newSocket.on("receiveMessage", (message) => {
+			const receivedMessage = {
+				id: message.messageId || Date.now(),
+				text: message.text,
+				time: new Date().toLocaleTimeString([], {
+					hour: "2-digit",
+					minute: "2-digit",
+				}),
+				isOwn: false,
+				sender: activeConversation?.name,
+				timestamp: new Date(),
+				avatar: activeConversation?.avatar,
+			};
+			
+			// Update messages if the conversation is active
 			if (activeConversation && message.senderId === activeConversation.userId) {
-				const receivedMessage = {
-					id: Date.now(),
-					text: message.text,
-					time: new Date().toLocaleTimeString([], {
-						hour: "2-digit",
-						minute: "2-digit",
-					}),
-					isOwn: false,
-					sender: activeConversation.name,
-					timestamp: new Date(),
-					avatar: activeConversation.avatar,
-				};
 				setMessages((prev) => [...prev, receivedMessage]);
 			}
+			
+			// Update conversation preview
+			setConversations((prev) => 
+				prev.map((conv) => 
+					conv.userId === message.senderId
+						? {
+								...conv,
+								lastMessage: message.text,
+								lastMessageTime: 'now',
+							}
+						: conv
+				)
+			);
+		});
+
+		// Listen for message saved confirmation with real ID
+		newSocket.on("messageSaved", ({ tempId, realId, message }) => {
+			console.log('Message saved with real ID:', realId, 'replacing temp ID:', tempId);
+			setMessages((prev) =>
+				prev.map((msg) =>
+					msg.id === tempId
+						? { ...msg, id: realId }
+						: msg
+				)
+			);
+		});
+
+		newSocket.on("messageEdited", (data) => {
+			setMessages((prev) =>
+				prev.map((msg) =>
+					msg.id === data.messageId
+						? { ...msg, text: data.newContent, isEdited: true }
+						: msg
+				)
+			);
+			
+			// Update conversation preview if needed
+			setConversations((prev) =>
+				prev.map((conv) =>
+					conv.userId === data.senderId
+						? { ...conv, lastMessage: data.newContent }
+						: conv
+				)
+			);
 		});
 
 		newSocket.on("connect_error", (err) => {
@@ -83,18 +131,36 @@ const ChatPage = () => {
           // Chỉ lấy những người bạn đã kết bạn thành công
           const acceptedFriends = friends.filter(friend => friend.friendshipStatus === 'friends');
           
-          // Chuyển đổi format dữ liệu phù hợp với component
-          const formattedConversations = acceptedFriends.map((friend, index) => ({
-            id: friend.id,
-            name: friend.fullName || 'Unknown User',
-            username: `@${friend.email?.split('@')[0] || 'unknown'}`,
-            avatar: friend.profilePicture || `https://ui-avatars.com/api/?name=${encodeURIComponent(friend.fullName || 'User')}&background=4f46e5&color=fff`,
-            lastMessage: 'Start a conversation...',
-            lastMessageTime: 'now',
-            userId: friend.id,
-            isOnline: false
-          }));
+          // Chuyển đổi format dữ liệu phù hợp với component và lấy tin nhắn mới nhất
+          const formattedConversationsPromises = acceptedFriends.map(async (friend) => {
+            let lastMessage = 'Start a conversation...';
+            let lastMessageTime = 'now';
+            
+            // Fetch latest message for this friend
+            try {
+              const messagesResponse = await getMessages(user.account.id, friend.id);
+              if (messagesResponse && messagesResponse.errCode === 0 && messagesResponse.messages.length > 0) {
+                const latestMsg = messagesResponse.messages[messagesResponse.messages.length - 1];
+                lastMessage = latestMsg.content;
+                lastMessageTime = formatTime(new Date(latestMsg.createdAt));
+              }
+            } catch (err) {
+              console.error(`Error loading messages for friend ${friend.id}:`, err);
+            }
+            
+            return {
+              id: friend.id,
+              name: friend.fullName || 'Unknown User',
+              username: `@${friend.email?.split('@')[0] || 'unknown'}`,
+              avatar: friend.profilePicture || `https://ui-avatars.com/api/?name=${encodeURIComponent(friend.fullName || 'User')}&background=4f46e5&color=fff`,
+              lastMessage,
+              lastMessageTime,
+              userId: friend.id,
+              isOnline: false
+            };
+          });
           
+          const formattedConversations = await Promise.all(formattedConversationsPromises);
           setConversations(formattedConversations);
         } else {
           setError(response?.errMessage || 'Failed to load friends');
@@ -152,6 +218,7 @@ const ChatPage = () => {
               sender: msg.User?.fullName || 'Unknown',
               timestamp: new Date(msg.createdAt),
               avatar: msg.User?.profilePicture || activeConversation.avatar,
+              isEdited: msg.isEdited || false,
             }));
             setMessages(formattedMessages);
             setTimeout(() => {
@@ -175,8 +242,9 @@ const ChatPage = () => {
 		e.preventDefault();
 		
 		if (newMessage.trim() && activeConversation && socket) {
+			const tempId = `temp-${Date.now()}`;
 			const message = {
-				id: Date.now(),
+				id: tempId,
 				text: newMessage.trim(),
 				time: new Date().toLocaleTimeString([], {
 					hour: "2-digit",
@@ -191,10 +259,25 @@ const ChatPage = () => {
 				recipientId: activeConversation.userId,
 				message: {
 					text: newMessage.trim(),
+					tempId: tempId,
 				},
 			});
 
 			setMessages((prev) => [...prev, message]);
+			
+			// Update conversation preview
+			setConversations((prev) =>
+				prev.map((conv) =>
+					conv.userId === activeConversation.userId
+						? {
+								...conv,
+								lastMessage: newMessage.trim(),
+								lastMessageTime: 'now',
+							}
+						: conv
+				)
+			);
+			
 			setNewMessage("");
 		}
 	};
@@ -220,6 +303,114 @@ const ChatPage = () => {
     if (diffInMinutes < 60) return `${diffInMinutes}m`;
     if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h`;
     return `${Math.floor(diffInMinutes / 1440)}d`;
+  };
+
+  const formatDateDivider = (date) => {
+    const messageDate = new Date(date);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    // Reset time to compare only dates
+    messageDate.setHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0);
+    yesterday.setHours(0, 0, 0, 0);
+    
+    if (messageDate.getTime() === today.getTime()) {
+      return 'Today';
+    } else if (messageDate.getTime() === yesterday.getTime()) {
+      return 'Yesterday';
+    } else {
+      // Format as "Monday, January 1, 2025"
+      return messageDate.toLocaleDateString('en-US', { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      });
+    }
+  };
+
+  const shouldShowDateDivider = (currentMessage, previousMessage) => {
+    if (!previousMessage) return true;
+    
+    const currentDate = new Date(currentMessage.timestamp);
+    const previousDate = new Date(previousMessage.timestamp);
+    
+    currentDate.setHours(0, 0, 0, 0);
+    previousDate.setHours(0, 0, 0, 0);
+    
+    return currentDate.getTime() !== previousDate.getTime();
+  };
+
+  const handleEditMessage = async (messageId) => {
+    if (!editingText.trim()) {
+      console.log('Edit message: empty text, canceling');
+      cancelEditing();
+      return;
+    }
+    
+    console.log('Editing message:', messageId, 'New content:', editingText.trim());
+    
+    try {
+      const response = await editMessage(messageId, editingText.trim(), user.account.id);
+      
+      console.log('Edit message response:', response);
+      
+      if (response && response.errCode === 0) {
+        // Update local message state
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === messageId
+              ? { ...msg, text: editingText.trim(), isEdited: true }
+              : msg
+          )
+        );
+        
+        // Emit socket event to update for other user
+        if (socket && socket.connected) {
+          console.log('Emitting editMessage socket event to recipient:', activeConversation.userId);
+          socket.emit('editMessage', {
+            messageId,
+            newContent: editingText.trim(),
+            recipientId: activeConversation.userId,
+          });
+        } else {
+          console.warn('Socket not connected, cannot emit editMessage event');
+        }
+        
+        // Update conversation preview if it's the latest message
+        const messageIndex = messages.findIndex(m => m.id === messageId);
+        if (messageIndex === messages.length - 1) {
+          setConversations((prev) =>
+            prev.map((conv) =>
+              conv.userId === activeConversation.userId
+                ? { ...conv, lastMessage: editingText.trim() }
+                : conv
+            )
+          );
+        }
+        
+        setEditingMessageId(null);
+        setEditingText('');
+      } else {
+        console.error('Edit failed:', response?.errMessage);
+        alert(response?.errMessage || 'Failed to edit message');
+      }
+    } catch (error) {
+      console.error('Error editing message:', error);
+      alert('Failed to edit message. Please try again.');
+    }
+  };
+
+  const startEditingMessage = (message) => {
+    setEditingMessageId(message.id);
+    setEditingText(message.text);
+  };
+
+  const cancelEditing = () => {
+    setEditingMessageId(null);
+    setEditingText('');
   };
 
   if (!user || !user.isAuthenticated) {
@@ -338,21 +529,82 @@ const ChatPage = () => {
               className="messages-container" 
               ref={messagesContainerRef}
             >
-              {messages.map((message) => (
-                <div
-                  key={message.id}
-                  className={`message-group ${message.isOwn ? 'sent' : 'received'}`}
-                >
-                  {!message.isOwn && (
-                    <div className="message-avatar">
-                      <img src={message.avatar} alt={message.sender} />
+              {messages.map((message, index) => (
+                <React.Fragment key={message.id}>
+                  {shouldShowDateDivider(message, messages[index - 1]) && (
+                    <div className="date-divider">
+                      <span className="date-divider-text">
+                        {formatDateDivider(message.timestamp)}
+                      </span>
                     </div>
                   )}
-                  <div className={`message-bubble ${message.isOwn ? 'sent' : 'received'}`}>
-                    <p className="message-text">{message.text}</p>
-                    <span className="message-time">{message.time}</span>
+                  <div
+                    className={`message-group ${message.isOwn ? 'sent' : 'received'}`}
+                  >
+                    {!message.isOwn && (
+                      <div className="message-avatar">
+                        <img src={message.avatar} alt={message.sender} />
+                      </div>
+                    )}
+                    <div className={`message-bubble ${message.isOwn ? 'sent' : 'received'}`}>
+                      {editingMessageId === message.id ? (
+                        <div className="message-edit-container">
+                          <input
+                            type="text"
+                            className="message-edit-input"
+                            value={editingText}
+                            onChange={(e) => setEditingText(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                handleEditMessage(message.id);
+                              } else if (e.key === 'Escape') {
+                                e.preventDefault();
+                                cancelEditing();
+                              }
+                            }}
+                            autoFocus
+                          />
+                          <div className="message-edit-actions">
+                            <button
+                              className="edit-action-btn confirm"
+                              onClick={() => handleEditMessage(message.id)}
+                              title="Save"
+                            >
+                              <Check size={14} />
+                            </button>
+                            <button
+                              className="edit-action-btn cancel"
+                              onClick={cancelEditing}
+                              title="Cancel"
+                            >
+                              <X size={14} />
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          <p className="message-text">
+                            {message.text}
+                            {message.isEdited && <span className="edited-indicator"> (edited)</span>}
+                          </p>
+                          <div className="message-footer">
+                            <span className="message-time">{message.time}</span>
+                            {message.isOwn && (
+                              <button
+                                className="edit-message-btn"
+                                onClick={() => startEditingMessage(message)}
+                                title="Edit message"
+                              >
+                                <Edit2 size={12} />
+                              </button>
+                            )}
+                          </div>
+                        </>
+                      )}
+                    </div>
                   </div>
-                </div>
+                </React.Fragment>
               ))}
               <div ref={messagesEndRef} />
             </div>
