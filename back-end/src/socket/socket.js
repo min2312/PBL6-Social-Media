@@ -1,6 +1,7 @@
 import { Server } from "socket.io";
 import { handleUpdateTable } from "./apiSocket.js";
 import { verifySocketToken } from "../middleware/JWT_Action.js";
+import { saveMessage } from "../service/socialService.js";
 let io;
 
 const initSocket = (server) => {
@@ -17,6 +18,26 @@ const initSocket = (server) => {
 
 	io.on("connection", (socket) => {
 		console.log("Client connected:", socket.id, "User:", socket.user);
+
+		// Join a room based on user ID
+		if (socket.user && socket.user.id) {
+			socket.join(socket.user.id.toString());
+			console.log(
+				`User ${socket.user.id} with socket ID ${socket.id} joined room ${socket.user.id}`
+			);
+		}
+
+		socket.on("sendMessage", async ({ recipientId, message }) => {
+			console.log(
+				`Received message from ${socket.user.id} to ${recipientId}:`,
+				message
+			);
+			await saveMessage(socket.user.id, recipientId, message);
+			io.to(recipientId.toString()).emit("receiveMessage", {
+				senderId: socket.user.id,
+				...message,
+			});
+		});
 
 		socket.on("updatePost", (updatedPost) => {
 			io.emit("postUpdated", updatedPost);
@@ -37,7 +58,7 @@ const initSocket = (server) => {
 		socket.on("joinRoom", (roomId) => {
       	socket.join(roomId);
       	console.log(`User joined room ${roomId}`);
-    	});
+    });
 
 		socket.on("disconnect", (reason) => {
 			console.log(`Client disconnected: ${socket.id}, Reason: ${reason}`);

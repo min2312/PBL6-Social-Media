@@ -97,7 +97,6 @@ const Post = ({ post, onUpdatePost, onDeletePost }) => {
 		newSocket.on("disconnect", (reason) => {
 			console.warn("WebSocket disconnected:", reason);
 		});
-
 		setSocket(newSocket);
 
 		return () => {
