@@ -70,7 +70,7 @@ const initSocket = (server) => {
 		socket.on("joinRoom", (roomId) => {
       	socket.join(roomId);
       	console.log(`User joined room ${roomId}`);
-    	});
+    });
 
 		socket.on("disconnect", (reason) => {
 			console.log(`Client disconnected: ${socket.id}, Reason: ${reason}`);
