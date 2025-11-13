@@ -467,6 +467,139 @@
   display: block;
 }
 
+/* Message Footer with Edit Button */
+.message-footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.edit-message-btn {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  opacity: 0;
+}
+
+.message-bubble:hover .edit-message-btn {
+  opacity: 1;
+}
+
+.edit-message-btn:hover {
+  color: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.edited-indicator {
+  font-size: 0.75rem;
+  opacity: 0.6;
+  font-style: italic;
+  margin-left: 4px;
+}
+
+/* Message Edit Container */
+.message-edit-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.message-edit-input {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  padding: 8px 12px;
+  color: #fff;
+  font-size: 0.95rem;
+  outline: none;
+  width: 100%;
+}
+
+.message-edit-input:focus {
+  border-color: #4f46e5;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.message-edit-actions {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.edit-action-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  font-size: 0.85rem;
+}
+
+.edit-action-btn.confirm {
+  background: #10b981;
+  border-color: #10b981;
+}
+
+.edit-action-btn.confirm:hover {
+  background: #059669;
+  border-color: #059669;
+}
+
+.edit-action-btn.cancel {
+  background: #ef4444;
+  border-color: #ef4444;
+}
+
+.edit-action-btn.cancel:hover {
+  background: #dc2626;
+  border-color: #dc2626;
+}
+
+/* Date Divider */
+.date-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 20px 0;
+  position: relative;
+}
+
+.date-divider::before,
+.date-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(to right, transparent, #374151, transparent);
+}
+
+.date-divider-text {
+  padding: 0 15px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: #111827;
+  border-radius: 12px;
+  padding: 6px 16px;
+  border: 1px solid #374151;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
 /* Message Input */
 .message-input-container {
   padding: 25px 30px;

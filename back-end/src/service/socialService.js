@@ -389,6 +389,30 @@ const getMessages = async (userId1, userId2) => {
 	}
 };
 
+const editMessage = async (messageId, newContent, userId) => {
+	try {
+		const message = await db.Message.findByPk(messageId);
+		
+		if (!message) {
+			return { errCode: 1, errMessage: "Message not found" };
+		}
+		
+		// Check if the user is the sender
+		if (message.senderId !== userId) {
+			return { errCode: 2, errMessage: "You can only edit your own messages" };
+		}
+		
+		message.content = newContent;
+		message.isEdited = true;
+		await message.save();
+		
+		return { errCode: 0, message, errMessage: "Message edited successfully" };
+	} catch (error) {
+		console.error("Error editing message:", error);
+		return { errCode: 1, errMessage: "Failed to edit message" };
+	}
+};
+
 module.exports = {
 	Search: Search,
 	AddFriend: AddFriend,
@@ -397,4 +421,5 @@ module.exports = {
 	getAllFriendships: getAllFriendships,
 	saveMessage,
 	getMessages,
+	editMessage,
 };

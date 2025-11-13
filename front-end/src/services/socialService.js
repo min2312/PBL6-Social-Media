@@ -74,6 +74,16 @@ const getMessages = (userId1, userId2) => {
 		});
 };
 
+const editMessage = (messageId, newContent, userId) => {
+	return axios
+		.put(`/api/messages/edit`, { messageId, newContent, userId })
+		.then((res) => res)
+		.catch((err) => {
+			console.error("Edit message error:", err);
+			return { errCode: 1, errMessage: "Failed to edit message" };
+		});
+};
+
 export {
 	search,
 	sendFriendRequest,
@@ -82,4 +92,5 @@ export {
 	cancelFriendRequest,
 	sendAddFriend,
 	getMessages,
+	editMessage,
 };
