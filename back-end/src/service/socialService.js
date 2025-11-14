@@ -327,10 +327,74 @@ let DeleteFriendship = (userId, friendId) => {
 	});
 };
 
+const getOrCreateConversation = async (userId1, userId2) => {
+	// Sort IDs to ensure consistency in conversation lookup
+	const [userOne, userTwo] = [userId1, userId2].sort();
+
+	let conversation = await db.Conversation.findOne({
+		where: {
+			userId1: userOne,
+			userId2: userTwo,
+		},
+	});
+
+	if (!conversation) {
+		conversation = await db.Conversation.create({
+			userId1: userOne,
+			userId2: userTwo,
+		});
+	}
+
+	return conversation;
+};
+
+const saveMessage = async (senderId, recipientId, content) => {
+	try {
+		const conversation = await getOrCreateConversation(senderId, recipientId);
+		
+		const message = await db.Message.create({
+			conversationId: conversation.id,
+			senderId: senderId,
+			content: content.text,
+			deliveredAt: new Date(),
+		});
+		
+		return { errCode: 0, message };
+	} catch (error) {
+		console.error("Error saving message:", error);
+		return { errCode: 1, errMessage: "Failed to save message" };
+	}
+};
+
+const getMessages = async (userId1, userId2) => {
+	try {
+		const conversation = await getOrCreateConversation(userId1, userId2);
+		if (!conversation) {
+			return []; // No conversation, no messages
+		}
+		const messages = await db.Message.findAll({
+			where: { conversationId: conversation.id },
+			include: [
+				{
+					model: db.User,
+					attributes: ["id", "fullName", "profilePicture"],
+				},
+			],
+			order: [["createdAt", "ASC"]],
+		});
+		return messages;
+	} catch (error) {
+		console.error("Error getting messages:", error);
+		throw error;
+	}
+};
+
 module.exports = {
 	Search: Search,
 	AddFriend: AddFriend,
 	UpdateFriendshipStatus: UpdateFriendshipStatus,
 	DeleteFriendship: DeleteFriendship,
 	getAllFriendships: getAllFriendships,
+	saveMessage,
+	getMessages,
 };

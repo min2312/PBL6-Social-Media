@@ -1,13 +1,30 @@
 .navbar {
-  background-color: #1f2937;
-  border-bottom: 1px solid #374151;
+  /* background-color: #1f2937; */
+  /* border-bottom: 1px solid #374151; */
   padding: 0.75rem 1.5rem;
-  position: sticky;
+  border-bottom: none; /* Rất quan trọng: Bỏ border-bottom gốc */
+  position: relative;
+  /* position: sticky; */
   top: 0;
   z-index: 50;
   backdrop-filter: blur(8px);
 }
-
+.navbar::after {
+  content: ""; /* Bắt buộc phải có */
+  display: block;
+  width: 97%; /* Chiều rộng mong muốn */
+  height: 1px; /* Chiều dày của đường kẻ */
+  background-color: #374151; /* Màu của đường kẻ */
+  
+  /* Căn giữa đường kẻ */
+  margin: 0 auto; /* Căn giữa theo chiều ngang */
+  
+  /* Định vị để đặt nó ở dưới cùng */
+  position: absolute;
+  bottom: 0;
+  left: 1.5%; /* (100% - 80%) / 2 để căn giữa */
+  /* Hoặc dùng: left: 0; right: 0; margin: 0 auto; (nếu không dùng left: 10% ở trên) */
+}
 .navbar-content {
   display: flex;
   align-items: center;

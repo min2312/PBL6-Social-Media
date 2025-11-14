@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef, useContext } from 'react';
 import { Search, MessageCircle, MoreHorizontal, Phone, Video, Info, Send, Smile, Paperclip } from 'lucide-react';
 import { UserContext } from '../../Context/UserProvider';
-import { getAllFriendships } from '../../services/socialService';
+import { getAllFriendships, getMessages } from '../../services/socialService';
 import './ChatPage.css';
+import { io } from 'socket.io-client';
 
 const ChatPage = () => {
   const { user } = useContext(UserContext);
@@ -14,29 +15,73 @@ const ChatPage = () => {
   const [error, setError] = useState(null);
   const messagesEndRef = useRef(null);
   const messagesContainerRef = useRef(null);
+  const [socket, setSocket] = useState(null);
+
+  useEffect(() => {
+		if (!user || !user.token) {
+			return;
+		}
+
+		const newSocket = io(`${process.env.REACT_APP_API_URL}`, {
+			extraHeaders: {
+				Authorization: `Bearer ${user.token}`,
+			},
+		});
+
+		setSocket(newSocket);
+
+		newSocket.on("connect", () => {
+			console.log("Socket connected for chat:", newSocket.id);
+		});
+
+		newSocket.on("receiveMessage", (message) => {
+			if (activeConversation && message.senderId === activeConversation.userId) {
+				const receivedMessage = {
+					id: Date.now(),
+					text: message.text,
+					time: new Date().toLocaleTimeString([], {
+						hour: "2-digit",
+						minute: "2-digit",
+					}),
+					isOwn: false,
+					sender: activeConversation.name,
+					timestamp: new Date(),
+					avatar: activeConversation.avatar,
+				};
+				setMessages((prev) => [...prev, receivedMessage]);
+			}
+		});
+
+		newSocket.on("connect_error", (err) => {
+			console.error("Chat socket connection error:", err.message);
+		});
+
+		newSocket.on("disconnect", (reason) => {
+			console.warn("Chat socket disconnected:", reason);
+		});
+
+		return () => {
+			newSocket.disconnect();
+		};
+	}, [user, activeConversation]);
 
   // Load friends from API
   useEffect(() => {
     const loadFriends = async () => {
       if (!user?.account?.id) {
-        console.log('No user account id found:', user);
         return;
       }
       
-      console.log('Loading friends for user ID:', user.account.id);
       setLoading(true);
       setError(null);
       try {
         const response = await getAllFriendships(user.account.id);
-        console.log('API Response:', response);
         
         if (response && response.errCode === 0) {
           const friends = response.friendships || [];
-          console.log('Friends data:', friends);
           
           // Chỉ lấy những người bạn đã kết bạn thành công
           const acceptedFriends = friends.filter(friend => friend.friendshipStatus === 'friends');
-          console.log('Accepted friends:', acceptedFriends);
           
           // Chuyển đổi format dữ liệu phù hợp với component
           const formattedConversations = acceptedFriends.map((friend, index) => ({
@@ -47,13 +92,11 @@ const ChatPage = () => {
             lastMessage: 'Start a conversation...',
             lastMessageTime: 'now',
             userId: friend.id,
-            isOnline: false // Có thể thêm logic kiểm tra online status sau
+            isOnline: false
           }));
           
-          console.log('Formatted conversations:', formattedConversations);
           setConversations(formattedConversations);
         } else {
-          console.log('API returned error or no data:', response);
           setError(response?.errMessage || 'Failed to load friends');
         }
       } catch (err) {
@@ -66,9 +109,6 @@ const ChatPage = () => {
 
     loadFriends();
   }, [user?.account?.id]);
-
-  // Mock messages data (sẽ được thay thế bằng API thực trong tương lai)
-  const [messagesData] = useState({});
 
   const [messages, setMessages] = useState([]);
 
@@ -93,37 +133,71 @@ const ChatPage = () => {
     scrollToBottom();
   }, [messages]);
 
-  // Auto-scroll when conversation is selected
+  // Load messages when conversation is selected
   useEffect(() => {
-    if (activeConversation) {
-      const conversationMessages = messagesData[activeConversation.id] || [];
-      setMessages(conversationMessages);
-      setTimeout(() => {
-        scrollToBottomImmediate();
-      }, 50);
-    }
-  }, [activeConversation, messagesData]);
+    const loadMessages = async () => {
+      if (activeConversation && user?.account?.id) {
+        try {
+          const response = await getMessages(user.account.id, activeConversation.userId);
+          
+          if (response && response.errCode === 0) {
+            const formattedMessages = response.messages.map((msg) => ({
+              id: msg.id,
+              text: msg.content,
+              time: new Date(msg.createdAt).toLocaleTimeString([], {
+                hour: '2-digit',
+                minute: '2-digit',
+              }),
+              isOwn: msg.senderId === user.account.id,
+              sender: msg.User?.fullName || 'Unknown',
+              timestamp: new Date(msg.createdAt),
+              avatar: msg.User?.profilePicture || activeConversation.avatar,
+            }));
+            setMessages(formattedMessages);
+            setTimeout(() => {
+              scrollToBottomImmediate();
+            }, 50);
+          }
+        } catch (err) {
+          console.error('Error loading messages:', err);
+        }
+      }
+    };
+
+    loadMessages();
+  }, [activeConversation, user?.account?.id]);
 
   const handleSelectConversation = (conversation) => {
     setActiveConversation(conversation);
   };
 
   const handleSendMessage = (e) => {
-    e.preventDefault();
-    if (newMessage.trim() && activeConversation) {
-      const message = {
-        id: messages.length + 1,
-        text: newMessage.trim(),
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        isOwn: true,
-        sender: user?.account?.fullName || 'You',
-        timestamp: new Date()
-      };
-      
-      setMessages(prev => [...prev, message]);
-      setNewMessage('');
-    }
-  };
+		e.preventDefault();
+		
+		if (newMessage.trim() && activeConversation && socket) {
+			const message = {
+				id: Date.now(),
+				text: newMessage.trim(),
+				time: new Date().toLocaleTimeString([], {
+					hour: "2-digit",
+					minute: "2-digit",
+				}),
+				isOwn: true,
+				sender: user?.account?.fullName || "You",
+				timestamp: new Date(),
+			};
+
+			socket.emit("sendMessage", {
+				recipientId: activeConversation.userId,
+				message: {
+					text: newMessage.trim(),
+				},
+			});
+
+			setMessages((prev) => [...prev, message]);
+			setNewMessage("");
+		}
+	};
 
   const handleKeyPress = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {

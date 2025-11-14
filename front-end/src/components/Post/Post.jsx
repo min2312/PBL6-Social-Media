@@ -1,9 +1,8 @@
 import React, { useState, useRef, useEffect, useContext } from "react";
 import {
 	MoreHorizontal,
-	ThumbsUp,
-	MessageSquare,
-	Share,
+	Heart,
+	MessageCircle,
 	Send,
 	Edit,
 	Trash2,
@@ -32,6 +31,8 @@ const Post = ({ post, onUpdatePost, onDeletePost }) => {
 	const [showComments, setShowComments] = useState(post.comments.length > 0);
 	const [commentText, setCommentText] = useState("");
 	const [comments, setComments] = useState(post.comments || []);
+	const [showAllComments, setShowAllComments] = useState(false);
+	const [visibleCommentsCount, setVisibleCommentsCount] = useState(2);
 	const [socket, setSocket] = useState(null);
 	const [showDropdown, setShowDropdown] = useState(false);
 	const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -97,7 +98,6 @@ const Post = ({ post, onUpdatePost, onDeletePost }) => {
 		newSocket.on("disconnect", (reason) => {
 			console.warn("WebSocket disconnected:", reason);
 		});
-
 		setSocket(newSocket);
 
 		return () => {
@@ -313,23 +313,35 @@ const Post = ({ post, onUpdatePost, onDeletePost }) => {
 		setIsImageViewerOpen(true);
 	};
 
+	const handleUserClick = (userId) => {
+		history.push(`/profile/${userId}`);
+	};
+
+	const handleCommentUserClick = (userId) => {
+		history.push(`/profile/${userId}`);
+	};
+
 	return (
 		<div className="post-card" data-post-id={post.id}>
 			{/* Post Header */}
 			<div className="post-header">
 				<div className="post-user-info">
-					<div className="post-user-avatar">
-						{post.User?.profilePicture && (
+					<div className="post-user-avatar clickable-user" onClick={() => handleUserClick(post.User?.id)}>
+						{post.User?.profilePicture ? (
 							<img
 								src={post.User.profilePicture}
 								alt="avatar"
 								style={{ width: 40, height: 40, borderRadius: "50%" }}
 							/>
+						) : (
+							<div className="default-avatar">
+								{post.User?.fullName?.charAt(0)?.toUpperCase() || 'U'}
+							</div>
 						)}
 					</div>
 					<div className="post-user-details">
-						<p className="user-name">{post.User?.fullName}</p>
-						<p className="user-username">{post.User?.username}</p>
+						<p className="user-name clickable-user" onClick={() => handleUserClick(post.User?.id)}>{post.User?.fullName}</p>
+						<p className="user-username clickable-user" onClick={() => handleUserClick(post.User?.id)}>{post.User?.username}</p>
 					</div>
 				</div>
 				<div className="post-meta">
@@ -384,130 +396,171 @@ const Post = ({ post, onUpdatePost, onDeletePost }) => {
 			{/* Post Actions */}
 			<div className="post-actions-bar">
 				<div className="post-actions-left">
-					<button
-						className={`action-btn like-btn ${isLiked ? "liked" : ""}`}
-						onClick={handleLike}
-					>
-						<ThumbsUp size={18} />
-						<span>{post.likes}</span>
-					</button>
-					<button
-						className="action-btn comment-btn"
-						onClick={() => setShowComments(!showComments)}
-					>
-						<MessageSquare size={18} />
-						<span>{comments.length}</span>
-					</button>
-					<button className="action-btn share-btn" onClick={handleShare}>
-						<Share size={18} />
-						<span>{post.shares}</span>
-					</button>
+					<div className="action-group">
+						<button
+							className={`action-btn like-btn ${isLiked ? "liked" : ""}`}
+							onClick={handleLike}
+						>
+							<Heart size={24} fill={isLiked ? "currentColor" : "none"} />
+						</button>
+						<button
+							className="action-btn comment-btn"
+							onClick={() => setShowComments(!showComments)}
+						>
+							<MessageCircle size={24} />
+						</button>
+						<button className="action-btn share-btn" onClick={handleShare}>
+							<Send size={24} />
+						</button>
+					</div>
+					<div className="action-counts">
+						<span className="likes-count">{post.likes.toLocaleString()} likes</span>
+						<span className="comments-count">{comments.length} comments</span>
+					</div>
 				</div>
 			</div>
 
 			{/* Comments Section */}
 			{showComments && (
 				<div className="comments-section">
-					{comments.map((comment) => (
-						<div key={comment.id} className="comment">
-							<div className="comment-avatar">
-								{comment.User?.profilePicture && (
-									<img
-										src={comment.User.profilePicture}
-										alt="avatar"
-										style={{ width: 32, height: 32, borderRadius: "50%" }}
-									/>
-								)}
-							</div>
-							<div className="comment-content">
-								<div className="comment-bubble">
-									<div className="comment-header">
-										<span className="comment-user">
-											{comment.User?.fullName}
-										</span>
-										<span className="comment-username">
-											{comment.User?.username}
-										</span>
-										<span className="comment-timestamp">
-											{formattedPostTime || comment.timestamp}
-										</span>
-										{user?.account?.id === comment.User?.id && (
-											<div className="comment-menu-wrapper">
-												<button
-													className="comment-menu-btn"
-													onClick={(e) => {
-														e.stopPropagation();
-														setActiveCommentMenu(
-															activeCommentMenu === comment.id ? null : comment.id
-														);
-													}}
-												>
-													<MoreHorizontal size={14} />
-												</button>
-												{activeCommentMenu === comment.id && (
-													<div className="comment-dropdown-menu">
-														{editingCommentId !== comment.id && (
-															<button
-																className="dropdown-item"
-																onClick={() => {
-																	setEditingCommentId(comment.id);
-																	setEditedCommentText(comment.content);
-																	setActiveCommentMenu(null);
-																}}
-															>
-																<span>Edit Comment</span>
-															</button>
-														)}
-														<button
-															className="dropdown-item delete-item"
-															onClick={() => handleDeleteComment(comment)}
-														>
-															<span>Delete Comment</span>
-														</button>
-													</div>
-												)}
-											</div>
-										)}
-									</div>
-									{editingCommentId === comment.id ? (
-										<div className="comment-edit-area">
-											<input
-												className="comment-edit-input"
-												value={editedCommentText}
-												onChange={(e) => setEditedCommentText(e.target.value)}
-												onKeyDown={(e) => {
-													if (e.key === "Enter") handleSaveEditedComment();
-													if (e.key === "Escape") handleCancelEdit();
-												}}
-												autoFocus
-											/>
-											<div className="comment-edit-actions">
-												<button
-													className="comment-edit-btn save"
-													onClick={handleSaveEditedComment}
-													disabled={!editedCommentText.trim()}
-												>
-													Save
-												</button>
-												<button
-													className="comment-edit-btn cancel"
-													onClick={handleCancelEdit}
-												>
-													Cancel
-												</button>
-											</div>
-										</div>
+					<div className="comments-container">
+						{comments.slice(0, showAllComments ? comments.length : visibleCommentsCount).map((comment) => (
+							<div key={comment.id} className="comment">
+								<div className="comment-avatar clickable-user" onClick={() => handleCommentUserClick(comment.User?.id)}>
+									{comment.User?.profilePicture ? (
+										<img
+											src={comment.User.profilePicture}
+											alt="avatar"
+											style={{ width: 32, height: 32, borderRadius: "50%" }}
+										/>
 									) : (
-										<p className="comment-text">{comment.content}</p>
+										<div className="default-comment-avatar">
+											{comment.User?.fullName?.charAt(0)?.toUpperCase() || 'U'}
+										</div>
 									)}
 								</div>
+								<div className="comment-content">
+									<div className="comment-bubble">
+										<div className="comment-header">
+											<span className="comment-user clickable-user" onClick={() => handleCommentUserClick(comment.User?.id)}>
+												{comment.User?.fullName}
+											</span>
+											<span className="comment-username clickable-user" onClick={() => handleCommentUserClick(comment.User?.id)}>
+												{comment.User?.username}
+											</span>
+											<span className="comment-timestamp">
+												{formattedPostTime || comment.timestamp}
+											</span>
+											{user?.account?.id === comment.User?.id && (
+												<div className="comment-menu-wrapper">
+													<button
+														className="comment-menu-btn"
+														onClick={(e) => {
+															e.stopPropagation();
+															setActiveCommentMenu(
+																activeCommentMenu === comment.id ? null : comment.id
+															);
+														}}
+													>
+														<MoreHorizontal size={14} />
+													</button>
+													{activeCommentMenu === comment.id && (
+														<div className="comment-dropdown-menu">
+															{editingCommentId !== comment.id && (
+																<button
+																	className="dropdown-item"
+																	onClick={() => {
+																		setEditingCommentId(comment.id);
+																		setEditedCommentText(comment.content);
+																		setActiveCommentMenu(null);
+																	}}
+																>
+																	<span>Edit Comment</span>
+																</button>
+															)}
+															<button
+																className="dropdown-item delete-item"
+																onClick={() => handleDeleteComment(comment)}
+															>
+																<span>Delete Comment</span>
+															</button>
+														</div>
+													)}
+												</div>
+											)}
+										</div>
+										{editingCommentId === comment.id ? (
+											<div className="comment-edit-area">
+												<input
+													className="comment-edit-input"
+													value={editedCommentText}
+													onChange={(e) => setEditedCommentText(e.target.value)}
+													onKeyDown={(e) => {
+														if (e.key === "Enter") handleSaveEditedComment();
+														if (e.key === "Escape") handleCancelEdit();
+													}}
+													autoFocus
+												/>
+												<div className="comment-edit-actions">
+													<button
+														className="comment-edit-btn save"
+														onClick={handleSaveEditedComment}
+														disabled={!editedCommentText.trim()}
+													>
+														Save
+													</button>
+													<button
+														className="comment-edit-btn cancel"
+														onClick={handleCancelEdit}
+													>
+														Cancel
+													</button>
+												</div>
+											</div>
+										) : (
+											<p className="comment-text">{comment.content}</p>
+										)}
+									</div>
+								</div>
 							</div>
-						</div>
-					))}
+						))}
+					</div>
+
+					{/* See More Comments Button */}
+					{comments.length > visibleCommentsCount && !showAllComments && (
+						<button 
+							className="see-more-comments-btn"
+							onClick={() => setShowAllComments(true)}
+						>
+							Xem thêm {comments.length - visibleCommentsCount} bình luận
+						</button>
+					)}
+
+					{/* See Less Comments Button */}
+					{showAllComments && comments.length > visibleCommentsCount && (
+						<button 
+							className="see-more-comments-btn"
+							onClick={() => setShowAllComments(false)}
+						>
+							Ẩn bớt bình luận
+						</button>
+					)}
 
 					{/* Add Comment Input */}
 					<div className="add-comment">
-						<div className="comment-avatar"></div>
+						<div className="comment-avatar">
+							{user?.account?.profilePicture ? (
+								<img
+									src={user.account.profilePicture}
+									alt="avatar"
+									style={{ width: 32, height: 32, borderRadius: "50%" }}
+								/>
+							) : (
+								<div className="default-comment-avatar">
+									{user?.account?.fullName?.charAt(0)?.toUpperCase() || 'U'}
+								</div>
+							)}
+						</div>
 						<div className="comment-input-wrapper">
 							<input
 								type="text"

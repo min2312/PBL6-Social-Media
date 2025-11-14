@@ -91,7 +91,7 @@ const Navbar = ({ title = "HomePage" }) => {
 								onClick={handleNotificationToggle}
 							>
 								<Bell size={20} />
-								<span className="notification-badge">{unread}</span>
+								{unread > 0 && <span className="notification-badge">{unread}</span>}
 							</button>
 
 							{showNotifications && (
@@ -108,7 +108,15 @@ const Navbar = ({ title = "HomePage" }) => {
 								onClick={handleUserMenuToggle}
 							>
 								<div className="navbar-avatar">
-									<span>{user?.account?.fullName.charAt(0)}</span>
+									{user?.account?.profilePicture ? (
+										<img
+											src={user.account.profilePicture}
+											alt="avatar"
+											style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
+										/>
+									) : (
+										<span>{user?.account?.fullName?.charAt(0)?.toUpperCase() || 'U'}</span>
+									)}
 								</div>
 							</button>
 
@@ -116,7 +124,15 @@ const Navbar = ({ title = "HomePage" }) => {
 								<div className="user-dropdown">
 									<div className="user-info">
 										<div className="user-avatar-large">
-											{user?.account?.fullName.charAt(0)}
+											{user?.account?.profilePicture ? (
+												<img
+													src={user.account.profilePicture}
+													alt="avatar"
+													style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
+												/>
+											) : (
+												<span>{user?.account?.fullName?.charAt(0)?.toUpperCase() || 'U'}</span>
+											)}
 										</div>
 										<div className="user-details">
 											<p className="user-name">{user?.account?.fullName}</p>

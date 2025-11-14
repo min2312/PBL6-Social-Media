@@ -16,7 +16,7 @@ const Sidebar = () => {
 			path: "/messenger",
 		},
 		{ id: "friends", icon: Users, label: "Friends", path: "/friends" },
-		{ id: "favorites", icon: Heart, label: "Favorites", path: "/favorites" },
+		// { id: "favorites", icon: Heart, label: "Favorites", path: "/favorites" },
 		{ id: "settings", icon: Settings, label: "Settings", path: "/settings" },
 	];
 
@@ -30,7 +30,17 @@ const Sidebar = () => {
 								to={`/profile/${user.account.id}`}
 								className="profile-button"
 							>
-								<div className="user-avatar"></div>
+								<div className="user-avatar">
+									{user?.account?.profilePicture ? (
+										<img
+											src={user.account.profilePicture}
+											alt="avatar"
+											style={{ width: "100%", height: "100%", borderRadius: "50%", objectFit: "cover" }}
+										/>
+									) : (
+										<span>{user?.account?.fullName?.charAt(0)?.toUpperCase() || "U"}</span>
+									)}
+								</div>
 								<span>{user?.account?.fullName}</span>
 							</Link>
 						</div>

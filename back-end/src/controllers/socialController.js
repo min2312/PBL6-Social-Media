@@ -86,10 +86,29 @@ let HandleCancelFriendRequest = async (req, res) => {
 	}
 };
 
+let handleGetMessages = async (req, res) => {
+	try {
+		const { userId1, userId2 } = req.query;
+		if (!userId1 || !userId2) {
+			return res
+				.status(400)
+				.json({ errCode: 1, errMessage: "Missing user IDs" });
+		}
+		const messages = await socialService.getMessages(userId1, userId2);
+		return res.status(200).json({ errCode: 0, messages });
+	} catch (error) {
+		console.error("Error getting messages:", error);
+		return res
+			.status(500)
+			.json({ errCode: 1, errMessage: "Error getting messages" });
+	}
+};
+
 module.exports = {
 	HandleSearch,
 	HandleAddFriend,
 	HandleSendFriendRequest,
 	HandleCancelFriendRequest,
 	HandleGetAllFriendships,
+	handleGetMessages,
 };

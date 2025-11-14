@@ -64,6 +64,16 @@ const getAllFriendships = (userId) => {
 		});
 };
 
+const getMessages = (userId1, userId2) => {
+	return axios
+		.get(`/api/messages?userId1=${userId1}&userId2=${userId2}`)
+		.then((res) => res)
+		.catch((err) => {
+			console.error("Get messages error:", err);
+			return { errCode: 1, errMessage: "Failed to get messages" };
+		});
+};
+
 export {
 	search,
 	sendFriendRequest,
@@ -71,4 +81,5 @@ export {
 	getAllFriendships,
 	cancelFriendRequest,
 	sendAddFriend,
+	getMessages,
 };
