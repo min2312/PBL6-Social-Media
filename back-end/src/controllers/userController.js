@@ -59,6 +59,45 @@ let HandleEditUser = async (req, res) => {
 	}
 	return res.status(200).json(message);
 };
+
+let HandleUpdateProfile = async (req, res) => {
+	try {
+		let data = req.body;
+		
+		// Validate that user ID is provided (either from request body or authenticated user)
+		if (!data.id && !req.user?.id) {
+			return res.status(400).json({
+				errCode: 1,
+				errMessage: "Missing user ID parameter!",
+			});
+		}
+		
+		// Use authenticated user's ID if not provided in body
+		if (!data.id && req.user?.id) {
+			data.id = req.user.id;
+		}
+		
+		let message = await userService.updateUserProfile(data);
+		
+		if (message && message.DT && message.DT.access_token) {
+			res.cookie("jwt", message.DT.access_token, {
+				httpOnly: true,
+				maxAge: process.env.maxAgeCookie,
+				secure: true,
+				sameSite: "none",
+			});
+		}
+		
+		return res.status(200).json(message);
+	} catch (error) {
+		console.error("Error in HandleUpdateProfile:", error);
+		return res.status(500).json({
+			errCode: -1,
+			errMessage: "Internal server error",
+		});
+	}
+};
+
 // let HandleDeleteUser = async (req, res) => {
 // 	if (!req.body.id) {
 // 		return res.status(200).json({
@@ -146,6 +185,7 @@ module.exports = {
 	HandleGetAllUser: HandleGetAllUser,
 	HandleCreateNewUser: HandleCreateNewUser,
 	HandleEditUser: HandleEditUser,
+	HandleUpdateProfile: HandleUpdateProfile,
 	HandleDeleteUser: HandleDeleteUser,
 	getUserAccount,
 	HandleLogOut: HandleLogOut,

@@ -1,8 +1,6 @@
 import React, { useContext, useEffect, useState } from "react";
 import {
 	Calendar,
-	MapPin,
-	Link as LinkIcon,
 	X,
 	MessageSquare,
 	UserX,
@@ -14,7 +12,7 @@ import "./Profile.css";
 import { UserContext } from "../../Context/UserProvider";
 import { useParams, useHistory } from "react-router-dom";
 import { GetAllPost, HandleGetLikePost } from "../../services/apiService";
-import { GetAllUser } from "../../services/userService";
+import { GetAllUser, UpdateProfileService } from "../../services/userService";
 import { io } from "socket.io-client";
 
 const Profile = () => {
@@ -28,8 +26,6 @@ const Profile = () => {
 		fullName: "",
 		username: "",
 		bio: "",
-		location: "",
-		website: "",
 		joinDate: "",
 		posts: 0,
 		avatar: null,
@@ -38,8 +34,6 @@ const Profile = () => {
 	const [editForm, setEditForm] = useState({
 		fullName: "",
 		bio: "",
-		location: "",
-		website: "",
 		avatar: null,
 	});
 
@@ -88,7 +82,6 @@ const Profile = () => {
 		});
 
 		newSocket.on("disconnect", (reason) => {
-			console.warn("WebSocket disconnected:", reason);
 		});
 
 		setSocket(newSocket);
@@ -107,115 +100,84 @@ const Profile = () => {
 			setLoading(true);
 			setError(null);
 			try {
-				const res = await GetAllPost(id);
-				if (res && res.errCode === 0) {
-					const hasPosts = Array.isArray(res.post) && res.post.length > 0;
-					if (hasPosts) {
-						const u = res.post[0].User || {};
-						const joinDate = u.createdAt
-							? new Date(u.createdAt).toLocaleString("en-US", {
-									month: "long",
-									year: "numeric",
-							  })
-							: "";
-						const mappedProfile = {
-							fullName: u.fullName || "",
-							username:
-								u.username || (u.email ? `@${u.email.split("@")[0]}` : ""),
-							bio: u.bio || "",
-							location: u.location || "",
-							website: u.website || "",
-							joinDate,
-							posts: res.post.length,
-							avatar: u.profilePicture || u.avatar || null,
-						};
-						setProfileData(mappedProfile);
-						setEditForm({
-							fullName: mappedProfile.fullName,
-							bio: mappedProfile.bio,
-							location: mappedProfile.location,
-							website: mappedProfile.website,
-							avatar: mappedProfile.avatar,
-						});
+				// Always fetch user data directly from user API to get the latest profile info
+				const userRes = await GetAllUser(id);
+				if (userRes && userRes.errCode === 0 && userRes.user) {
+					const u = userRes.user;
+					const joinDate = u.createdAt
+						? new Date(u.createdAt).toLocaleString("en-US", {
+								month: "long",
+								year: "numeric",
+						  })
+						: "";
+					const mappedProfile = {
+						id: u.id,
+						fullName: u.fullName || "",
+						username:
+							u.username || (u.email ? `@${u.email.split("@")[0]}` : ""),
+						bio: u.bio || "",
+						joinDate,
+						posts: 0, // Will be updated when we fetch posts
+						avatar: u.profilePicture || u.avatar || null,
+					};
+					setProfileData(mappedProfile);
+					setEditForm({
+						id: mappedProfile.id,
+						fullName: mappedProfile.fullName,
+						bio: mappedProfile.bio,
+						avatar: mappedProfile.avatar,
+					});
 
-						const formattedPosts = await Promise.all(
-							res.post.map(async (post) => {
-								const likeRes = await HandleGetLikePost(post.id);
-								const likesCount =
-									likeRes && likeRes.errCode === 0 ? likeRes.likes.length : 0;
-								const isLiked =
-									likeRes && likeRes.errCode === 0
-										? likeRes.likes.some((l) => l.userId === user?.account?.id)
-										: false;
-								return {
-									id: post.id,
-									User: {
-										id: u.id,
-										fullName: mappedProfile.fullName,
-										username: mappedProfile.username,
-										avatar: mappedProfile.avatar || null,
-									},
-									content: post.content,
-									images: post.imageUrl,
-									likes: likesCount,
-									islikedbyUser: isLiked,
-									comments: [],
-									shares: 0,
-									timestamp: post.updatedAt || post.createdAt,
-									formatTimeAgo,
-								};
-							})
-						);
-						setUserPosts(formattedPosts);
-					} else {
-						// No posts - fallback to GetAllUser
-						const userRes = await GetAllUser(id);
-						if (userRes && userRes.errCode === 0 && userRes.user) {
-							const u = userRes.user;
-							const joinDate = u.createdAt
-								? new Date(u.createdAt).toLocaleString("en-US", {
-										month: "long",
-										year: "numeric",
-								  })
-								: "";
-							const mappedProfile = {
-								id: u.id,
-								fullName: u.fullName || "",
-								username:
-									u.username || (u.email ? `@${u.email.split("@")[0]}` : ""),
-								bio: u.bio || "",
-								location: u.location || "",
-								website: u.website || "",
-								joinDate,
-								posts: 0,
-								avatar: u.profilePicture || u.avatar || null,
-							};
-							setProfileData(mappedProfile);
-							setEditForm({
-								id: mappedProfile.id,
-								fullName: mappedProfile.fullName,
-								bio: mappedProfile.bio,
-								location: mappedProfile.location,
-								website: mappedProfile.website,
-								avatar: mappedProfile.avatar,
-							});
-							setUserPosts([]);
-						} else {
-							setError(
-								"User not found. This user might not exist or has been deleted."
+					// Now fetch posts separately
+					const res = await GetAllPost(id);
+					if (res && res.errCode === 0) {
+						const hasPosts = Array.isArray(res.post) && res.post.length > 0;
+						if (hasPosts) {
+							// Update posts count
+							setProfileData(prev => ({
+								...prev,
+								posts: res.post.length
+							}));
+
+							const formattedPosts = await Promise.all(
+								res.post.map(async (post) => {
+									const likeRes = await HandleGetLikePost(post.id);
+									const likesCount =
+										likeRes && likeRes.errCode === 0 ? likeRes.likes.length : 0;
+									const isLiked =
+										likeRes && likeRes.errCode === 0
+											? likeRes.likes.some((l) => l.userId === user?.account?.id)
+											: false;
+									return {
+										id: post.id,
+										User: {
+											id: u.id,
+											fullName: mappedProfile.fullName,
+											username: mappedProfile.username,
+											avatar: mappedProfile.avatar || null,
+										},
+										content: post.content,
+										images: post.imageUrl,
+										likes: likesCount,
+										islikedbyUser: isLiked,
+										comments: [],
+										shares: 0,
+										timestamp: post.updatedAt || post.createdAt,
+										formatTimeAgo,
+									};
+								})
 							);
+							setUserPosts(formattedPosts);
+						} else {
+							setUserPosts([]);
 						}
+					} else {
+						setUserPosts([]);
 					}
 				} else {
-					// API returned an error
-					if (res && res.errCode === 1) {
-						setError("User not found. Please check the user ID and try again.");
-					} else {
-						setError(
-							res?.errMessage ||
-								"Failed to load profile. Please try again later."
-						);
-					}
+					setError(
+						"User not found. This user might not exist or has been deleted."
+					);
 				}
 			} catch (e) {
 				console.error("Profile fetch error:", e);
@@ -225,27 +187,70 @@ const Profile = () => {
 			}
 		};
 		fetchProfile();
-	}, [id, user?.account?.id]);
+	}, [id, user?.account?.id])
 
 	const handleEditProfile = () => {
 		setEditForm({
 			fullName: profileData.fullName,
 			bio: profileData.bio,
-			location: profileData.location,
-			website: profileData.website,
 			avatar: profileData.avatar,
 		});
 		setAvatarPreview(null);
 		setIsEditModalOpen(true);
 	};
 
-	const handleSaveProfile = () => {
-		setProfileData((prev) => ({
-			...prev,
-			...editForm,
-		}));
-		setIsEditModalOpen(false);
-		setAvatarPreview(null);
+	const handleSaveProfile = async () => {
+		try {
+			// Prepare the data to send to the API
+			const profileUpdateData = {
+				id: user?.account?.id || id,
+				fullName: editForm.fullName.trim(),
+				bio: editForm.bio.trim(),
+			};
+			
+			// Validate that we have a valid user ID
+			if (!profileUpdateData.id) {
+				alert("Cannot update profile: User ID is missing. Please try logging in again.");
+				return;
+			}
+			
+			const response = await UpdateProfileService(profileUpdateData);
+			
+			// Check if the response indicates an authentication error
+			if (response && response.errCode === -2) {
+				alert("Your session has expired. Please log in again.");
+				window.location.href = "/login";
+				return;
+			}
+			
+			if (response && response.errCode === 0) {
+				
+				// Close the modal first
+				setIsEditModalOpen(false);
+				setAvatarPreview(null);
+				
+				// Reload the page to reflect all changes
+				window.location.reload();
+			} else {
+				// Handle API error
+				const errorMessage = response?.errMessage || response?.message || "Unknown error occurred";
+				console.error("Failed to update profile:", errorMessage);
+				alert(`Failed to update profile: ${errorMessage}`);
+			}
+		} catch (error) {
+			console.error("Error updating profile:", error);
+			
+			if (error.response?.data?.errCode === -2) {
+				alert("Your session has expired. Please log in again.");
+				window.location.href = "/login";
+			} else {
+				const errorMessage = error.response?.data?.errMessage || 
+								   error.response?.data?.message || 
+								   error.message || 
+								   "An error occurred while updating profile";
+				alert(`Error: ${errorMessage}`);
+			}
+		}
 	};
 
 	const handleUpdatePost = (updatedPost) => {
@@ -416,20 +421,6 @@ const Profile = () => {
 
 								<div className="profile-meta">
 									<div className="meta-item">
-										<MapPin size={16} className="meta-icon" />
-										<span>{profileData.location}</span>
-									</div>
-									<div className="meta-item">
-										<LinkIcon size={16} className="meta-icon" />
-										<a
-											href={profileData.website}
-											target="_blank"
-											rel="noopener noreferrer"
-										>
-											{profileData.website}
-										</a>
-									</div>
-									<div className="meta-item">
 										<Calendar size={16} className="meta-icon" />
 										<span>Joined {profileData.joinDate}</span>
 									</div>
@@ -575,38 +566,6 @@ const Profile = () => {
 										}
 										placeholder="Tell us about yourself"
 										maxLength={160}
-									/>
-								</div>
-
-								<div className="form-group">
-									<label className="form-label">Location</label>
-									<input
-										type="text"
-										className="form-input"
-										value={editForm.location}
-										onChange={(e) =>
-											setEditForm((prev) => ({
-												...prev,
-												location: e.target.value,
-											}))
-										}
-										placeholder="Where are you located?"
-									/>
-								</div>
-
-								<div className="form-group">
-									<label className="form-label">Website</label>
-									<input
-										type="url"
-										className="form-input"
-										value={editForm.website}
-										onChange={(e) =>
-											setEditForm((prev) => ({
-												...prev,
-												website: e.target.value,
-											}))
-										}
-										placeholder="https://yourwebsite.com"
 									/>
 								</div>
 							</form>

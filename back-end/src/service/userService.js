@@ -236,6 +236,78 @@ let updateUser = (data) => {
 	});
 };
 
+let updateUserProfile = (data) => {
+	return new Promise(async (resolve, reject) => {
+		try {
+			if (!data.id) {
+				resolve({
+					errCode: 2,
+					errMessage: "Missing required parameter!",
+				});
+				return;
+			}
+
+			let user = await db.User.findOne({
+				where: { id: data.id },
+			});
+
+			if (user) {
+				// Prepare update object with only the fields we want to allow updating
+				let updateFields = {};
+				
+				if (data.fullName !== undefined) {
+					updateFields.fullName = data.fullName;
+				}
+				
+				if (data.bio !== undefined) {
+					updateFields.bio = data.bio;
+				}
+
+				// Update the user with only the specified fields
+				await db.User.update(updateFields, {
+					where: { id: data.id },
+				});
+
+				// Fetch the updated user data
+				let updatedUser = await db.User.findOne({
+					where: { id: data.id },
+					attributes: {
+						exclude: ["passwordHash"],
+					},
+				});
+
+				// Create new JWT token with updated information
+				let payload = {
+					id: updatedUser.id,
+					email: updatedUser.email,
+					fullName: updatedUser.fullName,
+					phone: updatedUser.phone,
+					gender: updatedUser.gender,
+					bio: updatedUser.bio,
+					createdAt: updatedUser.createdAt,
+					profilePicture: updatedUser.profilePicture,
+				};
+				let token = CreateJWT(payload);
+
+				resolve({
+					errCode: 0,
+					user: updatedUser,
+					DT: {
+						access_token: token,
+					},
+				});
+			} else {
+				resolve({
+					errCode: 1,
+					errMessage: "User not found!",
+				});
+			}
+		} catch (e) {
+			reject(e);
+		}
+	});
+};
+
 let upsertUserSocial = async (typeAcc, dataRaw) => {
 	try {
 		let user = null;
@@ -298,6 +370,7 @@ module.exports = {
 	CreateNewUser: CreateNewUser,
 	DeleteUser: DeleteUser,
 	updateUser: updateUser,
+	updateUserProfile: updateUserProfile,
 	getInfoCar: getInfoCar,
 	upsertUserSocial: upsertUserSocial,
 	resetPassword: resetPassword,
