@@ -111,7 +111,11 @@ const verifySocketToken = (socket, next) => {
 		return next();
 	}
 
-	const token = socket.handshake.headers.authorization?.split(" ")[1];
+	// Support multiple ways to pass token from browser clients
+	const headerToken = socket.handshake.headers.authorization?.split(" ")[1];
+	const authToken = socket.handshake.auth?.token; // recommended for browser socket.io
+	const queryToken = socket.handshake.query?.token; // fallback via query string
+	const token = headerToken || authToken || queryToken;
 	if (!token) {
 		return next(new Error("Authentication error: Token is missing"));
 	}

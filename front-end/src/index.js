@@ -1,4 +1,5 @@
 import React from "react";
+import "./polyfills"; // ensure process global exists before app code runs
 import ReactDOM from "react-dom/client";
 import "./index.css";
 import App from "./App";
@@ -7,13 +8,16 @@ import { store } from "./Redux/store";
 import { Provider } from "react-redux";
 import { UserProvider } from "./Context/UserProvider";
 import { NotificationProvider } from "./Context/NotificationContext";
+import { CallProvider } from "./Context/CallContext";
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
 	<Provider store={store}>
 		<React.StrictMode>
 			<UserProvider>
 				<NotificationProvider>
-				<App />
+					<CallProvider>
+						<App />
+					</CallProvider>
 				</NotificationProvider>
 			</UserProvider>
 		</React.StrictMode>

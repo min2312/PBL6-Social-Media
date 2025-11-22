@@ -32,8 +32,14 @@ let initWebRoutes = (app) => {
 	router.post("/api/add-friend", socialController.HandleAddFriend);
 	router.get("/api/get-post-like", apiController.HandleGetLike);
 	router.post("/api/handle-like-post", apiController.HandleLikePost);
-	router.get("/api/get-notifications-by-user-id", apiController.HandleGetNotificationsByUserId);
-	router.post("/api/update-notification-read-status", apiController.HandleUpdateNotificationReadStatus);
+	router.get(
+		"/api/get-notifications-by-user-id",
+		apiController.HandleGetNotificationsByUserId
+	);
+	router.post(
+		"/api/update-notification-read-status",
+		apiController.HandleUpdateNotificationReadStatus
+	);
 	router.post("/api/create-comment", apiController.HandleCreateComment);
 	router.post("/api/update-comment", apiController.HandleUpdateComment);
 	router.post("/api/delete-comment", apiController.HandleDeleteComment);
@@ -58,10 +64,8 @@ let initWebRoutes = (app) => {
 	);
 	router.post("/api/delete-post", apiController.HandleDeletePost);
 
-
 	router.delete("/api/delete-user", userController.HandleDeleteUser);
 	// router.post("/payment", apiController.HandlePaymentMoMo);
-
 
 	//ADMIN
 	router.get("/api/admin/get-all-users", adminController.HandleGetAllUsers);

@@ -66,11 +66,84 @@ const initSocket = (server) => {
 		socket.on("notification", ({ userId }) => {
 			io.emit("notificationReceived", { userId });
 		});
-		
+
+		// =============== WebRTC signaling events ===============
+		// Client A initiates a call to userId 'to'
+		socket.on("call:init", ({ to, callType }) => {
+			if (!to) return;
+			const fromId = socket.user?.id;
+			if (!fromId) return;
+			console.log(`Call init from ${fromId} to ${to} type=${callType}`);
+			io.to(to.toString()).emit("call:incoming", {
+				from: fromId,
+				callType: callType || "video",
+				caller: {
+					id: fromId,
+					name:
+						socket.user?.fullName ||
+						socket.user?.name ||
+						socket.user?.email ||
+						`${fromId}`,
+					avatar: socket.user?.profilePicture || null,
+				},
+			});
+		});
+
+		// Exchange SDP / ICE candidates
+		socket.on("call:signal", ({ to, signal }) => {
+			if (!to || !signal) return;
+			const fromId = socket.user?.id;
+			io.to(to.toString()).emit("call:signal", { from: fromId, signal });
+		});
+
+		socket.on("call:mode-change", ({ to, mode }) => {
+			io.to(to.toString()).emit("call:mode-change", { mode });
+		});
+
+		// Mic toggle notification
+		socket.on("call:mic-toggle", ({ to, muted }) => {
+			if (!to) return;
+			io.to(to.toString()).emit("call:mic-toggle", { muted });
+		});
+
+		// Video toggle notification
+		socket.on("call:video-toggle", ({ to, videoOff }) => {
+			if (!to) return;
+			io.to(to.toString()).emit("call:video-toggle", { videoOff });
+		});
+
+		// Callee accepts
+		socket.on("call:accept", ({ to, callType }) => {
+			if (!to) return;
+			const fromId = socket.user?.id;
+			console.log(`Call accepted by ${fromId} for ${to}`);
+			io.to(to.toString()).emit("call:accepted", {
+				from: fromId,
+				callType: callType || "video",
+			});
+		});
+
+		// Callee rejects
+		socket.on("call:reject", ({ to }) => {
+			if (!to) return;
+			const fromId = socket.user?.id;
+			console.log(`Call rejected by ${fromId} for ${to}`);
+			io.to(to.toString()).emit("call:rejected", { from: fromId });
+		});
+
+		// Either party ends call
+		socket.on("call:end", ({ to }) => {
+			if (!to) return;
+			const fromId = socket.user?.id;
+			console.log(`Call end from ${fromId} to ${to}`);
+			io.to(to.toString()).emit("call:ended", { from: fromId });
+		});
+		// ========================================================
+
 		socket.on("joinRoom", (roomId) => {
-      	socket.join(roomId);
-      	console.log(`User joined room ${roomId}`);
-    });
+			socket.join(roomId);
+			console.log(`User joined room ${roomId}`);
+		});
 
 		socket.on("disconnect", (reason) => {
 			console.log(`Client disconnected: ${socket.id}, Reason: ${reason}`);
