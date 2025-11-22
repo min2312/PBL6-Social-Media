@@ -23,13 +23,14 @@ const Notification = ({ isOpen, onClose }) => {
 		}
 
 		const newSocket = io(`${process.env.REACT_APP_API_URL}`, {
-			extraHeaders: {
-				Authorization: `Bearer ${user.token}`,
-			},
+			auth: { token: user.token },
+			transports: ["websocket", "polling"],
 		});
 
 		newSocket.on("connect", () => {});
-
+		newSocket.on("connect_error", (err) => {
+			console.error("Connection error (notif dropdown):", err.message);
+		});
 
 		newSocket.on("connect_error", (err) => {
 			console.error("Connection error:", err.message);
@@ -79,12 +80,11 @@ const Notification = ({ isOpen, onClose }) => {
 			try {
 				await UpdateNotificationReadStatus(notification.id, true);
 				if (socket) {
-            	socket.emit("notification", { userId: notification.receiverId });
-        }
+					socket.emit("notification", { userId: notification.receiverId });
+				}
 			} catch (error) {
 				console.warn("Failed to mark notification as read:", error);
 			}
-			
 		}
 
 		if (notification?.url) {
@@ -116,12 +116,18 @@ const Notification = ({ isOpen, onClose }) => {
 					return (
 						<div
 							key={n.id}
-							className={`notif-item ${isUnread ? "notif-item--unread" : ""} ${n?.url ? "notif-item--clickable" : ""}`}
+							className={`notif-item ${isUnread ? "notif-item--unread" : ""} ${
+								n?.url ? "notif-item--clickable" : ""
+							}`}
 							onClick={() => handleNotificationClick(n)}
 						>
 							<div className="notif-avatar">
 								{avatarUrl ? (
-									<img src={avatarUrl} alt={name} className="notif-avatar-img" />
+									<img
+										src={avatarUrl}
+										alt={name}
+										className="notif-avatar-img"
+									/>
 								) : (
 									(name?.[0] || "?").toUpperCase()
 								)}
