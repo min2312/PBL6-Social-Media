@@ -362,7 +362,17 @@ const HomePage = () => {
 			{/* New Post Input - Click to open modal */}
 			<div className="new-post" onClick={() => setIsAddPostOpen(true)}>
 				<div className="post-input-container">
-					<div className="post-avatar"></div>
+					<div className="post-avatar">
+						{user?.account?.profilePicture ? (
+							<img
+								src={user.account.profilePicture}
+								alt="avatar"
+								style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
+							/>
+						) : (
+							<span>{user?.account?.fullName?.charAt(0)?.toUpperCase() || 'U'}</span>
+						)}
+					</div>
 					<div className="post-input-wrapper">
 						<div className="post-textarea-placeholder">
 							What's on your mind?

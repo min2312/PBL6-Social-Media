@@ -11,7 +11,6 @@ import { LogOutUser } from "../../services/userService";
 import { toast } from "react-toastify";
 import Notification from "../Notification/Notification";
 
-
 const Navbar = ({ title = "HomePage" }) => {
 	const [showUserMenu, setShowUserMenu] = useState(false);
 	const [showNotifications, setShowNotifications] = useState(false);
@@ -62,8 +61,14 @@ const Navbar = ({ title = "HomePage" }) => {
 		<div className="navbar">
 			<div className="navbar-content">
 				{/* Logo/Brand Section */}
-				<div className="navbar-brand">
-					<div className="brand-logo">📱</div>
+				<div className="navbar-brand" onClick={() => history.push("/")}>
+					<div className="brand-logo">
+						<img 
+							src="https://your-logo-url.com/logo.png" 
+							alt="SocialHub Logo" 
+							className="logo-image"
+						/>
+					</div>
 					<span className="brand-name">SocialHub</span>
 				</div>
 
