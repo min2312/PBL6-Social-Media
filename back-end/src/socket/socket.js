@@ -17,21 +17,21 @@ const initSocket = (server) => {
 	io.use(verifySocketToken);
 
 	io.on("connection", (socket) => {
-		console.log("Client connected:", socket.id, "User:", socket.user);
+		// console.log("Client connected:", socket.id, "User:", socket.user);
 
 		// Join a room based on user ID
 		if (socket.user && socket.user.id) {
 			socket.join(socket.user.id.toString());
-			console.log(
-				`User ${socket.user.id} with socket ID ${socket.id} joined room ${socket.user.id}`
-			);
+			// console.log(
+			// 	`User ${socket.user.id} with socket ID ${socket.id} joined room ${socket.user.id}`
+			// );
 		}
 
 		socket.on("sendMessage", async ({ recipientId, message }) => {
-			console.log(
-				`Received message from ${socket.user.id} to ${recipientId}:`,
-				message
-			);
+			// console.log(
+			// 	`Received message from ${socket.user.id} to ${recipientId}:`,
+			// 	message
+			// );
 			const result = await saveMessage(socket.user.id, recipientId, message);
 			
 			if (result.errCode === 0) {
@@ -146,7 +146,7 @@ const initSocket = (server) => {
 		});
 
 		socket.on("disconnect", (reason) => {
-			console.log(`Client disconnected: ${socket.id}, Reason: ${reason}`);
+			// console.log(`Client disconnected: ${socket.id}, Reason: ${reason}`);
 		});
 		
 		socket.on("editMessage", ({ messageId, newContent, recipientId }) => {

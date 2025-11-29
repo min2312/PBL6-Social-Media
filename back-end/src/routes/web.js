@@ -50,6 +50,7 @@ let initWebRoutes = (app) => {
 	router.get("/api/accountAdmin", adminController.getAdminAccount);
 	router.get("/api/get-all-user", userController.HandleGetAllUser);
 	router.put("/api/edit-user", userController.HandleEditUser);
+	router.put("/api/update-profile", userController.HandleUpdateProfile);
 	router.post("/api/create-new-user", userController.HandleCreateNewUser);
 
 	router.post(
