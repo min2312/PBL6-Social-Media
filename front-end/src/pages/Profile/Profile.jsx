@@ -28,13 +28,14 @@ const Profile = () => {
 		bio: "",
 		joinDate: "",
 		posts: 0,
-		avatar: null,
+		profilePicture: null,
 	});
 
 	const [editForm, setEditForm] = useState({
 		fullName: "",
 		bio: "",
-		avatar: null,
+		profilePicture: null,
+		fileImage: null,
 	});
 
 	const [avatarPreview, setAvatarPreview] = useState(null);
@@ -81,8 +82,7 @@ const Profile = () => {
 			console.error("Connection error:", err.message);
 		});
 
-		newSocket.on("disconnect", (reason) => {
-		});
+		newSocket.on("disconnect", (reason) => {});
 
 		setSocket(newSocket);
 
@@ -118,14 +118,14 @@ const Profile = () => {
 						bio: u.bio || "",
 						joinDate,
 						posts: 0, // Will be updated when we fetch posts
-						avatar: u.profilePicture || u.avatar || null,
+						profilePicture: u.profilePicture || u.avatar || null,
 					};
 					setProfileData(mappedProfile);
 					setEditForm({
 						id: mappedProfile.id,
 						fullName: mappedProfile.fullName,
 						bio: mappedProfile.bio,
-						avatar: mappedProfile.avatar,
+						profilePicture: mappedProfile.profilePicture,
 					});
 
 					// Now fetch posts separately
@@ -134,9 +134,9 @@ const Profile = () => {
 						const hasPosts = Array.isArray(res.post) && res.post.length > 0;
 						if (hasPosts) {
 							// Update posts count
-							setProfileData(prev => ({
+							setProfileData((prev) => ({
 								...prev,
-								posts: res.post.length
+								posts: res.post.length,
 							}));
 
 							const formattedPosts = await Promise.all(
@@ -146,7 +146,9 @@ const Profile = () => {
 										likeRes && likeRes.errCode === 0 ? likeRes.likes.length : 0;
 									const isLiked =
 										likeRes && likeRes.errCode === 0
-											? likeRes.likes.some((l) => l.userId === user?.account?.id)
+											? likeRes.likes.some(
+													(l) => l.userId === user?.account?.id
+											  )
 											: false;
 									return {
 										id: post.id,
@@ -154,10 +156,11 @@ const Profile = () => {
 											id: u.id,
 											fullName: mappedProfile.fullName,
 											username: mappedProfile.username,
-											avatar: mappedProfile.avatar || null,
+											profilePicture: mappedProfile.profilePicture || null,
 										},
 										content: post.content,
 										images: post.imageUrl,
+										videoUrl: post.videoUrl || null,
 										likes: likesCount,
 										islikedbyUser: isLiked,
 										comments: [],
@@ -187,13 +190,13 @@ const Profile = () => {
 			}
 		};
 		fetchProfile();
-	}, [id, user?.account?.id])
+	}, [id, user?.account?.id]);
 
 	const handleEditProfile = () => {
 		setEditForm({
 			fullName: profileData.fullName,
 			bio: profileData.bio,
-			avatar: profileData.avatar,
+			profilePicture: profileData.profilePicture,
 		});
 		setAvatarPreview(null);
 		setIsEditModalOpen(true);
@@ -202,52 +205,57 @@ const Profile = () => {
 	const handleSaveProfile = async () => {
 		try {
 			// Prepare the data to send to the API
-			const profileUpdateData = {
-				id: user?.account?.id || id,
-				fullName: editForm.fullName.trim(),
-				bio: editForm.bio.trim(),
-			};
-			
+			const profileUpdateData = new FormData();
+			profileUpdateData.append("id", user?.account?.id || id);
+			profileUpdateData.append("fullName", editForm.fullName.trim());
+			profileUpdateData.append("bio", editForm.bio.trim());
+			if (avatarPreview) {
+				profileUpdateData.append("image", editForm.fileImage);
+			}
+
 			// Validate that we have a valid user ID
-			if (!profileUpdateData.id) {
-				alert("Cannot update profile: User ID is missing. Please try logging in again.");
+			if (!profileUpdateData.get("id")) {
+				alert(
+					"Cannot update profile: User ID is missing. Please try logging in again."
+				);
 				return;
 			}
-			
+
 			const response = await UpdateProfileService(profileUpdateData);
-			
+
 			// Check if the response indicates an authentication error
 			if (response && response.errCode === -2) {
 				alert("Your session has expired. Please log in again.");
 				window.location.href = "/login";
 				return;
 			}
-			
+
 			if (response && response.errCode === 0) {
-				
 				// Close the modal first
 				setIsEditModalOpen(false);
 				setAvatarPreview(null);
-				
+
 				// Reload the page to reflect all changes
 				window.location.reload();
 			} else {
 				// Handle API error
-				const errorMessage = response?.errMessage || response?.message || "Unknown error occurred";
+				const errorMessage =
+					response?.errMessage || response?.message || "Unknown error occurred";
 				console.error("Failed to update profile:", errorMessage);
 				alert(`Failed to update profile: ${errorMessage}`);
 			}
 		} catch (error) {
 			console.error("Error updating profile:", error);
-			
+
 			if (error.response?.data?.errCode === -2) {
 				alert("Your session has expired. Please log in again.");
 				window.location.href = "/login";
 			} else {
-				const errorMessage = error.response?.data?.errMessage || 
-								   error.response?.data?.message || 
-								   error.message || 
-								   "An error occurred while updating profile";
+				const errorMessage =
+					error.response?.data?.errMessage ||
+					error.response?.data?.message ||
+					error.message ||
+					"An error occurred while updating profile";
 				alert(`Error: ${errorMessage}`);
 			}
 		}
@@ -269,6 +277,11 @@ const Profile = () => {
 	};
 	const handleAvatarChange = (e) => {
 		const file = e.target.files[0];
+		const checkfileFormat = file?.type.startsWith("image/");
+		if (!checkfileFormat) {
+			alert("Please select a valid image file (jpg, png, etc.)");
+			return;
+		}
 		if (file) {
 			const reader = new FileReader();
 			reader.onload = (e) => {
@@ -276,7 +289,8 @@ const Profile = () => {
 				setAvatarPreview(imageUrl);
 				setEditForm((prev) => ({
 					...prev,
-					avatar: imageUrl,
+					profilePicture: imageUrl,
+					fileImage: file,
 				}));
 			};
 			reader.readAsDataURL(file);
@@ -287,7 +301,8 @@ const Profile = () => {
 		setAvatarPreview(null);
 		setEditForm((prev) => ({
 			...prev,
-			avatar: null,
+			profilePicture: null,
+			fileImage: null,
 		}));
 	};
 
@@ -407,8 +422,8 @@ const Profile = () => {
 							<div
 								className="profile-avatar"
 								style={{
-									backgroundImage: profileData.avatar
-										? `url(${profileData.avatar})`
+									backgroundImage: profileData.profilePicture
+										? `url(${profileData.profilePicture})`
 										: "none",
 									backgroundSize: "cover",
 									backgroundPosition: "center",
@@ -505,14 +520,14 @@ const Profile = () => {
 											className="avatar-preview"
 											style={{
 												backgroundImage:
-													avatarPreview || editForm.avatar
-														? `url(${avatarPreview || editForm.avatar})`
+													avatarPreview || editForm.profilePicture
+														? `url(${avatarPreview || editForm.profilePicture})`
 														: "none",
 												backgroundSize: "cover",
 												backgroundPosition: "center",
 											}}
 										>
-											{!avatarPreview && !editForm.avatar && (
+											{!avatarPreview && !editForm.profilePicture && (
 												<span className="avatar-placeholder">No Image</span>
 											)}
 										</div>
@@ -527,7 +542,7 @@ const Profile = () => {
 											<label htmlFor="avatar-upload" className="upload-btn">
 												Choose Image
 											</label>
-											{(avatarPreview || editForm.avatar) && (
+											{(avatarPreview || editForm.profilePicture) && (
 												<button
 													type="button"
 													onClick={handleRemoveAvatar}

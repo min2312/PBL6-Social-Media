@@ -19,7 +19,7 @@ import {
 	DeletePostConfirm,
 	GetAllComment,
 	UpdateComment,
-	DeleteComment
+	DeleteComment,
 } from "../../services/apiService";
 import { checkToxicComment } from "../../services/aiService";
 import { toast } from "react-toastify";
@@ -136,8 +136,8 @@ const Post = ({ post, onUpdatePost, onDeletePost }) => {
 			const newLikes = isLiked ? post.likes - 1 : post.likes + 1;
 			onUpdatePost({ ...post, likes: newLikes });
 			if (socket) {
-            socket.emit("notification", { userId: post.userId });
-        }
+				socket.emit("notification", { userId: post.userId });
+			}
 		}
 	};
 	const handleAddComment = async () => {
@@ -149,8 +149,7 @@ const Post = ({ post, onUpdatePost, onDeletePost }) => {
 		} catch (e) {
 			console.error("Toxic check error:", e);
 		}
-		const isToxic =
-			(toxicRes?.label && toxicRes.label !== 0);
+		const isToxic = toxicRes?.label && toxicRes.label !== 0;
 		if (isToxic) {
 			setToxicResult(toxicRes);
 			setShowToxicModal(true);
@@ -172,8 +171,8 @@ const Post = ({ post, onUpdatePost, onDeletePost }) => {
 		setCommentText("");
 		onUpdatePost({ ...post, comments: [newComment] });
 		if (socket) {
-            socket.emit("notification", { userId: post.userId });
-        }
+			socket.emit("notification", { userId: post.userId });
+		}
 		setIsCheckingToxic(false);
 	};
 	const HandleGetComment = async () => {
@@ -210,8 +209,8 @@ const Post = ({ post, onUpdatePost, onDeletePost }) => {
 			onDeletePost(postToDelete);
 			toast.success("Post deleted successfully!");
 			if (socket) {
-            socket.emit("notification", { userId: post.userId });
-        }
+				socket.emit("notification", { userId: post.userId });
+			}
 		} else {
 			toast.error(response.errMessage || "Failed to delete post.");
 		}
@@ -231,7 +230,7 @@ const Post = ({ post, onUpdatePost, onDeletePost }) => {
 		} catch (e) {
 			console.error("Toxic check error (edit):", e);
 		}
-		const isToxic = (toxicRes?.label && toxicRes.label !== 0);
+		const isToxic = toxicRes?.label && toxicRes.label !== 0;
 		if (isToxic) {
 			setToxicResult(toxicRes);
 			setShowToxicModal(true);
@@ -247,8 +246,8 @@ const Post = ({ post, onUpdatePost, onDeletePost }) => {
 			if (res && res.errCode === 0) {
 				const updated = res.comment;
 				const commentTimestamp = post.formatTimeAgo(updated.updatedAt);
-				setComments(prev =>
-					prev.map(c =>
+				setComments((prev) =>
+					prev.map((c) =>
 						c.id === editingCommentId
 							? { ...updated, timestamp: commentTimestamp }
 							: c
@@ -326,7 +325,10 @@ const Post = ({ post, onUpdatePost, onDeletePost }) => {
 			{/* Post Header */}
 			<div className="post-header">
 				<div className="post-user-info">
-					<div className="post-user-avatar clickable-user" onClick={() => handleUserClick(post.User?.id)}>
+					<div
+						className="post-user-avatar clickable-user"
+						onClick={() => handleUserClick(post.User?.id)}
+					>
 						{post.User?.profilePicture ? (
 							<img
 								src={post.User.profilePicture}
@@ -335,16 +337,33 @@ const Post = ({ post, onUpdatePost, onDeletePost }) => {
 							/>
 						) : (
 							<div className="default-avatar">
-								{post.User?.fullName?.charAt(0)?.toUpperCase() || 'U'}
+								{post.User?.fullName?.charAt(0)?.toUpperCase() || "U"}
 							</div>
 						)}
 					</div>
 					<div className="post-user-details">
-						<p className="user-name clickable-user" onClick={() => handleUserClick(post.User?.id)}>{post.User?.fullName}</p>
+						<p
+							className="user-name clickable-user"
+							onClick={() => handleUserClick(post.User?.id)}
+						>
+							{post.User?.fullName}
+						</p>
 						<div className="post-user-subtext">
-							<p className="user-username clickable-user" onClick={() => handleUserClick(post.User?.id)}>{post.User?.username}</p>
-							{/* <span className="subtext-separator">•</span> */}
-							<span className="post-timestamp clickable" onClick={handleTimestampClick}>{formattedTime}</span>
+							<p
+								className="user-username clickable-user"
+								onClick={() => handleUserClick(post.User?.id)}
+							>
+								{post.User?.username}
+							</p>
+							{post.User?.username && (
+								<span className="subtext-separator">•</span>
+							)}
+							<span
+								className="post-timestamp clickable"
+								onClick={handleTimestampClick}
+							>
+								{formattedTime}
+							</span>
 						</div>
 					</div>
 				</div>
@@ -381,8 +400,8 @@ const Post = ({ post, onUpdatePost, onDeletePost }) => {
 			{post.images && post.images.length > 0 && (
 				<div className="post-images">
 					{post.images.map((image, index) => (
-						<div 
-							key={index} 
+						<div
+							key={index}
 							className="post-image clickable-image"
 							onClick={() => handleImageClick(index)}
 						>
@@ -393,6 +412,16 @@ const Post = ({ post, onUpdatePost, onDeletePost }) => {
 							/>
 						</div>
 					))}
+				</div>
+			)}
+
+			{post.videoUrl && (
+				<div className="post-video">
+					<video
+						src={post.videoUrl}
+						controls
+						style={{ width: "100%", borderRadius: 8 }}
+					/>
 				</div>
 			)}
 
@@ -417,7 +446,9 @@ const Post = ({ post, onUpdatePost, onDeletePost }) => {
 						</button>
 					</div>
 					<div className="action-counts">
-						<span className="likes-count">{post.likes.toLocaleString()} likes</span>
+						<span className="likes-count">
+							{post.likes.toLocaleString()} likes
+						</span>
 						<span className="comments-count">{comments.length} comments</span>
 					</div>
 				</div>
@@ -427,111 +458,134 @@ const Post = ({ post, onUpdatePost, onDeletePost }) => {
 			{showComments && (
 				<div className="comments-section">
 					<div className="comments-container">
-						{comments.slice(0, showAllComments ? comments.length : visibleCommentsCount).map((comment) => (
-							<div key={comment.id} className="comment">
-								<div className="comment-avatar clickable-user" onClick={() => handleCommentUserClick(comment.User?.id)}>
-									{comment.User?.profilePicture ? (
-										<img
-											src={comment.User.profilePicture}
-											alt="avatar"
-											style={{ width: 32, height: 32, borderRadius: "50%" }}
-										/>
-									) : (
-										<div className="default-comment-avatar">
-											{comment.User?.fullName?.charAt(0)?.toUpperCase() || 'U'}
-										</div>
-									)}
-								</div>
-								<div className="comment-content">
-									<div className="comment-bubble">
-										<div className="comment-header">
-											<span className="comment-user clickable-user" onClick={() => handleCommentUserClick(comment.User?.id)}>
-												{comment.User?.fullName}
-											</span>
-											<span className="comment-username clickable-user" onClick={() => handleCommentUserClick(comment.User?.id)}>
-												{comment.User?.username}
-											</span>
-											<span className="comment-timestamp">
-												{formattedPostTime || comment.timestamp}
-											</span>
-											{user?.account?.id === comment.User?.id && (
-												<div className="comment-menu-wrapper">
-													<button
-														className="comment-menu-btn"
-														onClick={(e) => {
-															e.stopPropagation();
-															setActiveCommentMenu(
-																activeCommentMenu === comment.id ? null : comment.id
-															);
-														}}
-													>
-														<MoreHorizontal size={14} />
-													</button>
-													{activeCommentMenu === comment.id && (
-														<div className="comment-dropdown-menu">
-															{editingCommentId !== comment.id && (
-																<button
-																	className="dropdown-item"
-																	onClick={() => {
-																		setEditingCommentId(comment.id);
-																		setEditedCommentText(comment.content);
-																		setActiveCommentMenu(null);
-																	}}
-																>
-																	<span>Edit Comment</span>
-																</button>
-															)}
-															<button
-																className="dropdown-item delete-item"
-																onClick={() => handleDeleteComment(comment)}
-															>
-																<span>Delete Comment</span>
-															</button>
-														</div>
-													)}
-												</div>
-											)}
-										</div>
-										{editingCommentId === comment.id ? (
-											<div className="comment-edit-area">
-												<input
-													className="comment-edit-input"
-													value={editedCommentText}
-													onChange={(e) => setEditedCommentText(e.target.value)}
-													onKeyDown={(e) => {
-														if (e.key === "Enter") handleSaveEditedComment();
-														if (e.key === "Escape") handleCancelEdit();
-													}}
-													autoFocus
-												/>
-												<div className="comment-edit-actions">
-													<button
-														className="comment-edit-btn save"
-														onClick={handleSaveEditedComment}
-														disabled={!editedCommentText.trim()}
-													>
-														Save
-													</button>
-													<button
-														className="comment-edit-btn cancel"
-														onClick={handleCancelEdit}
-													>
-														Cancel
-													</button>
-												</div>
-											</div>
+						{comments
+							.slice(
+								0,
+								showAllComments ? comments.length : visibleCommentsCount
+							)
+							.map((comment) => (
+								<div key={comment.id} className="comment">
+									<div
+										className="comment-avatar clickable-user"
+										onClick={() => handleCommentUserClick(comment.User?.id)}
+									>
+										{comment.User?.profilePicture ? (
+											<img
+												src={comment.User.profilePicture}
+												alt="avatar"
+												style={{ width: 32, height: 32, borderRadius: "50%" }}
+											/>
 										) : (
-											<p className="comment-text">{comment.content}</p>
+											<div className="default-comment-avatar">
+												{comment.User?.fullName?.charAt(0)?.toUpperCase() ||
+													"U"}
+											</div>
 										)}
 									</div>
+									<div className="comment-content">
+										<div className="comment-bubble">
+											<div className="comment-header">
+												<span
+													className="comment-user clickable-user"
+													onClick={() =>
+														handleCommentUserClick(comment.User?.id)
+													}
+												>
+													{comment.User?.fullName}
+												</span>
+												<span
+													className="comment-username clickable-user"
+													onClick={() =>
+														handleCommentUserClick(comment.User?.id)
+													}
+												>
+													{comment.User?.username}
+												</span>
+												<span className="comment-timestamp">
+													{formattedPostTime || comment.timestamp}
+												</span>
+												{user?.account?.id === comment.User?.id && (
+													<div className="comment-menu-wrapper">
+														<button
+															className="comment-menu-btn"
+															onClick={(e) => {
+																e.stopPropagation();
+																setActiveCommentMenu(
+																	activeCommentMenu === comment.id
+																		? null
+																		: comment.id
+																);
+															}}
+														>
+															<MoreHorizontal size={14} />
+														</button>
+														{activeCommentMenu === comment.id && (
+															<div className="comment-dropdown-menu">
+																{editingCommentId !== comment.id && (
+																	<button
+																		className="dropdown-item"
+																		onClick={() => {
+																			setEditingCommentId(comment.id);
+																			setEditedCommentText(comment.content);
+																			setActiveCommentMenu(null);
+																		}}
+																	>
+																		<span>Edit Comment</span>
+																	</button>
+																)}
+																<button
+																	className="dropdown-item delete-item"
+																	onClick={() => handleDeleteComment(comment)}
+																>
+																	<span>Delete Comment</span>
+																</button>
+															</div>
+														)}
+													</div>
+												)}
+											</div>
+											{editingCommentId === comment.id ? (
+												<div className="comment-edit-area">
+													<input
+														className="comment-edit-input"
+														value={editedCommentText}
+														onChange={(e) =>
+															setEditedCommentText(e.target.value)
+														}
+														onKeyDown={(e) => {
+															if (e.key === "Enter") handleSaveEditedComment();
+															if (e.key === "Escape") handleCancelEdit();
+														}}
+														autoFocus
+													/>
+													<div className="comment-edit-actions">
+														<button
+															className="comment-edit-btn save"
+															onClick={handleSaveEditedComment}
+															disabled={!editedCommentText.trim()}
+														>
+															Save
+														</button>
+														<button
+															className="comment-edit-btn cancel"
+															onClick={handleCancelEdit}
+														>
+															Cancel
+														</button>
+													</div>
+												</div>
+											) : (
+												<p className="comment-text">{comment.content}</p>
+											)}
+										</div>
+									</div>
 								</div>
-							</div>
-						))}
+							))}
 					</div>
 
 					{/* See More Comments Button */}
 					{comments.length > visibleCommentsCount && !showAllComments && (
-						<button 
+						<button
 							className="see-more-comments-btn"
 							onClick={() => setShowAllComments(true)}
 						>
@@ -541,7 +595,7 @@ const Post = ({ post, onUpdatePost, onDeletePost }) => {
 
 					{/* See Less Comments Button */}
 					{showAllComments && comments.length > visibleCommentsCount && (
-						<button 
+						<button
 							className="see-more-comments-btn"
 							onClick={() => setShowAllComments(false)}
 						>
@@ -560,7 +614,7 @@ const Post = ({ post, onUpdatePost, onDeletePost }) => {
 								/>
 							) : (
 								<div className="default-comment-avatar">
-									{user?.account?.fullName?.charAt(0)?.toUpperCase() || 'U'}
+									{user?.account?.fullName?.charAt(0)?.toUpperCase() || "U"}
 								</div>
 							)}
 						</div>
@@ -612,7 +666,9 @@ const Post = ({ post, onUpdatePost, onDeletePost }) => {
 			{showToxicModal && (
 				<div className="post-modal-overlay">
 					<div className="post-modal post-modal-danger">
-						<p>This comment appears to contain toxic content. Please edit it.</p>
+						<p>
+							This comment appears to contain toxic content. Please edit it.
+						</p>
 						{toxicResult?.details && (
 							<small style={{ color: "#ef4444" }}>
 								{JSON.stringify(toxicResult.details)}
@@ -639,7 +695,9 @@ const Post = ({ post, onUpdatePost, onDeletePost }) => {
 					<div className="post-modal">
 						<p>Are you sure you want to delete this comment?</p>
 						{commentToDelete?.content && (
-							<small style={{ color: "#9ca3af", display: "block", marginTop: 8 }}>
+							<small
+								style={{ color: "#9ca3af", display: "block", marginTop: 8 }}
+							>
 								{commentToDelete.content}
 							</small>
 						)}

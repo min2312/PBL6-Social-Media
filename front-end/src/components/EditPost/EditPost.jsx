@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { X, Upload, Trash2, AlertTriangle } from "lucide-react";
+import React, { useState, useEffect, useRef } from "react";
+import { X, Upload, Trash2, AlertTriangle, Video } from "lucide-react";
 import "./EditPost.css";
 import { UpdatePost } from "../../services/apiService";
 import { checkToxicComment } from "../../services/aiService";
@@ -9,8 +9,12 @@ const EditPost = ({ isOpen, onClose, post, onUpdatePost }) => {
 	const [editData, setEditData] = useState({
 		content: "",
 		images: [],
+		videoUrl: null,
 	});
 	const [newImages, setNewImages] = useState([]);
+	const [newVideo, setNewVideo] = useState(null); // { url, file, duration }
+	const [removeExistingVideo, setRemoveExistingVideo] = useState(false);
+	const videoInputRef = useRef(null);
 	const [isSaving, setIsSaving] = useState(false);
 	const [isCheckingToxic, setIsCheckingToxic] = useState(false);
 	const [showToxicModal, setShowToxicModal] = useState(false);
@@ -21,10 +25,13 @@ const EditPost = ({ isOpen, onClose, post, onUpdatePost }) => {
 			setEditData({
 				content: post.content || "",
 				images: post.images || [],
+				videoUrl: post.videoUrl || null,
 			});
 			setNewImages([]);
+			setNewVideo(null);
+			setRemoveExistingVideo(false);
 		}
-	}, [post]);
+	}, [post, isOpen]);
 
 	const handleImageUpload = (e) => {
 		const files = Array.from(e.target.files);
@@ -49,12 +56,45 @@ const EditPost = ({ isOpen, onClose, post, onUpdatePost }) => {
 		setNewImages((prev) => prev.filter((_, i) => i !== index));
 	};
 
+	// Handle video upload with 5-minute limit client-side
+	const handleVideoUpload = (e) => {
+		const file = e.target.files?.[0];
+		if (!file) return;
+		if (!file.type.startsWith("video/")) return;
+
+		const url = URL.createObjectURL(file);
+		const tempVideo = document.createElement("video");
+		tempVideo.preload = "metadata";
+		tempVideo.src = url;
+		tempVideo.onloadedmetadata = () => {
+			const duration = tempVideo.duration;
+			if (duration && duration > 300) {
+				URL.revokeObjectURL(url);
+				setNewVideo(null);
+				alert("Video has to be 5 minutes or shorter.");
+				e.target.value = "";
+				return;
+			}
+			setNewVideo({ url, file, duration });
+			// If selecting a new video, we implicitly replace existing
+			setRemoveExistingVideo(false);
+		};
+		tempVideo.onerror = () => {
+			URL.revokeObjectURL(url);
+			setNewVideo(null);
+			alert("Cannot read this video. Please try another file.");
+			e.target.value = "";
+		};
+	};
+
 	const handleSave = async () => {
 		if (isSaving || isCheckingToxic) return;
 		if (
 			!editData.content.trim() &&
 			newImages.length === 0 &&
-			editData.images.length === 0
+			editData.images.length === 0 &&
+			!newVideo &&
+			!editData.videoUrl
 		) {
 			toast.error("Post cannot be empty!");
 			return;
@@ -85,6 +125,11 @@ const EditPost = ({ isOpen, onClose, post, onUpdatePost }) => {
 			...post,
 			content: editData.content,
 			images: [...editData.images, ...newImages],
+			videoUrl: removeExistingVideo
+				? null
+				: newVideo
+				? null
+				: editData.videoUrl,
 		};
 		const formData = new FormData();
 		formData.append("id", post.id);
@@ -98,6 +143,17 @@ const EditPost = ({ isOpen, onClose, post, onUpdatePost }) => {
 				}
 			});
 		}
+		// Video fields
+		if (newVideo?.file) {
+			formData.append("video", newVideo.file);
+		} else {
+			// If remove flag is set, send empty to trigger deletion; else send existing to keep
+			formData.append(
+				"videoUrl",
+				removeExistingVideo ? "" : editData.videoUrl || ""
+			);
+		}
+
 		setIsSaving(true);
 		try {
 			let response = await UpdatePost(formData);
@@ -105,6 +161,7 @@ const EditPost = ({ isOpen, onClose, post, onUpdatePost }) => {
 				...post,
 				content: response.post.content,
 				images: JSON.parse(response.post.imageUrl) || [],
+				videoUrl: response.post.videoUrl || null,
 			};
 
 			if (response && response.errCode === 0) {
@@ -123,6 +180,8 @@ const EditPost = ({ isOpen, onClose, post, onUpdatePost }) => {
 			images: post?.images || [],
 		});
 		setNewImages([]);
+		setNewVideo(null);
+		setRemoveExistingVideo(false);
 		onClose();
 	};
 
@@ -271,6 +330,87 @@ const EditPost = ({ isOpen, onClose, post, onUpdatePost }) => {
 								</label>
 							</div>
 						</div>
+
+						{/* Video Section - Only show if has video or can add video */}
+						{(editData.videoUrl || newVideo || !removeExistingVideo) && (
+							<div className="form-group" style={{ marginTop: 16 }}>
+								<label className="form-label">Video</label>
+								{editData.videoUrl && !removeExistingVideo && !newVideo && (
+									<div className="images-section" style={{ marginBottom: 12 }}>
+										<h4 className="images-subtitle">Current Video</h4>
+										<div
+											className="image-item"
+											style={{ width: "100%", maxWidth: "none" }}
+										>
+											<video
+												src={editData.videoUrl}
+												controls
+												style={{
+													width: "100%",
+													borderRadius: 8,
+													maxHeight: 400,
+													display: "block",
+												}}
+											/>
+											<button
+												type="button"
+												className="remove-image-btn"
+												onClick={() => setRemoveExistingVideo(true)}
+											>
+												<Trash2 size={16} />
+											</button>
+										</div>
+									</div>
+								)}
+								{newVideo && (
+									<div className="images-section" style={{ marginBottom: 12 }}>
+										<h4 className="images-subtitle">
+											New Video (Duration: {Math.round(newVideo.duration)}s)
+										</h4>
+										<div
+											className="image-item"
+											style={{ width: "100%", maxWidth: "none" }}
+										>
+											<video
+												src={newVideo.url}
+												controls
+												style={{
+													width: "100%",
+													borderRadius: 8,
+													maxHeight: 400,
+													display: "block",
+												}}
+											/>
+											<button
+												type="button"
+												className="remove-image-btn"
+												onClick={() => {
+													URL.revokeObjectURL(newVideo.url);
+													setNewVideo(null);
+												}}
+											>
+												<Trash2 size={16} />
+											</button>
+										</div>
+									</div>
+								)}
+
+								<div className="upload-section">
+									<input
+										type="file"
+										id="video-upload"
+										accept="video/*"
+										onChange={handleVideoUpload}
+										className="file-input"
+										ref={videoInputRef}
+										style={{ display: "none" }}
+									/>
+									<label htmlFor="video-upload" className="upload-btn">
+										<Video size={20} /> Add/Replace Video
+									</label>
+								</div>
+							</div>
+						)}
 					</div>
 
 					<div className="edit-post-footer">

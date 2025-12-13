@@ -4,7 +4,7 @@ import adminController from "../controllers/adminController";
 import { checkUserJWT, CreateJWT } from "../middleware/JWT_Action";
 import passport from "passport";
 import apiController from "../controllers/apiController";
-import uploadCloud from "../middleware/Cloudinary_Multer";
+import { uploadCloud, uploadMedia } from "../middleware/Cloudinary_Multer";
 import socialController from "../controllers/socialController.js";
 import {
 	sendResetOTP,
@@ -50,17 +50,27 @@ let initWebRoutes = (app) => {
 	router.get("/api/accountAdmin", adminController.getAdminAccount);
 	router.get("/api/get-all-user", userController.HandleGetAllUser);
 	router.put("/api/edit-user", userController.HandleEditUser);
-	router.put("/api/update-profile", userController.HandleUpdateProfile);
+	router.put(
+		"/api/update-profile",
+		uploadCloud.single("image"),
+		userController.HandleUpdateProfile
+	);
 	router.post("/api/create-new-user", userController.HandleCreateNewUser);
 
 	router.post(
 		"/api/create-new-post",
-		uploadCloud.array("image"),
+		uploadMedia.fields([
+			{ name: "image", maxCount: 10 },
+			{ name: "video", maxCount: 1 },
+		]),
 		apiController.HandleCreatePost
 	);
 	router.post(
 		"/api/update-post",
-		uploadCloud.array("image"),
+		uploadMedia.fields([
+			{ name: "image", maxCount: 10 },
+			{ name: "video", maxCount: 1 },
+		]),
 		apiController.HandleEditPost
 	);
 	router.post("/api/delete-post", apiController.HandleDeletePost);

@@ -77,7 +77,7 @@ let CreateComment = (data) => {
 	});
 };
 
-let CreatePost = (data, fileImages) => {
+let CreatePost = (data, fileImages, fileVideos = []) => {
 	return new Promise(async (resolve, reject) => {
 		try {
 			if (!data) {
@@ -97,10 +97,19 @@ let CreatePost = (data, fileImages) => {
 				} else if (fileImages && fileImages.length > 0) {
 					imagePath = fileImages.map((f) => f.path);
 				}
+				// Derive videoUrl from uploaded video file
+				let videoUrl = null;
+				if (Array.isArray(fileVideos) && fileVideos.length > 0) {
+					const v = fileVideos[0];
+					videoUrl = v?.path || null;
+				} else if (typeof data.videoUrl === "string" && data.videoUrl) {
+					// In case client sent an existing video URL
+					videoUrl = data.videoUrl;
+				}
 				let newPost = await db.Post.create({
 					userId: Number(data.userId),
 					content: data.content,
-					videoUrl: data.videoUrl,
+					videoUrl,
 					imageUrl: Array.isArray(imagePath)
 						? JSON.stringify(imagePath)
 						: imagePath,
@@ -135,7 +144,7 @@ let CreatePost = (data, fileImages) => {
 	});
 };
 
-let EditPost = (data, fileImage) => {
+let EditPost = (data, fileImage, fileVideos = []) => {
 	return new Promise(async (resolve, reject) => {
 		try {
 			let check = await db.Post.findOne({
@@ -177,11 +186,40 @@ let EditPost = (data, fileImage) => {
 				);
 				const finalImageValue =
 					newImages.length > 0 ? JSON.stringify(newImages) : null;
+				// Handle replacing/removing old video if needed
+				try {
+					// incoming from uploaded files or data.videoUrl
+					const incomingVideo =
+						Array.isArray(fileVideos) && fileVideos.length > 0
+							? fileVideos[0]?.path || null
+							: data.videoUrl || null;
+					const existingVideo = check.videoUrl;
+					const shouldRemoveOld =
+						(existingVideo &&
+							(incomingVideo === null || incomingVideo === "")) ||
+						(existingVideo && incomingVideo && incomingVideo !== existingVideo);
+					if (shouldRemoveOld) {
+						const uploadPart = existingVideo.split("/upload/")[1];
+						if (uploadPart) {
+							let parts = uploadPart.split("/");
+							if (parts[0].startsWith("v")) parts.shift();
+							const publicId = parts.join("/").split(".")[0];
+							await cloudinary.uploader.destroy(publicId, {
+								resource_type: "video",
+							});
+						}
+					}
+				} catch (err) {
+					console.warn("Failed to delete old video:", err?.message || err);
+				}
+
 				await check.update({
 					content:
 						data.content === null || data.content === "" ? null : data.content,
 					videoUrl:
-						data.videoUrl === null || data.videoUrl === ""
+						Array.isArray(fileVideos) && fileVideos.length > 0
+							? fileVideos[0]?.path || null
+							: data.videoUrl === null || data.videoUrl === ""
 							? null
 							: data.videoUrl,
 					imageUrl: finalImageValue,
@@ -248,6 +286,23 @@ let DeletePost = (postId) => {
 						console.error("❌ Error deleting image:", imgUrl, err);
 					}
 				}
+				// Delete video on Cloudinary if exists
+				try {
+					if (check.videoUrl) {
+						const uploadPart = check.videoUrl.split("/upload/")[1];
+						if (uploadPart) {
+							let parts = uploadPart.split("/");
+							if (parts[0].startsWith("v")) parts.shift();
+							const publicId = parts.join("/").split(".")[0];
+							await cloudinary.uploader.destroy(publicId, {
+								resource_type: "video",
+							});
+						}
+					}
+				} catch (err) {
+					console.error("❌ Error deleting video:", check.videoUrl, err);
+				}
+
 				await db.Post.destroy({
 					where: { id: postId },
 				});
