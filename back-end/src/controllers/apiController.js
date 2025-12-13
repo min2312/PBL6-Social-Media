@@ -2,16 +2,24 @@ import { or } from "sequelize";
 import apiService from "../service/apiService";
 const cloudinary = require("cloudinary").v2;
 
-
-
 let HandleCreatePost = async (req, res) => {
-	let data = req.body;
-	let fileImages = req.files;
+	let data = req.body || {};
+	// Support both array upload and fields upload
+	const files = req.files || {};
+	const fileImages = Array.isArray(files) ? files : files.image || [];
+	const fileVideos = Array.isArray(files) ? [] : files.video || [];
 	if (!data || Object.keys(data).length === 0) {
-		if (fileImages) {
-			fileImages.forEach(async (fileImage) => {
+		if (fileImages && fileImages.length) {
+			for (const fileImage of fileImages) {
 				await cloudinary.uploader.destroy(fileImage.filename);
-			});
+			}
+		}
+		if (fileVideos && fileVideos.length) {
+			for (const fileVideo of fileVideos) {
+				await cloudinary.uploader.destroy(fileVideo.filename, {
+					resource_type: "video",
+				});
+			}
 		}
 		return res.status(200).json({
 			errCode: 1,
@@ -20,17 +28,25 @@ let HandleCreatePost = async (req, res) => {
 	}
 
 	try {
-		let result = await apiService.CreatePost(data, fileImages);
+		// Delegate video handling to service; controller stays thin
+		let result = await apiService.CreatePost(data, fileImages, fileVideos);
 		return res.status(200).json({
 			errCode: result.errCode,
 			errMessage: result.errMessage,
 			post: result.post,
 		});
 	} catch (error) {
-		if (fileImages) {
-			fileImages.forEach(async (fileImage) => {
+		if (fileImages && fileImages.length) {
+			for (const fileImage of fileImages) {
 				await cloudinary.uploader.destroy(fileImage.filename);
-			});
+			}
+		}
+		if (fileVideos && fileVideos.length) {
+			for (const fileVideo of fileVideos) {
+				await cloudinary.uploader.destroy(fileVideo.filename, {
+					resource_type: "video",
+				});
+			}
 		}
 		return res.status(500).json({
 			errCode: 1,
@@ -40,13 +56,22 @@ let HandleCreatePost = async (req, res) => {
 };
 
 let HandleEditPost = async (req, res) => {
-	let data = req.body;
-	let fileImages = req.files;
+	let data = req.body || {};
+	const files = req.files || {};
+	const fileImages = Array.isArray(files) ? files : files.image || [];
+	const fileVideos = Array.isArray(files) ? [] : files.video || [];
 	if (!data || Object.keys(data).length === 0) {
-		if (fileImages) {
-			fileImages.forEach(async (fileImage) => {
+		if (fileImages && fileImages.length) {
+			for (const fileImage of fileImages) {
 				await cloudinary.uploader.destroy(fileImage.filename);
-			});
+			}
+		}
+		if (fileVideos && fileVideos.length) {
+			for (const fileVideo of fileVideos) {
+				await cloudinary.uploader.destroy(fileVideo.filename, {
+					resource_type: "video",
+				});
+			}
 		}
 		return res.status(200).json({
 			errCode: 1,
@@ -54,17 +79,25 @@ let HandleEditPost = async (req, res) => {
 		});
 	}
 	try {
-		let result = await apiService.EditPost(data, fileImages);
+		// Delegate video handling to service
+		let result = await apiService.EditPost(data, fileImages, fileVideos);
 		return res.status(200).json({
 			errCode: result.errCode,
 			errMessage: result.errMessage,
 			post: result.post,
 		});
 	} catch (error) {
-		if (fileImages) {
-			fileImages.forEach(async (fileImage) => {
+		if (fileImages && fileImages.length) {
+			for (const fileImage of fileImages) {
 				await cloudinary.uploader.destroy(fileImage.filename);
-			});
+			}
+		}
+		if (fileVideos && fileVideos.length) {
+			for (const fileVideo of fileVideos) {
+				await cloudinary.uploader.destroy(fileVideo.filename, {
+					resource_type: "video",
+				});
+			}
 		}
 		return res.status(500).json({
 			errCode: 1,
@@ -154,8 +187,6 @@ let HandleGetLike = async (req, res) => {
 	});
 };
 
-
-
 let HandleCreateComment = async (req, res) => {
 	let data = req.body;
 	if (!data) {
@@ -216,8 +247,6 @@ let HandleDeleteComment = async (req, res) => {
 		});
 	}
 };
-
-
 
 let HandleGetNotificationsByUserId = async (req, res) => {
 	let userId = req.query.userId;

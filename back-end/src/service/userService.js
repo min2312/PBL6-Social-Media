@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import { where } from "sequelize";
 import { response } from "express";
 import { CreateJWT } from "../middleware/JWT_Action";
+const cloudinary = require("cloudinary").v2;
 require("dotenv").config();
 const salt = bcrypt.genSaltSync(10);
 let HandleUserLogin = (email, password) => {
@@ -236,7 +237,7 @@ let updateUser = (data) => {
 	});
 };
 
-let updateUserProfile = (data) => {
+let updateUserProfile = (data, fileImage) => {
 	return new Promise(async (resolve, reject) => {
 		try {
 			if (!data.id) {
@@ -252,15 +253,31 @@ let updateUserProfile = (data) => {
 			});
 
 			if (user) {
+				if (fileImage) {
+					if (user.profilePicture) {
+						const uploadPart = user.profilePicture.split("/upload/")[1];
+						let parts = uploadPart.split("/");
+						if (parts[0].startsWith("v")) {
+							parts.shift();
+						}
+						const publicId = parts.join("/").split(".")[0];
+						await cloudinary.uploader.destroy(publicId);
+					}
+				}
 				// Prepare update object with only the fields we want to allow updating
 				let updateFields = {};
-				
+
 				if (data.fullName !== undefined) {
 					updateFields.fullName = data.fullName;
 				}
-				
+
 				if (data.bio !== undefined) {
 					updateFields.bio = data.bio;
+				}
+				if (fileImage) {
+					updateFields.profilePicture = fileImage
+						? fileImage.path
+						: user.profilePicture;
 				}
 
 				// Update the user with only the specified fields
@@ -297,12 +314,18 @@ let updateUserProfile = (data) => {
 					},
 				});
 			} else {
+				if (fileImage) {
+					await cloudinary.uploader.destroy(fileImage.filename);
+				}
 				resolve({
 					errCode: 1,
 					errMessage: "User not found!",
 				});
 			}
 		} catch (e) {
+			if (fileImage) {
+				await cloudinary.uploader.destroy(fileImage.filename);
+			}
 			reject(e);
 		}
 	});
