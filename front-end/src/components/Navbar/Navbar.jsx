@@ -1,5 +1,5 @@
 import React, { useContext, useState } from "react";
-import { Search, Bell, Settings, LogOut, LogIn } from "lucide-react";
+import { Search, Bell, Settings, LogOut, LogIn, ChevronDown } from "lucide-react";
 import "./Navbar.css";
 import { UserContext } from "../../Context/UserProvider";
 import { useNotifications } from "../../Context/NotificationContext";
@@ -10,6 +10,7 @@ import {
 import { LogOutUser } from "../../services/userService";
 import { toast } from "react-toastify";
 import Notification from "../Notification/Notification";
+import logo from "../../assets/images/logo3.png";
 
 const Navbar = ({ title = "HomePage" }) => {
 	const [showUserMenu, setShowUserMenu] = useState(false);
@@ -64,12 +65,12 @@ const Navbar = ({ title = "HomePage" }) => {
 				<div className="navbar-brand" onClick={() => history.push("/")}>
 					<div className="brand-logo">
 						<img 
-							src="https://your-logo-url.com/logo.png" 
+							src={logo} 
 							alt="SocialHub Logo" 
 							className="logo-image"
 						/>
 					</div>
-					<span className="brand-name">SocialHub</span>
+					<span className="brand-name">KIDSOCIAL</span>
 				</div>
 
 				{/* Search Bar */}
@@ -123,6 +124,10 @@ const Navbar = ({ title = "HomePage" }) => {
 										<span>{user?.account?.fullName?.charAt(0)?.toUpperCase() || 'U'}</span>
 									)}
 								</div>
+								<span className="user-menu-name">
+									{user?.account?.fullName?.split(" ").pop()}
+								</span>
+								<ChevronDown size={16} className="user-menu-icon" />
 							</button>
 
 							{showUserMenu && (

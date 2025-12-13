@@ -23,7 +23,7 @@ const Sidebar = () => {
 	return (
 		<div className="sidebar">
 			<div className="sidebar-content">
-				<div className="logo-section">
+				{/* <div className="logo-section">
 					{user && user.isAuthenticated ? (
 						<div className="user-profile">
 							<Link
@@ -45,7 +45,7 @@ const Sidebar = () => {
 							</Link>
 						</div>
 					) : null}
-				</div>
+				</div> */}
 
 				<nav className="sidebar-nav">
 					{sidebarItems.map((item) => {

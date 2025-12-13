@@ -4,7 +4,7 @@
   right: 0;
   width: 320px;
   max-height: 400px;
-  background-color: #1f2937;
+  background-color: #0d0d0d;
   border: 1px solid #374151;
   border-radius: 0.5rem;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
@@ -15,7 +15,7 @@
 .notif-header {
   padding: 1rem;
   border-bottom: 1px solid #374151;
-  background-color: #1f2937;
+  background-color: #0d0d0d;
 }
 
 .notif-header h3 {

@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState } from "react";
 import AddPost from "../../components/AddPost/AddPost";
 import Post from "../../components/Post/Post";
-import "./Home.css";
+import "./HomePage.css";
 import {
 	CreateNewPost,
 	GetAllPost,

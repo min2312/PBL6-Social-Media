@@ -341,11 +341,14 @@ const Post = ({ post, onUpdatePost, onDeletePost }) => {
 					</div>
 					<div className="post-user-details">
 						<p className="user-name clickable-user" onClick={() => handleUserClick(post.User?.id)}>{post.User?.fullName}</p>
-						<p className="user-username clickable-user" onClick={() => handleUserClick(post.User?.id)}>{post.User?.username}</p>
+						<div className="post-user-subtext">
+							<p className="user-username clickable-user" onClick={() => handleUserClick(post.User?.id)}>{post.User?.username}</p>
+							{/* <span className="subtext-separator">•</span> */}
+							<span className="post-timestamp clickable" onClick={handleTimestampClick}>{formattedTime}</span>
+						</div>
 					</div>
 				</div>
 				<div className="post-meta">
-					<span className="post-timestamp clickable" onClick={handleTimestampClick}>{formattedTime}</span>
 					{user?.account?.id === post.User?.id && (
 						<div className="post-menu-wrapper" ref={dropdownRef}>
 							<button className="post-menu-btn" onClick={toggleDropdown}>

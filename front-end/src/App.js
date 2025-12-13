@@ -30,13 +30,15 @@ function App() {
 					</div>
 				) : (
 					<div className="app-layout">
-						{user && user.isAuthenticated && <Sidebar />}
-						<div className="main-content">
-							{user && user.isAuthenticated && <Navbar title="Bird Social" />}
-							<div className="content-area">
-								<ClientRoute />
+						{user && user.isAuthenticated && <Navbar title="Bird Social" />}
+						<div className="app-body">
+							{user && user.isAuthenticated && <Sidebar />}
+							<div className="main-content">
+								<div className="content-area">
+									<ClientRoute />
+								</div>
+								{/* <Footer /> */}
 							</div>
-							{/* <Footer /> */}
 						</div>
 					</div>
 				)}
