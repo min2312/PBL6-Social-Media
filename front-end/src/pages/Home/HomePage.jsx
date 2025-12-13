@@ -270,7 +270,7 @@ const HomePage = () => {
 									<strong>{result.filename || `Image ${index + 1}`}:</strong>
 									<span className="violation-label">{result.label}</span>
 									<span className="confidence">
-										({result.confidence}% confidence)
+										{/* ({result.confidence}% confidence) */}
 									</span>
 								</li>
 							))}

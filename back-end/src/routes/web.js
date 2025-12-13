@@ -32,8 +32,14 @@ let initWebRoutes = (app) => {
 	router.post("/api/add-friend", socialController.HandleAddFriend);
 	router.get("/api/get-post-like", apiController.HandleGetLike);
 	router.post("/api/handle-like-post", apiController.HandleLikePost);
-	router.get("/api/get-notifications-by-user-id", apiController.HandleGetNotificationsByUserId);
-	router.post("/api/update-notification-read-status", apiController.HandleUpdateNotificationReadStatus);
+	router.get(
+		"/api/get-notifications-by-user-id",
+		apiController.HandleGetNotificationsByUserId
+	);
+	router.post(
+		"/api/update-notification-read-status",
+		apiController.HandleUpdateNotificationReadStatus
+	);
 	router.post("/api/create-comment", apiController.HandleCreateComment);
 	router.post("/api/update-comment", apiController.HandleUpdateComment);
 	router.post("/api/delete-comment", apiController.HandleDeleteComment);
@@ -44,6 +50,7 @@ let initWebRoutes = (app) => {
 	router.get("/api/accountAdmin", adminController.getAdminAccount);
 	router.get("/api/get-all-user", userController.HandleGetAllUser);
 	router.put("/api/edit-user", userController.HandleEditUser);
+	router.put("/api/update-profile", userController.HandleUpdateProfile);
 	router.post("/api/create-new-user", userController.HandleCreateNewUser);
 
 	router.post(
@@ -58,10 +65,8 @@ let initWebRoutes = (app) => {
 	);
 	router.post("/api/delete-post", apiController.HandleDeletePost);
 
-
 	router.delete("/api/delete-user", userController.HandleDeleteUser);
 	// router.post("/payment", apiController.HandlePaymentMoMo);
-
 
 	//ADMIN
 	router.get("/api/admin/get-all-users", adminController.HandleGetAllUsers);
@@ -135,15 +140,8 @@ let initWebRoutes = (app) => {
 	router.post("/api/reset-otp/send", sendResetOTP);
 	router.post("/api/reset-otp/verify", verifyResetOTP);
 	router.post("/api/reset-password", resetPassword);
-	// router.post(
-	// 	"/api/cancel-order-detail",
-	// 	apiController.HandleCancelOrderDetail
-	// );
-	// router.get(
-	// 	"/api/get-cancellations-by-order-id",
-	// 	apiController.HandleGetCancellationsByOrderId
-	// );
 	router.get("/api/messages", socialController.handleGetMessages);
+	router.put("/api/messages/edit", socialController.handleEditMessage);
 
 	return app.use("/", router);
 };

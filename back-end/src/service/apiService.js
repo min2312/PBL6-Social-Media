@@ -13,8 +13,6 @@ const axios = require("axios");
 const cloudinary = require("cloudinary").v2;
 require("dotenv").config();
 
-
-
 let CreateComment = (data) => {
 	return new Promise(async (resolve, reject) => {
 		try {
@@ -44,7 +42,9 @@ let CreateComment = (data) => {
 						receiverId: postOwnerId,
 						senderId: data.userId,
 						title: `New comment ${newComment.id}`,
-						content: `${sender?.fullName || "Someone"} commented: ${String(data.content || "").slice(0, 100)}`,
+						content: `${sender?.fullName || "Someone"} commented: ${String(
+							data.content || ""
+						).slice(0, 100)}`,
 						url: `/post/${data.postId}`,
 						type: "COMMENT",
 						isRead: false,
@@ -76,7 +76,6 @@ let CreateComment = (data) => {
 		}
 	});
 };
-
 
 let CreatePost = (data, fileImages) => {
 	return new Promise(async (resolve, reject) => {
@@ -279,7 +278,7 @@ let GetAllPost = (postId) => {
 			if (postId === "ALL") {
 				posts = await db.Post.findAll({
 					where: {
-						isDeleted: false
+						isDeleted: false,
 					},
 					include: [
 						{
@@ -287,6 +286,7 @@ let GetAllPost = (postId) => {
 							attributes: ["id", "fullName", "email", "profilePicture"],
 						},
 					],
+					order: [["createdAt", "DESC"]],
 				});
 			}
 			if (postId && postId !== "ALL") {
@@ -304,6 +304,7 @@ let GetAllPost = (postId) => {
 							],
 						},
 					],
+					order: [["createdAt", "DESC"]],
 				});
 			}
 			const formattedPosts = posts.map((p) => {
@@ -604,9 +605,9 @@ let GetPostByPostId = (postId) => {
 			}
 
 			let post = await db.Post.findOne({
-				where: { 
+				where: {
 					id: postId,
-					isDeleted: false 
+					isDeleted: false,
 				},
 				include: [
 					{

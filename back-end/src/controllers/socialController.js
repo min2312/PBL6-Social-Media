@@ -104,6 +104,24 @@ let handleGetMessages = async (req, res) => {
 	}
 };
 
+let handleEditMessage = async (req, res) => {
+	try {
+		const { messageId, newContent, userId } = req.body;
+		if (!messageId || !newContent || !userId) {
+			return res
+				.status(400)
+				.json({ errCode: 1, errMessage: "Missing required fields" });
+		}
+		const result = await socialService.editMessage(messageId, newContent, userId);
+		return res.status(200).json(result);
+	} catch (error) {
+		console.error("Error editing message:", error);
+		return res
+			.status(500)
+			.json({ errCode: 1, errMessage: "Error editing message" });
+	}
+};
+
 module.exports = {
 	HandleSearch,
 	HandleAddFriend,
@@ -111,4 +129,5 @@ module.exports = {
 	HandleCancelFriendRequest,
 	HandleGetAllFriendships,
 	handleGetMessages,
+	handleEditMessage,
 };
