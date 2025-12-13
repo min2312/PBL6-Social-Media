@@ -1,5 +1,5 @@
 import React, { useContext, useState } from "react";
-import { Search, Bell, Settings, LogOut, LogIn } from "lucide-react";
+import { Search, Bell, Settings, LogOut, LogIn, ChevronDown } from "lucide-react";
 import "./Navbar.css";
 import { UserContext } from "../../Context/UserProvider";
 import { useNotifications } from "../../Context/NotificationContext";
@@ -10,7 +10,7 @@ import {
 import { LogOutUser } from "../../services/userService";
 import { toast } from "react-toastify";
 import Notification from "../Notification/Notification";
-
+import logo from "../../assets/images/logo3.png";
 
 const Navbar = ({ title = "HomePage" }) => {
 	const [showUserMenu, setShowUserMenu] = useState(false);
@@ -62,9 +62,15 @@ const Navbar = ({ title = "HomePage" }) => {
 		<div className="navbar">
 			<div className="navbar-content">
 				{/* Logo/Brand Section */}
-				<div className="navbar-brand">
-					<div className="brand-logo">📱</div>
-					<span className="brand-name">SocialHub</span>
+				<div className="navbar-brand" onClick={() => history.push("/")}>
+					<div className="brand-logo">
+						<img 
+							src={logo} 
+							alt="SocialHub Logo" 
+							className="logo-image"
+						/>
+					</div>
+					<span className="brand-name">KIDSOCIAL</span>
 				</div>
 
 				{/* Search Bar */}
@@ -91,7 +97,7 @@ const Navbar = ({ title = "HomePage" }) => {
 								onClick={handleNotificationToggle}
 							>
 								<Bell size={20} />
-								<span className="notification-badge">{unread}</span>
+								{unread > 0 && <span className="notification-badge">{unread}</span>}
 							</button>
 
 							{showNotifications && (
@@ -108,15 +114,35 @@ const Navbar = ({ title = "HomePage" }) => {
 								onClick={handleUserMenuToggle}
 							>
 								<div className="navbar-avatar">
-									<span>{user?.account?.fullName.charAt(0)}</span>
+									{user?.account?.profilePicture ? (
+										<img
+											src={user.account.profilePicture}
+											alt="avatar"
+											style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
+										/>
+									) : (
+										<span>{user?.account?.fullName?.charAt(0)?.toUpperCase() || 'U'}</span>
+									)}
 								</div>
+								<span className="user-menu-name">
+									{user?.account?.fullName?.split(" ").pop()}
+								</span>
+								<ChevronDown size={16} className="user-menu-icon" />
 							</button>
 
 							{showUserMenu && (
 								<div className="user-dropdown">
 									<div className="user-info">
 										<div className="user-avatar-large">
-											{user?.account?.fullName.charAt(0)}
+											{user?.account?.profilePicture ? (
+												<img
+													src={user.account.profilePicture}
+													alt="avatar"
+													style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
+												/>
+											) : (
+												<span>{user?.account?.fullName?.charAt(0)?.toUpperCase() || 'U'}</span>
+											)}
 										</div>
 										<div className="user-details">
 											<p className="user-name">{user?.account?.fullName}</p>

@@ -153,12 +153,13 @@
 
 /* New Post Styles */
 .new-post {
-	background-color: #1f2937;
-	border-radius: 0.5rem;
+	background-color: #0d0d0d;
+	border-radius: 2rem;
 	padding: 1rem;
 	margin-bottom: 1.5rem;
 	cursor: pointer;
 	transition: background-color 0.2s;
+	border: 1px solid #374151;
 }
 
 .new-post:hover {
@@ -174,9 +175,15 @@
 .post-avatar {
 	width: 2.5rem;
 	height: 2.5rem;
-	background-color: #4b5563;
+	background: linear-gradient(45deg, #3b82f6, #8b5cf6);
 	border-radius: 50%;
 	flex-shrink: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: white;
+	font-weight: 600;
+	font-size: 1rem;
 }
 
 .post-input-wrapper {
@@ -184,7 +191,7 @@
 }
 
 .post-textarea-placeholder {
-	background-color: #374151;
+	background-color: #171717;
 	color: #9ca3af;
 	padding: 0.75rem;
 	border-radius: 0.5rem;

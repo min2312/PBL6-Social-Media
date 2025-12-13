@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState } from "react";
 import AddPost from "../../components/AddPost/AddPost";
 import Post from "../../components/Post/Post";
-import "./Home.css";
+import "./HomePage.css";
 import {
 	CreateNewPost,
 	GetAllPost,
@@ -13,6 +13,7 @@ import { UserContext } from "../../Context/UserProvider";
 import { io } from "socket.io-client";
 import { checkNSFWContent } from "../../services/aiService";
 import { AlertTriangle, X } from "lucide-react";
+import { checkToxicComment } from "../../services/aiService";
 const HomePage = () => {
 	const [isAddPostOpen, setIsAddPostOpen] = useState(false);
 	const [posts, setPosts] = useState([]);
@@ -22,6 +23,10 @@ const HomePage = () => {
 	const [isCheckingNSFW, setIsCheckingNSFW] = useState(false);
 	const [nsfwModalOpen, setNsfwModalOpen] = useState(false);
 	const [nsfwResults, setNsfwResults] = useState([]);
+	const [isCheckingToxic, setIsCheckingToxic] = useState(false);
+	const [showToxicModal, setShowToxicModal] = useState(false);
+	const [toxicResult, setToxicResult] = useState(null);
+
 	const HandleGetAllPost = async () => {
 		try {
 			if (user && user.isAuthenticated === false) {
@@ -126,7 +131,28 @@ const HomePage = () => {
 			return;
 		}
 
-		// BƯỚC 1: Check NSFW TRƯỚC nếu có ảnh
+		// BƯỚC 1: Check toxic content trước nếu có nội dung
+		if (postData.content && postData.content.trim()) {
+			setIsCheckingToxic(true);
+			try {
+				const toxicCheck = await checkToxicComment(postData.content);
+				setIsCheckingToxic(false);
+
+				const isToxic = toxicCheck?.label && toxicCheck.label !== 0;
+				if (isToxic) {
+					setToxicResult(toxicCheck);
+					setShowToxicModal(true);
+					return;
+				}
+			} catch (error) {
+				setIsCheckingToxic(false);
+				console.error("Toxic check failed:", error);
+				toast.error("Content check failed. Please try again.");
+				return;
+			}
+		}
+
+		// BƯỚC 2: Check NSFW TRƯỚC nếu có ảnh
 		if (postData.imageUrl && postData.imageUrl.length > 0) {
 			setIsCheckingNSFW(true);
 			try {
@@ -271,12 +297,82 @@ const HomePage = () => {
 		);
 	};
 
+	const ToxicModal = () => {
+		return (
+			<div
+				className="nsfw-modal-overlay"
+				onClick={() => setShowToxicModal(false)}
+			>
+				<div
+					className="nsfw-modal-content"
+					onClick={(e) => e.stopPropagation()}
+				>
+					<div className="nsfw-modal-header">
+						<div className="nsfw-warning-icon">
+							<AlertTriangle size={32} color="#ef4444" />
+						</div>
+						<h2>Toxic Content Detected</h2>
+						<button
+							className="nsfw-close-btn"
+							onClick={() => setShowToxicModal(false)}
+						>
+							<X size={20} />
+						</button>
+					</div>
+					<div className="nsfw-modal-body">
+						<p>
+							We detected potentially toxic content in your post. Please review
+							our community guidelines:
+						</p>
+						{toxicResult?.details && (
+							<div className="nsfw-violations">
+								<div>
+									<strong>Content Issue:</strong>
+									<span className="violation-label">
+										{JSON.stringify(toxicResult.details)}
+									</span>
+								</div>
+							</div>
+						)}
+						<div className="nsfw-guidelines">
+							<h4>Community Guidelines:</h4>
+							<ul>
+								<li>Be respectful and kind to others</li>
+								<li>No hate speech or harassment</li>
+								<li>Avoid offensive or inflammatory language</li>
+								<li>Keep discussions constructive and positive</li>
+							</ul>
+						</div>
+					</div>
+					<div className="nsfw-modal-footer">
+						<button
+							className="nsfw-understand-btn"
+							onClick={() => setShowToxicModal(false)}
+						>
+							I Understand
+						</button>
+					</div>
+				</div>
+			</div>
+		);
+	};
+
 	return user && user.isAuthenticated ? (
 		<div className="content-wrapper">
 			{/* New Post Input - Click to open modal */}
 			<div className="new-post" onClick={() => setIsAddPostOpen(true)}>
 				<div className="post-input-container">
-					<div className="post-avatar"></div>
+					<div className="post-avatar">
+						{user?.account?.profilePicture ? (
+							<img
+								src={user.account.profilePicture}
+								alt="avatar"
+								style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
+							/>
+						) : (
+							<span>{user?.account?.fullName?.charAt(0)?.toUpperCase() || 'U'}</span>
+						)}
+					</div>
 					<div className="post-input-wrapper">
 						<div className="post-textarea-placeholder">
 							What's on your mind?
@@ -302,12 +398,16 @@ const HomePage = () => {
 				isOpen={isAddPostOpen}
 				onClose={() => setIsAddPostOpen(false)}
 				onSubmit={handleAddPost}
-				isLoading={isCheckingNSFW}
-				loadingText="Checking content..."
+				isLoading={isCheckingNSFW || isCheckingToxic}
+				loadingText={isCheckingToxic ? "Checking content for toxicity..." : "Checking content..."
+				}
 			/>
 
 			{/* NSFW Warning Modal */}
 			{nsfwModalOpen && <NSFWModal />}
+
+			{/* Toxic Content Warning Modal */}
+			{showToxicModal && <ToxicModal />}
 		</div>
 	) : (
 		<div

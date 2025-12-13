@@ -23,19 +23,29 @@ const Sidebar = () => {
 	return (
 		<div className="sidebar">
 			<div className="sidebar-content">
-				<div className="logo-section">
+				{/* <div className="logo-section">
 					{user && user.isAuthenticated ? (
 						<div className="user-profile">
 							<Link
 								to={`/profile/${user.account.id}`}
 								className="profile-button"
 							>
-								<div className="user-avatar"></div>
+								<div className="user-avatar">
+									{user?.account?.profilePicture ? (
+										<img
+											src={user.account.profilePicture}
+											alt="avatar"
+											style={{ width: "100%", height: "100%", borderRadius: "50%", objectFit: "cover" }}
+										/>
+									) : (
+										<span>{user?.account?.fullName?.charAt(0)?.toUpperCase() || "U"}</span>
+									)}
+								</div>
 								<span>{user?.account?.fullName}</span>
 							</Link>
 						</div>
 					) : null}
-				</div>
+				</div> */}
 
 				<nav className="sidebar-nav">
 					{sidebarItems.map((item) => {

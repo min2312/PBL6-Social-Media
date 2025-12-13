@@ -51,6 +51,26 @@ const initSocket = (server) => {
 			}
 		});
 
+		// Join a room based on user ID
+		if (socket.user && socket.user.id) {
+			socket.join(socket.user.id.toString());
+			console.log(
+				`User ${socket.user.id} with socket ID ${socket.id} joined room ${socket.user.id}`
+			);
+		}
+
+		socket.on("sendMessage", async ({ recipientId, message }) => {
+			console.log(
+				`Received message from ${socket.user.id} to ${recipientId}:`,
+				message
+			);
+			await saveMessage(socket.user.id, recipientId, message);
+			io.to(recipientId.toString()).emit("receiveMessage", {
+				senderId: socket.user.id,
+				...message,
+			});
+		});
+
 		socket.on("updatePost", (updatedPost) => {
 			io.emit("postUpdated", updatedPost);
 		});

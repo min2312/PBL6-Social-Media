@@ -1,7 +1,7 @@
 .sidebar {
-  width: 256px;
-  background-color: #1f2937;
-  border-right: 1px solid #374151;
+  width: 300px;
+  background-color: #171717;
+  /* border-right: 1px  solid #374151; */
 }
 
 .sidebar-content {
@@ -95,8 +95,14 @@
 .user-avatar {
   width: 2rem;
   height: 2rem;
-  background-color: #4b5563;
+  background: linear-gradient(45deg, #3b82f6, #8b5cf6);
   border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 600;
+  font-size: 0.875rem;
 }
 
 @media (max-width: 768px) {
