@@ -1,5 +1,5 @@
 import React, { useState, useRef, useContext } from "react";
-import { X, ImagePlus, Trash2 } from "lucide-react";
+import { X, ImagePlus, Trash2, Video } from "lucide-react";
 import "./AddPost.css";
 import { UserContext } from "../../Context/UserProvider";
 
@@ -13,6 +13,8 @@ const AddPost = ({
 	const [caption, setCaption] = useState("");
 	const [images, setImages] = useState([]);
 	const [isSubmitting, setIsSubmitting] = useState(false);
+	const [video, setVideo] = useState(null); // { url, file, duration }
+	const videoInputRef = useRef(null);
 	const fileInputRef = useRef(null);
 	const maxLength = 280;
 	const { user } = useContext(UserContext);
@@ -37,6 +39,38 @@ const AddPost = ({
 		});
 	};
 
+	// Video upload handler (client-side 5-min limit)
+	const handleVideoUpload = (e) => {
+		const file = e.target.files?.[0];
+		if (!file) return;
+		if (!file.type.startsWith("video/")) return;
+
+		const url = URL.createObjectURL(file);
+		// Create temp video to read duration
+		const tempVideo = document.createElement("video");
+		tempVideo.preload = "metadata";
+		tempVideo.src = url;
+		tempVideo.onloadedmetadata = () => {
+			const duration = tempVideo.duration; // seconds
+			// Enforce <= 300 seconds (5 minutes)
+			if (duration && duration > 300) {
+				URL.revokeObjectURL(url);
+				setVideo(null);
+				alert("video has to be 5 minutes or shorter.");
+				// reset input so same file can be re-selected
+				e.target.value = "";
+				return;
+			}
+			setVideo({ url, file, duration });
+		};
+		tempVideo.onerror = () => {
+			URL.revokeObjectURL(url);
+			setVideo(null);
+			alert("Cannot read this video. Please try another file.");
+			e.target.value = "";
+		};
+	};
+
 	const removeImage = (id) => {
 		setImages((prev) => prev.filter((img) => img.id !== id));
 	};
@@ -44,7 +78,7 @@ const AddPost = ({
 	// Chuẩn hóa dữ liệu gửi lên cho đúng với bảng posts
 	const handleSubmit = async () => {
 		if (isSubmitting || isLoading) return;
-		if (caption.trim() || images.length > 0) {
+		if (caption.trim() || images.length > 0 || !!video) {
 			setIsSubmitting(true);
 			try {
 				// Lấy mảng file gốc (nếu có)
@@ -53,10 +87,12 @@ const AddPost = ({
 					userId: user?.id,
 					content: caption.trim(),
 					imageUrl: imageFiles.length > 0 ? imageFiles : null, // gửi mảng file hoặc null
+					video: video?.file || null, // gửi file video nếu có
 				});
 				// Reset form
 				setCaption("");
 				setImages([]);
+				setVideo(null);
 				onClose();
 			} finally {
 				setIsSubmitting(false);
@@ -67,13 +103,15 @@ const AddPost = ({
 	const handleClose = () => {
 		setCaption("");
 		setImages([]);
+		setVideo(null);
 		onClose();
 	};
 
 	if (!isOpen) return null;
 
 	const remainingChars = maxLength - caption.length;
-	const canPost = (caption.trim() || images.length > 0) && remainingChars >= 0;
+	const canPost =
+		(caption.trim() || images.length > 0 || !!video) && remainingChars >= 0;
 	const currentlyLoading = isSubmitting || isLoading;
 
 	return (
@@ -125,16 +163,43 @@ const AddPost = ({
 							</div>
 						)}
 
+						{video && (
+							<div className="video-preview">
+								<video src={video.url} controls className="preview-video" />
+								<div className="video-meta">
+									Duration: {Math.round(video.duration)}s
+								</div>
+								<button
+									type="button"
+									className="remove-image"
+									onClick={() => {
+										URL.revokeObjectURL(video.url);
+										setVideo(null);
+									}}
+								>
+									<Trash2 size={16} />
+								</button>
+							</div>
+						)}
+
 						<div className="image-upload-section">
 							<div className="upload-content">
 								<ImagePlus size={48} className="upload-icon" />
-								<p className="upload-text">Add photos to your post</p>
+								<p className="upload-text">Add photos/videos to your post</p>
 								<button
 									type="button"
 									className="upload-btn"
 									onClick={() => fileInputRef.current?.click()}
 								>
 									Select Photos
+								</button>
+								<button
+									type="button"
+									className="upload-btn secondary"
+									onClick={() => videoInputRef.current?.click()}
+									style={{ marginLeft: 8 }}
+								>
+									<Video size={16} style={{ marginRight: 6 }} /> Select Video
 								</button>
 							</div>
 							<input
@@ -144,6 +209,14 @@ const AddPost = ({
 								multiple
 								className="file-input"
 								onChange={handleImageUpload}
+							/>
+							<input
+								ref={videoInputRef}
+								type="file"
+								accept="video/*"
+								className="file-input"
+								onChange={handleVideoUpload}
+								style={{ display: "none" }}
 							/>
 						</div>
 					</form>

@@ -16,7 +16,6 @@ const DeletePost = ({ isOpen, onClose, onConfirm, post }) => {
 			setIsDeleting(false);
 		}
 	};
-
 	return (
 		<div className="delete-post-overlay" onClick={onClose}>
 			<div className="delete-post-modal" onClick={(e) => e.stopPropagation()}>
@@ -48,6 +47,11 @@ const DeletePost = ({ isOpen, onClose, onConfirm, post }) => {
 								<span className="image-count">
 									{post.images.length} image{post.images.length > 1 ? "s" : ""}
 								</span>
+							</div>
+						)}
+						{post?.videoUrl && (
+							<div className="preview-video">
+								<span className="video-label">1 video</span>
 							</div>
 						)}
 					</div>
