@@ -84,6 +84,7 @@ const SearchResult = () => {
 					res.posts.map(async (post) => ({
 						...post,
 						images: post.imageUrl,
+						videoUrl: post.videoUrl || null,
 						likes: await HandleGetLikePost(post.id).then((res) =>
 							res && res.errCode === 0 ? res.likes.length : 0
 						),

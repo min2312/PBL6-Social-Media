@@ -63,22 +63,31 @@ let HandleEditUser = async (req, res) => {
 let HandleUpdateProfile = async (req, res) => {
 	try {
 		let data = req.body;
-		
+		let fileImage = req.file;
+		let urlImage = data.url_image;
 		// Validate that user ID is provided (either from request body or authenticated user)
 		if (!data.id && !req.user?.id) {
+			if (fileImage) {
+				await cloudinary.uploader.destroy(fileImage.filename);
+			}
 			return res.status(400).json({
 				errCode: 1,
 				errMessage: "Missing user ID parameter!",
 			});
 		}
-		
+
 		// Use authenticated user's ID if not provided in body
 		if (!data.id && req.user?.id) {
 			data.id = req.user.id;
 		}
-		
-		let message = await userService.updateUserProfile(data);
-		
+		if (urlImage) {
+			const uploadResponse = await cloudinary.uploader.upload(urlImage, {
+				folder: "SocialMedia",
+			});
+			data.image = uploadResponse.secure_url;
+		}
+		let message = await userService.updateUserProfile(data, fileImage);
+
 		if (message && message.DT && message.DT.access_token) {
 			res.cookie("jwt", message.DT.access_token, {
 				httpOnly: true,
@@ -87,7 +96,7 @@ let HandleUpdateProfile = async (req, res) => {
 				sameSite: "none",
 			});
 		}
-		
+
 		return res.status(200).json(message);
 	} catch (error) {
 		console.error("Error in HandleUpdateProfile:", error);
@@ -131,6 +140,7 @@ const getUserAccount = async (req, res) => {
 			fullName: req.user.fullName,
 			email: req.user.email,
 			bio: req.user.bio,
+			profilePicture: req.user.profilePicture,
 			createdAt: req.user.createdAt,
 		},
 	});

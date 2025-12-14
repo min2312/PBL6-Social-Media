@@ -125,7 +125,8 @@ const HomePage = () => {
 	const handleAddPost = async (postData) => {
 		if (
 			postData.content === "" &&
-			(!postData.imageUrl || postData.imageUrl.length === 0)
+			(!postData.imageUrl || postData.imageUrl.length === 0) &&
+			!postData.video
 		) {
 			toast.error("Post cannot be empty");
 			return;
@@ -198,6 +199,11 @@ const HomePage = () => {
 				postData.imageUrl.forEach((img) => {
 					formData.append("image", img);
 				});
+			}
+
+			// Thêm video vào FormData nếu có
+			if (postData.video) {
+				formData.append("video", postData.video);
 			}
 
 			const newPost = await CreateNewPost(formData);
@@ -367,10 +373,17 @@ const HomePage = () => {
 							<img
 								src={user.account.profilePicture}
 								alt="avatar"
-								style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
+								style={{
+									width: "100%",
+									height: "100%",
+									borderRadius: "50%",
+									objectFit: "cover",
+								}}
 							/>
 						) : (
-							<span>{user?.account?.fullName?.charAt(0)?.toUpperCase() || 'U'}</span>
+							<span>
+								{user?.account?.fullName?.charAt(0)?.toUpperCase() || "U"}
+							</span>
 						)}
 					</div>
 					<div className="post-input-wrapper">
@@ -399,7 +412,10 @@ const HomePage = () => {
 				onClose={() => setIsAddPostOpen(false)}
 				onSubmit={handleAddPost}
 				isLoading={isCheckingNSFW || isCheckingToxic}
-				loadingText={isCheckingToxic ? "Checking content for toxicity..." : "Checking content..."
+				loadingText={
+					isCheckingToxic
+						? "Checking content for toxicity..."
+						: "Checking content..."
 				}
 			/>
 

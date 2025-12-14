@@ -10,12 +10,32 @@ cloudinary.config({
 
 const storage = new CloudinaryStorage({
 	cloudinary,
-	allowedFormats: ["jpg", "png", "jpeg", "webp", "jfif"],
-	params: {
-		folder: "SocialMedia",
+	params: async (req, file) => {
+		const isVideo = (file.mimetype || "").startsWith("video/");
+		const allowedFormats = isVideo
+			? ["mp4", "webm", "mov"]
+			: ["jpg", "png", "jpeg", "webp", "jfif"];
+		return {
+			folder: "SocialMedia",
+			resource_type: isVideo ? "video" : "image",
+			allowed_formats: allowedFormats,
+		};
 	},
 });
 
-const uploadCloud = multer({ storage, limits: { fileSize: 10 * 1024 * 1024 } }); // 10MB limit
+// Default uploader (images and small files)
+const uploadCloud = multer({
+	storage,
+	limits: { fileSize: 10 * 1024 * 1024 },
+}); // 10MB per file
 
-module.exports = uploadCloud;
+// Media uploader (supports larger video files)
+const uploadMedia = multer({
+	storage,
+	limits: { fileSize: 500 * 1024 * 1024 }, // up to ~500MB for videos
+});
+
+module.exports = {
+	uploadCloud,
+	uploadMedia,
+};
