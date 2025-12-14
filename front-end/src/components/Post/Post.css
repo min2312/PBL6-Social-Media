@@ -66,6 +66,12 @@
   color: #3b82f6;
 }
 
+.user-name-container {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
 .post-user-subtext {
   display: flex;
   align-items: center;
@@ -100,7 +106,7 @@
 }
 
 .post-timestamp {
-  font-size: 0.875rem;
+  font-size: 0.8rem;
   color: #9ca3af;
 }
 

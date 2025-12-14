@@ -12,6 +12,7 @@ import Settings from "../pages/Settings/Settings";
 import SearchResult from "../pages/SearchResult/SearchResult";
 import FriendList from "../pages/FriendList/FriendList";
 import PostById from "../pages/PostById/PostById";
+import LoginAdmin from "../pages/Admin/Login/LoginAdmin";
 
 // import PrivateRoutesRole from "./PrivateRoutesRole";
 import PrivateRoutes from "./PrivateRoutes";
@@ -50,6 +51,7 @@ const ClientRoute = () => {
 				<PrivateRoutes path="/messenger" component={ChatPage} />
 				<Route path="/login" component={Login} />
 				<Route path="/register" component={Register} />
+				<Route path="/login_admin" component={LoginAdmin} />
 				<PrivateRoutes path="/friends" component={FriendList} />
 				<Route path="/admin" component={Admin} />
 				<PrivateRoutes path="/settings" component={Settings} />

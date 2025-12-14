@@ -671,6 +671,59 @@ let GetPostByPostId = (postId) => {
 	});
 };
 
+let GetLikedPostsByUserId = (userId) => {
+	return new Promise(async (resolve, reject) => {
+		try {
+			let likes = await db.Like.findAll({
+				where: { userId: userId },
+				attributes: ["postId"],
+			});
+
+			if (!likes || likes.length === 0) {
+				resolve([]);
+				return;
+			}
+
+			let postIds = likes.map((like) => like.postId);
+
+			let posts = await db.Post.findAll({
+				where: {
+					id: { [Op.in]: postIds },
+					isDeleted: false,
+				},
+				include: [
+					{
+						model: db.User,
+						attributes: ["id", "fullName", "email", "profilePicture"],
+					},
+				],
+				order: [["createdAt", "DESC"]],
+			});
+
+			const formattedPosts = posts.map((p) => {
+				let images = [];
+				try {
+					if (typeof p.imageUrl === "string") {
+						images = JSON.parse(p.imageUrl);
+					} else if (Array.isArray(p.imageUrl)) {
+						images = p.imageUrl;
+					}
+				} catch (err) {
+					console.warn("Invalid imageUrl JSON:", p.imageUrl);
+				}
+
+				return {
+					...p.toJSON(),
+					imageUrl: images,
+				};
+			});
+			resolve(formattedPosts);
+		} catch (e) {
+			reject(e);
+		}
+	});
+};
+
 let UpdateNotificationReadStatus = (notificationId, isRead = true) => {
 	return new Promise(async (resolve, reject) => {
 		try {
@@ -724,4 +777,5 @@ module.exports = {
 	DeleteComment,
 	GetPostByPostId,
 	UpdateNotificationReadStatus,
+	GetLikedPostsByUserId,
 };

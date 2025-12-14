@@ -107,6 +107,16 @@ const GetPostByPostId = (postId) => {
 			console.log(err);
 		});
 };
+const GetLikedPostsByUserId = (userId) => {
+	return axios
+		.get(`/api/get-liked-posts?userId=${userId}`)
+		.then((response) => {
+			return response;
+		})
+		.catch((err) => {
+			console.log(err);
+		});
+};
 const UpdateNotificationReadStatus = (id, isRead = true) => {
 	return axios
 		.post("/api/update-notification-read-status", { id, isRead })
@@ -130,4 +140,5 @@ export {
 	DeleteComment,
 	GetPostByPostId,
 	UpdateNotificationReadStatus,
+	GetLikedPostsByUserId,
 };

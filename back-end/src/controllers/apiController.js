@@ -271,6 +271,31 @@ let HandleGetPostByPostId = async (req, res) => {
 	}
 };
 
+let HandleGetLikedPostsByUserId = async (req, res) => {
+	let userId = req.query.userId;
+	if (!userId) {
+		return res.status(200).json({
+			errCode: 1,
+			errMessage: "Missing required parameter",
+			posts: [],
+		});
+	}
+	try {
+		let posts = await apiService.GetLikedPostsByUserId(userId);
+		return res.status(200).json({
+			errCode: 0,
+			errMessage: "OK",
+			posts: posts,
+		});
+	} catch (e) {
+		return res.status(500).json({
+			errCode: 1,
+			errMessage: "Error fetching liked posts",
+			posts: [],
+		});
+	}
+};
+
 let HandleUpdateNotificationReadStatus = async (req, res) => {
 	const { id, isRead } = req.body;
 	if (!id) {
@@ -308,4 +333,5 @@ module.exports = {
 	HandleDeleteComment,
 	HandleGetPostByPostId,
 	HandleUpdateNotificationReadStatus,
+	HandleGetLikedPostsByUserId,
 };

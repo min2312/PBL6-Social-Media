@@ -340,11 +340,13 @@ const Post = ({ post, onUpdatePost, onDeletePost }) => {
 						)}
 					</div>
 					<div className="post-user-details">
-						<p className="user-name clickable-user" onClick={() => handleUserClick(post.User?.id)}>{post.User?.fullName}</p>
+						<div className="user-name-container">
+							<p className="user-name clickable-user" onClick={() => handleUserClick(post.User?.id)}>{post.User?.fullName}</p>
+							<span className="subtext-separator">•</span>
+							<span className="post-timestamp clickable" onClick={handleTimestampClick}>{formattedTime}</span>
+						</div>
 						<div className="post-user-subtext">
 							<p className="user-username clickable-user" onClick={() => handleUserClick(post.User?.id)}>{post.User?.username}</p>
-							{/* <span className="subtext-separator">•</span> */}
-							<span className="post-timestamp clickable" onClick={handleTimestampClick}>{formattedTime}</span>
 						</div>
 					</div>
 				</div>

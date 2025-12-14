@@ -11,7 +11,7 @@ const Notification = ({ isOpen, onClose }) => {
 	const history = useHistory();
 	const [socket, setSocket] = useState(null);
 	const { user } = useContext(UserContext);
-	const { notifications = [], unread = 0 } = useNotifications();
+	const { notifications = [], unread = 0, setNotifications, setUnread } = useNotifications();
 
 	const displayedNotifications = Array.isArray(notifications)
 		? notifications
@@ -79,9 +79,14 @@ const Notification = ({ isOpen, onClose }) => {
 		if (notification?.isRead === false) {
 			try {
 				await UpdateNotificationReadStatus(notification.id, true);
-				if (socket) {
-					socket.emit("notification", { userId: notification.receiverId });
-				}
+				
+				// Update local state without socket
+				setNotifications(prevNotifications => 
+					prevNotifications.map(n => 
+						n.id === notification.id ? { ...n, isRead: true } : n
+					)
+				);
+				setUnread(prevUnread => Math.max(0, prevUnread - 1));
 			} catch (error) {
 				console.warn("Failed to mark notification as read:", error);
 			}

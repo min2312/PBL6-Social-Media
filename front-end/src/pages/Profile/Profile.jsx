@@ -6,13 +6,26 @@ import {
 	UserX,
 	AlertCircle,
 	Home,
+	UserPlus,
+	UserCheck,
 } from "lucide-react";
 import Post from "../../components/Post/Post";
 import "./Profile.css";
 import { UserContext } from "../../Context/UserProvider";
 import { useParams, useHistory } from "react-router-dom";
-import { GetAllPost, HandleGetLikePost } from "../../services/apiService";
+import {
+	GetAllPost,
+	HandleGetLikePost,
+	GetLikedPostsByUserId,
+} from "../../services/apiService";
 import { GetAllUser, UpdateProfileService } from "../../services/userService";
+import {
+	search as searchService,
+	sendFriendRequest,
+	cancelFriendRequest,
+	sendAddFriend,
+} from "../../services/socialService";
+import { toast } from "react-toastify";
 import { io } from "socket.io-client";
 
 const Profile = () => {
@@ -22,6 +35,7 @@ const Profile = () => {
 	const { user } = useContext(UserContext);
 	const { id } = useParams();
 	const history = useHistory();
+	const [friendshipStatus, setFriendshipStatus] = useState("none");
 	const [profileData, setProfileData] = useState({
 		fullName: "",
 		username: "",
@@ -39,6 +53,7 @@ const Profile = () => {
 
 	const [avatarPreview, setAvatarPreview] = useState(null);
 	const [userPosts, setUserPosts] = useState([]);
+	const [likedPosts, setLikedPosts] = useState([]);
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState(null);
 
@@ -81,8 +96,7 @@ const Profile = () => {
 			console.error("Connection error:", err.message);
 		});
 
-		newSocket.on("disconnect", (reason) => {
-		});
+		newSocket.on("disconnect", (reason) => {});
 
 		setSocket(newSocket);
 
@@ -90,6 +104,54 @@ const Profile = () => {
 			newSocket.disconnect();
 		};
 	}, [user]);
+
+	useEffect(() => {
+		const fetchLikedPosts = async () => {
+			if (activeTab === "likes" && id) {
+				try {
+					const res = await GetLikedPostsByUserId(id);
+					if (res && res.errCode === 0) {
+						const formattedPosts = await Promise.all(
+							res.posts.map(async (post) => {
+								const likeRes = await HandleGetLikePost(post.id);
+								const likesCount =
+									likeRes && likeRes.errCode === 0 ? likeRes.likes.length : 0;
+								const isLiked =
+									likeRes && likeRes.errCode === 0
+										? likeRes.likes.some((l) => l.userId === user?.account?.id)
+										: false;
+								return {
+									id: post.id,
+									User: {
+										id: post.User.id,
+										fullName: post.User.fullName,
+										username:
+											post.User.username ||
+											(post.User.email
+												? `@${post.User.email.split("@")[0]}`
+												: ""),
+										avatar: post.User.profilePicture || null,
+									},
+									content: post.content,
+									images: post.imageUrl,
+									likes: likesCount,
+									islikedbyUser: isLiked,
+									comments: [],
+									shares: 0,
+									timestamp: post.updatedAt || post.createdAt,
+									formatTimeAgo,
+								};
+							})
+						);
+						setLikedPosts(formattedPosts);
+					}
+				} catch (e) {
+					console.error("Error fetching liked posts", e);
+				}
+			}
+		};
+		fetchLikedPosts();
+	}, [activeTab, id, user?.account?.id]);
 
 	useEffect(() => {
 		const fetchProfile = async () => {
@@ -128,15 +190,37 @@ const Profile = () => {
 						avatar: mappedProfile.avatar,
 					});
 
+					// Fetch friendship status if viewing another user's profile
+					if (user?.account?.id && u.id !== user.account.id) {
+						try {
+							const searchRes = await searchService(
+								u.fullName,
+								user.account.id
+							);
+							if (
+								searchRes &&
+								searchRes.errCode === 0 &&
+								searchRes.people
+							) {
+								const person = searchRes.people.find((p) => p.id === u.id);
+								if (person) {
+									setFriendshipStatus(person.friendshipStatus || "none");
+								}
+							}
+						} catch (err) {
+							console.error("Failed to fetch friendship status", err);
+						}
+					}
+
 					// Now fetch posts separately
 					const res = await GetAllPost(id);
 					if (res && res.errCode === 0) {
 						const hasPosts = Array.isArray(res.post) && res.post.length > 0;
 						if (hasPosts) {
 							// Update posts count
-							setProfileData(prev => ({
+							setProfileData((prev) => ({
 								...prev,
-								posts: res.post.length
+								posts: res.post.length,
 							}));
 
 							const formattedPosts = await Promise.all(
@@ -187,7 +271,70 @@ const Profile = () => {
 			}
 		};
 		fetchProfile();
-	}, [id, user?.account?.id])
+	}, [id, user?.account?.id]);
+
+	const handleAddFriend = async () => {
+		if (!user || !user.isAuthenticated) {
+			toast.error("Please log in to add friends");
+			return;
+		}
+		const res = await sendAddFriend(user.account.id, id);
+		if (res && res.errCode === 0) {
+			toast.success("Friend request sent");
+			if (socket) {
+				socket.emit("sendFriendRequest", {
+					data: user.account,
+					toUserId: id,
+					friendshipStatus: "they_sent_request",
+				});
+			}
+			setFriendshipStatus("you_sent_request");
+		} else {
+			toast.error(res?.errMessage || "Failed to send request");
+		}
+	};
+
+	const handleCancelFriendRequest = async () => {
+		const res = await cancelFriendRequest(user.account.id, id);
+		if (res && res.errCode === 0) {
+			toast.success(
+				friendshipStatus === "friends"
+					? "Unfriended"
+					: "Request canceled"
+			);
+			if (socket) {
+				socket.emit("sendFriendRequest", {
+					toUserId: id,
+					friendshipStatus: "none",
+				});
+			}
+			setFriendshipStatus("none");
+		} else {
+			toast.error(res?.errMessage || "Failed to cancel request");
+		}
+	};
+
+	const handleRespondFriendRequest = async (status) => {
+		const res = await sendFriendRequest(user.account.id, id, status);
+		if (res && res.errCode === 0) {
+			toast.success(
+				`Friend request ${
+					status === "accepted" ? "accepted" : "declined"
+				}`
+			);
+			const newStatus = status === "accepted" ? "friends" : "none";
+			if (socket) {
+				socket.emit("sendFriendRequest", {
+					data: user.account,
+					toUserId: id,
+					friendshipStatus: newStatus,
+				});
+			}
+			setFriendshipStatus(newStatus);
+		} else {
+			toast.error(res?.errMessage || "Failed to update request");
+		}
+	};
 
 	const handleEditProfile = () => {
 		setEditForm({
@@ -207,47 +354,50 @@ const Profile = () => {
 				fullName: editForm.fullName.trim(),
 				bio: editForm.bio.trim(),
 			};
-			
+
 			// Validate that we have a valid user ID
 			if (!profileUpdateData.id) {
-				alert("Cannot update profile: User ID is missing. Please try logging in again.");
+				alert(
+					"Cannot update profile: User ID is missing. Please try logging in again."
+				);
 				return;
 			}
-			
+
 			const response = await UpdateProfileService(profileUpdateData);
-			
+
 			// Check if the response indicates an authentication error
 			if (response && response.errCode === -2) {
 				alert("Your session has expired. Please log in again.");
 				window.location.href = "/login";
 				return;
 			}
-			
+
 			if (response && response.errCode === 0) {
-				
 				// Close the modal first
 				setIsEditModalOpen(false);
 				setAvatarPreview(null);
-				
+
 				// Reload the page to reflect all changes
 				window.location.reload();
 			} else {
 				// Handle API error
-				const errorMessage = response?.errMessage || response?.message || "Unknown error occurred";
+				const errorMessage =
+					response?.errMessage || response?.message || "Unknown error occurred";
 				console.error("Failed to update profile:", errorMessage);
 				alert(`Failed to update profile: ${errorMessage}`);
 			}
 		} catch (error) {
 			console.error("Error updating profile:", error);
-			
+
 			if (error.response?.data?.errCode === -2) {
 				alert("Your session has expired. Please log in again.");
 				window.location.href = "/login";
 			} else {
-				const errorMessage = error.response?.data?.errMessage || 
-								   error.response?.data?.message || 
-								   error.message || 
-								   "An error occurred while updating profile";
+				const errorMessage =
+					error.response?.data?.errMessage ||
+					error.response?.data?.message ||
+					error.message ||
+					"An error occurred while updating profile";
 				alert(`Error: ${errorMessage}`);
 			}
 		}
@@ -260,12 +410,16 @@ const Profile = () => {
 		setUserPosts((prev) =>
 			prev.map((post) => (post.id === updatedPost.id ? updatedPost : post))
 		);
+		setLikedPosts((prev) =>
+			prev.map((post) => (post.id === updatedPost.id ? updatedPost : post))
+		);
 	};
 	const handleDeletePost = (postToDelete) => {
 		if (socket) {
 			socket.emit("deletePost", postToDelete);
 		}
 		setUserPosts((prev) => prev.filter((post) => post.id !== postToDelete.id));
+		setLikedPosts((prev) => prev.filter((post) => post.id !== postToDelete.id));
 	};
 	const handleAvatarChange = (e) => {
 		const file = e.target.files[0];
@@ -384,11 +538,25 @@ const Profile = () => {
 					</div>
 				);
 			case "likes":
+				if (likedPosts.length === 0) {
+					return (
+						<div className="no-posts">
+							<MessageSquare size={48} className="no-posts-icon" />
+							<h3>No liked posts</h3>
+							<p>Liked posts will appear here.</p>
+						</div>
+					);
+				}
 				return (
-					<div className="no-posts">
-						<MessageSquare size={48} className="no-posts-icon" />
-						<h3>No liked posts</h3>
-						<p>Liked posts will appear here.</p>
+					<div className="profile-posts">
+						{likedPosts.map((post) => (
+							<Post
+								key={post.id}
+								post={{ ...post, formatTimeAgo }}
+								onUpdatePost={handleUpdatePost}
+								onDeletePost={handleDeletePost}
+							/>
+						))}
 					</div>
 				);
 			default:
@@ -427,13 +595,65 @@ const Profile = () => {
 								</div>
 
 								<div className="profile-actions">
-									{user?.account?.id?.toString() === id?.toString() && (
+									{user?.account?.id?.toString() === id?.toString() ? (
 										<button
 											className="edit-profile-btn"
 											onClick={handleEditProfile}
 										>
 											Edit Profile
 										</button>
+									) : (
+										<>
+											{friendshipStatus === "none" && (
+												<button
+													className="action-btn primary"
+													onClick={handleAddFriend}
+												>
+													<UserPlus size={18} />
+													Add Friend
+												</button>
+											)}
+											{friendshipStatus === "you_sent_request" && (
+												<button
+													className="action-btn danger"
+													onClick={handleCancelFriendRequest}
+												>
+													<X size={18} />
+													Cancel Request
+												</button>
+											)}
+											{friendshipStatus === "they_sent_request" && (
+												<>
+													<button
+														className="action-btn success"
+														onClick={() =>
+															handleRespondFriendRequest("accepted")
+														}
+													>
+														<UserCheck size={18} />
+														Accept
+													</button>
+													<button
+														className="action-btn danger"
+														onClick={() =>
+															handleRespondFriendRequest("reject")
+														}
+													>
+														<UserX size={18} />
+														Decline
+													</button>
+												</>
+											)}
+											{friendshipStatus === "friends" && (
+												<button
+													className="action-btn danger"
+													onClick={handleCancelFriendRequest}
+												>
+													<UserX size={18} />
+													Unfriend
+												</button>
+											)}
+										</>
 									)}
 								</div>
 							</div>

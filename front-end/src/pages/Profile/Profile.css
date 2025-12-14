@@ -6,7 +6,7 @@
 
 /* Profile Header */
 .profile-header {
-	background-color: #1f2937;
+	background-color: #171717;
 	border-radius: 0.75rem;
 	overflow: hidden;
 	margin-bottom: 1.5rem;
@@ -96,6 +96,51 @@
 
 .edit-profile-btn:hover {
 	background-color: #1d4ed8;
+}
+
+/* Action Buttons */
+.action-btn {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0.5rem 1rem;
+	border-radius: 0.5rem;
+	border: none;
+	cursor: pointer;
+	font-weight: 600;
+	font-size: 0.875rem;
+	transition: all 0.2s;
+	color: white;
+}
+
+.action-btn.primary {
+	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+	box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.action-btn.primary:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.action-btn.danger {
+	background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+	box-shadow: 0 2px 8px rgba(244, 67, 54, 0.3);
+}
+
+.action-btn.danger:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 4px 12px rgba(244, 67, 54, 0.4);
+}
+
+.action-btn.success {
+	background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+	box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+}
+
+.action-btn.success:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
 }
 
 /* Profile Stats */

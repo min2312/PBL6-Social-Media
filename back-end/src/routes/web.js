@@ -45,6 +45,7 @@ let initWebRoutes = (app) => {
 	router.post("/api/delete-comment", apiController.HandleDeleteComment);
 	router.get("/api/getAllPost", apiController.HandleGetAllPost);
 	router.get("/api/get-post-by-id", apiController.HandleGetPostByPostId);
+	router.get("/api/get-liked-posts", apiController.HandleGetLikedPostsByUserId);
 	router.get("/api/getAllComment", apiController.HandleGetAllComment);
 	router.get("/api/account", userController.getUserAccount);
 	router.get("/api/accountAdmin", adminController.getAdminAccount);
