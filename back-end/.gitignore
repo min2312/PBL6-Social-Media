@@ -4,7 +4,6 @@
 /.idea
 
 .env
-.babelrc
 __tests__
 testUtils
 jest.config.cjs
