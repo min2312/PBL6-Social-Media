@@ -16,6 +16,7 @@ import LoginAdmin from "../pages/Admin/Login/LoginAdmin";
 
 // import PrivateRoutesRole from "./PrivateRoutesRole";
 import PrivateRoutes from "./PrivateRoutes";
+import PrivateRoutesRole from "./PrivateRoutesRole";
 // import LoginAdmin from "../pages/Login/LoginAdmin";
 // import OrderMenu from "../pages/OrderMenu/OrderMenu";
 // import ResetPassword from "../pages/Login/ResetPassword";
@@ -53,7 +54,7 @@ const ClientRoute = () => {
 				<Route path="/register" component={Register} />
 				<Route path="/login_admin" component={LoginAdmin} />
 				<PrivateRoutes path="/friends" component={FriendList} />
-				<Route path="/admin" component={Admin} />
+				<PrivateRoutesRole path="/admin" component={Admin} role="admin" />
 				<PrivateRoutes path="/settings" component={Settings} />
 				<PrivateRoutes path="/search" component={SearchResult} />
 				<PrivateRoutes path="/post/:postId" component={PostById} />
