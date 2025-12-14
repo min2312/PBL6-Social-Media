@@ -10,7 +10,7 @@
 		"test:logs:save": "SET SHOW_IO=1&& jest --runInBand > test-report/terminal.log 2>&1",
 		"logs:csv": "node scripts/parse_jest_logs_to_csv.js test-report/terminal.log test-report/terminal.csv",
 		"start": "nodemon --exec ./node_modules/.bin/babel-node src/server.js",
-		"run": "node --experimental-specifier-resolution=node src/server.js"
+		"run": "babel-node src/server.js"
 	},
 	"author": "MINH",
 	"license": "ISC",
@@ -40,7 +40,10 @@
 		"qs": "^6.13.0",
 		"sequelize": "^6.37.3",
 		"sequelize-cli": "^6.6.2",
-		"socket.io": "^4.8.1"
+		"socket.io": "^4.8.1",
+		"@babel/core": "^7.12.10",
+		"@babel/node": "^7.12.10",
+		"@babel/preset-env": "^7.12.10"
 	},
 	"devDependencies": {
 		"@babel/core": "^7.12.10",
