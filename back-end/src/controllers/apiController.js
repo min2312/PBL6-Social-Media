@@ -34,6 +34,7 @@ let HandleCreatePost = async (req, res) => {
 			errCode: result.errCode,
 			errMessage: result.errMessage,
 			post: result.post,
+			violenceDetails: result.violenceDetails, // Pass through violence detection details
 		});
 	} catch (error) {
 		if (fileImages && fileImages.length) {
@@ -85,6 +86,7 @@ let HandleEditPost = async (req, res) => {
 			errCode: result.errCode,
 			errMessage: result.errMessage,
 			post: result.post,
+			violenceDetails: result.violenceDetails, // Pass through violence detection details
 		});
 	} catch (error) {
 		if (fileImages && fileImages.length) {

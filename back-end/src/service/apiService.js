@@ -91,22 +91,23 @@ let CreatePost = (data, fileImages, fileVideos = []) => {
 					errMessage: "The post error",
 				});
 			} else {
-				let imagePath = null;
-				if (Array.isArray(data.image) && data.image.length > 0) {
-					imagePath = data.image; // mảng ảnh từ Cloudinary
-				} else if (fileImages && fileImages.length > 0) {
-					imagePath = fileImages.map((f) => f.path);
-				}
-				// Derive videoUrl from uploaded video file
-				let videoUrl = null;
-				if (Array.isArray(fileVideos) && fileVideos.length > 0) {
-					const v = fileVideos[0];
-					videoUrl = v?.path || null;
-				} else if (typeof data.videoUrl === "string" && data.videoUrl) {
-					// In case client sent an existing video URL
-					videoUrl = data.videoUrl;
-				}
-				let newPost = await db.Post.create({
+			let imagePath = null;
+			if (Array.isArray(data.image) && data.image.length > 0) {
+				imagePath = data.image; // mảng ảnh từ Cloudinary
+			} else if (fileImages && fileImages.length > 0) {
+				imagePath = fileImages.map((f) => f.path);
+			}
+			
+			// Derive videoUrl from uploaded video file
+			let videoUrl = null;
+			if (Array.isArray(fileVideos) && fileVideos.length > 0) {
+				const v = fileVideos[0];
+				videoUrl = v?.path || null;
+			} else if (typeof data.videoUrl === "string" && data.videoUrl) {
+				// In case client sent an existing video URL
+				videoUrl = data.videoUrl;
+			}
+			let newPost = await db.Post.create({
 					userId: Number(data.userId),
 					content: data.content,
 					videoUrl,

@@ -219,6 +219,7 @@ const getAllPosts = async () => {
                 id: post.id,
                 content: post.content,
                 imageUrl: images,
+                videoUrl: post.videoUrl || null,
                 isDeleted: post.isDeleted || false,
                 createdAt: post.createdAt,
                 userId: post.User.id,
