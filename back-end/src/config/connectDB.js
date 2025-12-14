@@ -17,6 +17,7 @@ const sequelize = new Sequelize(
 				ca: fs.readFileSync(
 					path.join(__dirname, "./certs/DigiCertGlobalRootCA.crt.pem")
 				),
+				rejectUnauthorized: false,
 			},
 		},
 	}
