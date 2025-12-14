@@ -1,5 +1,7 @@
 const { Sequelize } = require("sequelize");
-
+require("dotenv").config();
+import fs from "fs";
+import path from "path";
 // Option 3: Passing parameters separately (other dialects)
 const sequelize = new Sequelize(
 	process.env.DB_NAME,
@@ -9,6 +11,14 @@ const sequelize = new Sequelize(
 		host: process.env.DB_HOST,
 		dialect: "mysql",
 		port: process.env.DB_PORT,
+		dialectOptions: {
+			ssl: {
+				require: true,
+				ca: fs.readFileSync(
+					path.join(__dirname, "./certs/DigiCertGlobalRootCA.crt.pem")
+				),
+			},
+		},
 	}
 );
 
