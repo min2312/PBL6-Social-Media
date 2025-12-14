@@ -42,6 +42,10 @@ const Admin = () => {
 		pendingPosts: 0,
 	});
 	const [loading, setLoading] = useState(false);
+	const [currentUserPage, setCurrentUserPage] = useState(1);
+	const [currentPostPage, setCurrentPostPage] = useState(1);
+	const usersPerPage = 5;
+	const postsPerPage = 9;
 	const history = useHistory();
 	const { logoutContext } = useContext(UserContext);
 
@@ -223,11 +227,13 @@ const Admin = () => {
 		setSelectedUserId(userId);
 		setActiveTab("posts");
 		setSearchQuery("");
+		setCurrentPostPage(1);
 	};
 
 	// Clear selected user filter
 	const handleClearUserFilter = () => {
 		setSelectedUserId(null);
+		setCurrentPostPage(1);
 	};
 
 	// Filter data based on search
@@ -255,6 +261,36 @@ const Admin = () => {
 	const selectedUser = selectedUserId
 		? users.find((u) => u.id === selectedUserId)
 		: null;
+
+	// Pagination logic for users
+	const indexOfLastUser = currentUserPage * usersPerPage;
+	const indexOfFirstUser = indexOfLastUser - usersPerPage;
+	const currentUsers = filteredUsers.slice(indexOfFirstUser, indexOfLastUser);
+	const totalUserPages = Math.ceil(filteredUsers.length / usersPerPage);
+
+	// Pagination logic for posts
+	const indexOfLastPost = currentPostPage * postsPerPage;
+	const indexOfFirstPost = indexOfLastPost - postsPerPage;
+	const currentPosts = filteredPosts.slice(indexOfFirstPost, indexOfLastPost);
+	const totalPostPages = Math.ceil(filteredPosts.length / postsPerPage);
+
+	// Pagination handlers
+	const handleUserPageChange = (pageNumber) => {
+		setCurrentUserPage(pageNumber);
+	};
+
+	const handlePostPageChange = (pageNumber) => {
+		setCurrentPostPage(pageNumber);
+	};
+
+	// Reset to page 1 when search or filter changes
+	useEffect(() => {
+		setCurrentUserPage(1);
+	}, [searchQuery, statusFilter]);
+
+	useEffect(() => {
+		setCurrentPostPage(1);
+	}, [searchQuery, selectedUserId]);
 
 	if (loading) {
 		return (
@@ -331,6 +367,7 @@ const Admin = () => {
 						setActiveTab("users");
 						handleClearUserFilter();
 						setSearchQuery("");
+						setCurrentUserPage(1);
 					}}
 				>
 					<Users size={18} />
@@ -341,6 +378,7 @@ const Admin = () => {
 					onClick={() => {
 						setActiveTab("posts");
 						setSearchQuery("");
+						setCurrentPostPage(1);
 					}}
 				>
 					<FileText size={18} />
@@ -408,19 +446,19 @@ const Admin = () => {
 									<th>View Posts</th>
 									<th>Actions</th>
 								</tr>
-							</thead>
-							<tbody>
-								{filteredUsers.map((user) => (
-									<tr key={user.id}>
-										<td>{user.id}</td>
-										<td>
-											<div className="user-info-cell">
-												<div className="user-avatar-small">
-													{user.fullName?.charAt(0) || "?"}
-												</div>
-												<span>{user.fullName || "Unknown"}</span>
+						</thead>
+						<tbody>
+							{currentUsers.map((user) => (
+								<tr key={user.id}>
+									<td>{user.id}</td>
+									<td>
+										<div className="user-info-cell">
+											<div className="user-avatar-small">
+												{user.fullName?.charAt(0) || "?"}
 											</div>
-										</td>
+											<span>{user.fullName || "Unknown"}</span>
+										</div>
+									</td>
 										<td>{user.email}</td>
 										<td>
 											<span className={`status-badge ${user.status}`}>
@@ -471,6 +509,39 @@ const Admin = () => {
 							</tbody>
 						</table>
 					)}
+					{filteredUsers.length > 0 && totalUserPages > 1 && (
+						<div className="pagination">
+							<button
+								className="pagination-btn"
+								onClick={() => handleUserPageChange(currentUserPage - 1)}
+								disabled={currentUserPage === 1}
+							>
+								← Previous
+							</button>
+							<div className="pagination-numbers">
+								{Array.from({ length: totalUserPages }, (_, i) => i + 1).map(
+									(page) => (
+										<button
+											key={page}
+											className={`pagination-number ${
+												page === currentUserPage ? "active" : ""
+											}`}
+											onClick={() => handleUserPageChange(page)}
+										>
+											{page}
+										</button>
+									)
+								)}
+							</div>
+							<button
+								className="pagination-btn"
+								onClick={() => handleUserPageChange(currentUserPage + 1)}
+								disabled={currentUserPage === totalUserPages}
+							>
+								Next →
+							</button>
+						</div>
+					)}
 				</div>
 			) : (
 				<div className="posts-section">
@@ -496,7 +567,7 @@ const Admin = () => {
 								<p>No posts found</p>
 							</div>
 						) : (
-							filteredPosts.map((post) => (
+							currentPosts.map((post) => (
 								<div key={post.id} className="admin-post-card">
 									<div className="post-header">
 										<div className="post-user">
@@ -525,6 +596,15 @@ const Admin = () => {
 										{post.imageUrl && post.imageUrl.length > 0 && (
 											<div className="post-image">
 												<img src={post.imageUrl[0]} alt="Post" />
+											</div>
+										)}
+										{post.videoUrl && (
+											<div className="post-video">
+												<video
+													src={post.videoUrl}
+													controls
+													style={{ width: "100%", borderRadius: 8 }}
+												/>
 											</div>
 										)}
 									</div>
@@ -562,6 +642,39 @@ const Admin = () => {
 							))
 						)}
 					</div>
+					{filteredPosts.length > 0 && totalPostPages > 1 && (
+						<div className="pagination">
+							<button
+								className="pagination-btn"
+								onClick={() => handlePostPageChange(currentPostPage - 1)}
+								disabled={currentPostPage === 1}
+							>
+								← Previous
+							</button>
+							<div className="pagination-numbers">
+								{Array.from({ length: totalPostPages }, (_, i) => i + 1).map(
+									(page) => (
+										<button
+											key={page}
+											className={`pagination-number ${
+												page === currentPostPage ? "active" : ""
+											}`}
+											onClick={() => handlePostPageChange(page)}
+										>
+											{page}
+										</button>
+									)
+								)}
+							</div>
+							<button
+								className="pagination-btn"
+								onClick={() => handlePostPageChange(currentPostPage + 1)}
+								disabled={currentPostPage === totalPostPages}
+							>
+								Next →
+							</button>
+						</div>
+					)}
 				</div>
 			)}
 		</div>
