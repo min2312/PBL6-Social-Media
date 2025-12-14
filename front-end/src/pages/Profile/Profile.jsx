@@ -57,6 +57,7 @@ const Profile = () => {
 	const [likedPosts, setLikedPosts] = useState([]);
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState(null);
+	const [isSaving, setIsSaving] = useState(false);
 
 	const formatTimeAgo = (dateString) => {
 		const date = new Date(dateString);
@@ -198,11 +199,7 @@ const Profile = () => {
 								u.fullName,
 								user.account.id
 							);
-							if (
-								searchRes &&
-								searchRes.errCode === 0 &&
-								searchRes.people
-							) {
+							if (searchRes && searchRes.errCode === 0 && searchRes.people) {
 								const person = searchRes.people.find((p) => p.id === u.id);
 								if (person) {
 									setFriendshipStatus(person.friendshipStatus || "none");
@@ -302,9 +299,7 @@ const Profile = () => {
 		const res = await cancelFriendRequest(user.account.id, id);
 		if (res && res.errCode === 0) {
 			toast.success(
-				friendshipStatus === "friends"
-					? "Unfriended"
-					: "Request canceled"
+				friendshipStatus === "friends" ? "Unfriended" : "Request canceled"
 			);
 			if (socket) {
 				socket.emit("sendFriendRequest", {
@@ -322,9 +317,7 @@ const Profile = () => {
 		const res = await sendFriendRequest(user.account.id, id, status);
 		if (res && res.errCode === 0) {
 			toast.success(
-				`Friend request ${
-					status === "accepted" ? "accepted" : "declined"
-				}`
+				`Friend request ${status === "accepted" ? "accepted" : "declined"}`
 			);
 			const newStatus = status === "accepted" ? "friends" : "none";
 			if (socket) {
@@ -351,16 +344,18 @@ const Profile = () => {
 	};
 
 	const handleSaveProfile = async () => {
+		setIsSaving(true);
 		try {
 			// Prepare the data to send to the API
-			const profileUpdateData = {
-				id: user?.account?.id || id,
-				fullName: editForm.fullName.trim(),
-				bio: editForm.bio.trim(),
-			};
-
+			const profileUpdateData = new FormData();
+			profileUpdateData.append("id", user?.account?.id || id);
+			profileUpdateData.append("fullName", editForm.fullName.trim());
+			profileUpdateData.append("bio", editForm.bio.trim());
+			if (avatarPreview) {
+				profileUpdateData.append("image", editForm.fileImage);
+			}
 			// Validate that we have a valid user ID
-			if (!profileUpdateData.id) {
+			if (!profileUpdateData.get("id")) {
 				alert(
 					"Cannot update profile: User ID is missing. Please try logging in again."
 				);
@@ -404,6 +399,8 @@ const Profile = () => {
 					"An error occurred while updating profile";
 				alert(`Error: ${errorMessage}`);
 			}
+		} finally {
+			setIsSaving(false);
 		}
 	};
 
@@ -646,9 +643,7 @@ const Profile = () => {
 													</button>
 													<button
 														className="action-btn danger"
-														onClick={() =>
-															handleRespondFriendRequest("reject")
-														}
+														onClick={() => handleRespondFriendRequest("reject")}
 													>
 														<UserX size={18} />
 														Decline
@@ -806,11 +801,16 @@ const Profile = () => {
 							<button
 								className="cancel-btn"
 								onClick={() => setIsEditModalOpen(false)}
+								disabled={isSaving}
 							>
 								Cancel
 							</button>
-							<button className="save-btn" onClick={handleSaveProfile}>
-								Save Changes
+							<button
+								className="save-btn"
+								onClick={handleSaveProfile}
+								disabled={isSaving}
+							>
+								{isSaving ? "Saving..." : "Save Changes"}
 							</button>
 						</div>
 					</div>
