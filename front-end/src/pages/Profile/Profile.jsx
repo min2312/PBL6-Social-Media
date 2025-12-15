@@ -132,7 +132,7 @@ const Profile = () => {
 											(post.User.email
 												? `@${post.User.email.split("@")[0]}`
 												: ""),
-										avatar: post.User.profilePicture || null,
+										profilePicture: post.User.profilePicture || null,
 									},
 									content: post.content,
 									images: post.imageUrl,
