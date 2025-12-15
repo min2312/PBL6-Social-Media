@@ -2,7 +2,10 @@ import React, { useState, useEffect, useRef } from "react";
 import { X, Upload, Trash2, AlertTriangle, Video } from "lucide-react";
 import "./EditPost.css";
 import { UpdatePost } from "../../services/apiService";
-import { checkToxicComment } from "../../services/aiService";
+import {
+	checkToxicComment,
+	checkVideoViolence,
+} from "../../services/aiService";
 import { toast } from "react-toastify";
 
 const EditPost = ({ isOpen, onClose, post, onUpdatePost }) => {
@@ -34,31 +37,6 @@ const EditPost = ({ isOpen, onClose, post, onUpdatePost }) => {
 			setRemoveExistingVideo(false);
 		}
 	}, [post, isOpen]);
-
-	// Check violence via Flask API directly
-	const checkVideoViolence = async (videoFile) => {
-		try {
-			const formData = new FormData();
-			formData.append("video", videoFile);
-			formData.append("threshold", "0.5");
-			formData.append("min_detections", "10");
-
-			const response = await fetch("http://localhost:5000/api/check-violence", {
-				method: "POST",
-				body: formData,
-			});
-
-			if (!response.ok) {
-				throw new Error("Failed to check violence");
-			}
-
-			const result = await response.json();
-			return result;
-		} catch (error) {
-			console.error("Violence check error:", error);
-			throw error;
-		}
-	};
 
 	const handleImageUpload = (e) => {
 		const files = Array.from(e.target.files);
@@ -155,7 +133,11 @@ const EditPost = ({ isOpen, onClose, post, onUpdatePost }) => {
 
 			try {
 				// Call Flask API directly
-				const violenceResponse = await checkVideoViolence(newVideo.file);
+				const vForm = new FormData();
+				vForm.append("video", newVideo.file);
+				vForm.append("threshold", "0.5");
+				vForm.append("min_detections", "10");
+				const violenceResponse = await checkVideoViolence(vForm);
 
 				if (violenceResponse?.violence_detected) {
 					setViolenceResult(violenceResponse);
@@ -205,7 +187,7 @@ const EditPost = ({ isOpen, onClose, post, onUpdatePost }) => {
 		setIsSaving(true);
 		try {
 			let response = await UpdatePost(formData);
-			
+
 			if (response && response.errCode === 0) {
 				updatedPost = {
 					...post,
@@ -213,14 +195,16 @@ const EditPost = ({ isOpen, onClose, post, onUpdatePost }) => {
 					images: JSON.parse(response.post.imageUrl) || [],
 					videoUrl: response.post.videoUrl || null,
 				};
-				
+
 				// Hiển thị thông báo thành công
 				if (newVideo?.file) {
-					toast.success("✅ Video passed violence check! Post updated successfully!");
+					toast.success(
+						"✅ Video passed violence check! Post updated successfully!"
+					);
 				} else {
 					toast.success("Post updated successfully!");
 				}
-				
+
 				onUpdatePost(updatedPost);
 				onClose();
 			} else {
@@ -313,12 +297,15 @@ const EditPost = ({ isOpen, onClose, post, onUpdatePost }) => {
 				<div
 					className="edit-post-modal"
 					onClick={(e) => e.stopPropagation()}
-					style={{ maxWidth: "650px", maxHeight: '90vh', overflow: 'auto' }}
+					style={{ maxWidth: "650px", maxHeight: "90vh", overflow: "auto" }}
 				>
-					<div className="edit-post-header" style={{ background: '#1f2937', borderBottom: '2px solid #dc2626' }}>
+					<div
+						className="edit-post-header"
+						style={{ background: "#1f2937", borderBottom: "2px solid #dc2626" }}
+					>
 						<div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
 							<AlertTriangle size={24} color="#ff6b6b" />
-							<h2 style={{ color: '#ff6b6b' }}>⚠️ Violent Content Detected</h2>
+							<h2 style={{ color: "#ff6b6b" }}>⚠️ Violent Content Detected</h2>
 						</div>
 						<button
 							className="close-btn"
@@ -328,64 +315,122 @@ const EditPost = ({ isOpen, onClose, post, onUpdatePost }) => {
 						</button>
 					</div>
 					<div className="edit-post-body">
-						<p style={{ marginBottom: '16px', fontWeight: '500', color: '#fca5a5', fontSize: '15px' }}>
-							⚠️ Your video cannot be posted. Violent content was detected in the following time periods:
+						<p
+							style={{
+								marginBottom: "16px",
+								fontWeight: "500",
+								color: "#fca5a5",
+								fontSize: "15px",
+							}}
+						>
+							⚠️ Your video cannot be posted. Violent content was detected in
+							the following time periods:
 						</p>
-						{violenceResult?.violent_segments && violenceResult.violent_segments.length > 0 && (
-							<div style={{ 
-								background: 'rgba(220, 38, 38, 0.1)', 
-								border: '2px solid rgba(220, 38, 38, 0.3)', 
-								borderRadius: '8px', 
-								padding: '16px',
-								marginBottom: '16px'
-							}}>
-								<ul style={{ margin: 0, paddingLeft: '20px', listStyle: 'none' }}>
-									{violenceResult.violent_segments.map((segment, index) => (
-										<li key={index} style={{ marginBottom: '12px', fontSize: '15px', color: '#ffffff' }}>
-											<strong style={{ color: '#ff6b6b', fontSize: '16px' }}>
-												⏱️ Time: {segment.start} → {segment.end}
-											</strong>
-											{segment.detection_count && (
-												<div style={{ marginTop: '4px' }}>
-													<span style={{ 
-														display: 'block', 
-														fontSize: '13px', 
-														color: '#d1d5db',
-														marginTop: '2px' 
-													}}>
-														🚨 {segment.detection_count} consecutive violent clips detected
-													</span>
-												</div>
-											)}
-										</li>
-									))}
-								</ul>
-							</div>
-						)}
+						{violenceResult?.violent_segments &&
+							violenceResult.violent_segments.length > 0 && (
+								<div
+									style={{
+										background: "rgba(220, 38, 38, 0.1)",
+										border: "2px solid rgba(220, 38, 38, 0.3)",
+										borderRadius: "8px",
+										padding: "16px",
+										marginBottom: "16px",
+									}}
+								>
+									<ul
+										style={{
+											margin: 0,
+											paddingLeft: "20px",
+											listStyle: "none",
+										}}
+									>
+										{violenceResult.violent_segments.map((segment, index) => (
+											<li
+												key={index}
+												style={{
+													marginBottom: "12px",
+													fontSize: "15px",
+													color: "#ffffff",
+												}}
+											>
+												<strong style={{ color: "#ff6b6b", fontSize: "16px" }}>
+													⏱️ Time: {segment.start} → {segment.end}
+												</strong>
+												{segment.detection_count && (
+													<div style={{ marginTop: "4px" }}>
+														<span
+															style={{
+																display: "block",
+																fontSize: "13px",
+																color: "#d1d5db",
+																marginTop: "2px",
+															}}
+														>
+															🚨 {segment.detection_count} consecutive violent
+															clips detected
+														</span>
+													</div>
+												)}
+											</li>
+										))}
+									</ul>
+								</div>
+							)}
 
-						<div style={{ background: 'rgba(75, 85, 99, 0.3)', borderRadius: '8px', padding: '16px' }}>
-							<h4 style={{ color: '#fbbf24', marginBottom: '12px' }}>Community Guidelines:</h4>
-							<ul style={{ paddingLeft: "20px", color: '#e5e7eb', lineHeight: '1.8' }}>
+						<div
+							style={{
+								background: "rgba(75, 85, 99, 0.3)",
+								borderRadius: "8px",
+								padding: "16px",
+							}}
+						>
+							<h4 style={{ color: "#fbbf24", marginBottom: "12px" }}>
+								Community Guidelines:
+							</h4>
+							<ul
+								style={{
+									paddingLeft: "20px",
+									color: "#e5e7eb",
+									lineHeight: "1.8",
+								}}
+							>
 								<li>❌ No violent or graphic content showing physical harm</li>
-								<li>❌ No content depicting fights, assaults, or violent acts</li>
+								<li>
+									❌ No content depicting fights, assaults, or violent acts
+								</li>
 								<li>✅ Keep content safe and appropriate for all audiences</li>
-								<li>📧 Contact our moderation team if you believe this is a mistake</li>
+								<li>
+									📧 Contact our moderation team if you believe this is a
+									mistake
+								</li>
 							</ul>
 						</div>
 						{violenceResult && (
-							<div style={{ 
-								marginTop: '16px', 
-								padding: '12px',
-								background: 'rgba(59, 130, 246, 0.1)',
-								border: '1px solid rgba(59, 130, 246, 0.3)',
-								borderRadius: '6px',
-								fontSize: '14px', 
-								color: '#93c5fd' 
-							}}>
-								<p style={{ margin: '0 0 8px 0', color: '#60a5fa' }}><strong>📊 Analysis Summary:</strong></p>
-								<p style={{ margin: '4px 0' }}>• Video duration: {violenceResult.duration?.toFixed(2)} seconds</p>
-								<p style={{ margin: '4px 0' }}>• Total clips analyzed: {violenceResult.total_clips_analyzed}</p>
-								<p style={{ margin: '4px 0' }}>• Violent segments found: {violenceResult.violent_segments.length}</p>
+							<div
+								style={{
+									marginTop: "16px",
+									padding: "12px",
+									background: "rgba(59, 130, 246, 0.1)",
+									border: "1px solid rgba(59, 130, 246, 0.3)",
+									borderRadius: "6px",
+									fontSize: "14px",
+									color: "#93c5fd",
+								}}
+							>
+								<p style={{ margin: "0 0 8px 0", color: "#60a5fa" }}>
+									<strong>📊 Analysis Summary:</strong>
+								</p>
+								<p style={{ margin: "4px 0" }}>
+									• Video duration: {violenceResult.duration?.toFixed(2)}{" "}
+									seconds
+								</p>
+								<p style={{ margin: "4px 0" }}>
+									• Total clips analyzed: {violenceResult.total_clips_analyzed}
+								</p>
+								<p style={{ margin: "4px 0" }}>
+									• Violent segments found:{" "}
+									{violenceResult.violent_segments.length}
+								</p>
 							</div>
 						)}
 					</div>
