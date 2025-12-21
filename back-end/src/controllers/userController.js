@@ -55,6 +55,8 @@ let HandleEditUser = async (req, res) => {
 		res.cookie("jwt", message.DT.access_token, {
 			httpOnly: true,
 			maxAge: 60 * 60 * 1000,
+			sameSite: "none",
+			secure: true,
 		});
 	}
 	return res.status(200).json(message);
