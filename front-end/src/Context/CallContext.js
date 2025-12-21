@@ -208,10 +208,7 @@ export const CallProvider = ({ children }) => {
 		if (socketRef.current) return;
 		const s = io(`${process.env.REACT_APP_API_URL}`, {
 			auth: { token: user.token },
-			transports: ["websocket"],
-			upgrade: false,
-			reconnectionAttempts: 5, // Giới hạn số lần thử lại
-			reconnectionDelay: 1000,
+			transports: ["websocket", "polling"],
 		});
 		socketRef.current = s;
 

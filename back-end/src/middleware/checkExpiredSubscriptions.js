@@ -47,6 +47,8 @@ const checkExpiredSubscriptions = async (req, res, next) => {
 				res.cookie("jwt", newToken, {
 					httpOnly: true,
 					maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+					sameSite: "none",
+					secure: true,
 				});
 				req.user = payload; // Update req.user with new data
 				res.set("X-User-Updated", "true");
