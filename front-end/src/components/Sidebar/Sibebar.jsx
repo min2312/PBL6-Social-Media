@@ -1,5 +1,5 @@
 import React, { useContext } from "react";
-import { Home, MessageCircle, Heart, Settings, Users } from "lucide-react";
+import { Home, MessageCircle, Landmark, Settings, Users } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import "./Sidebar.css";
 import { UserContext } from "../../Context/UserProvider";
@@ -18,6 +18,7 @@ const Sidebar = () => {
 		{ id: "friends", icon: Users, label: "Friends", path: "/friends" },
 		// { id: "favorites", icon: Heart, label: "Favorites", path: "/favorites" },
 		{ id: "settings", icon: Settings, label: "Settings", path: "/settings" },
+		{ id: "payment", icon: Landmark, label: "Payment", path: "/payment" },
 	];
 
 	return (

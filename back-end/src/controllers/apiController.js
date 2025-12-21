@@ -1,5 +1,7 @@
 import { or } from "sequelize";
 import apiService from "../service/apiService";
+import { CreateJWT } from "../middleware/JWT_Action";
+import db from "../models/index";
 const cloudinary = require("cloudinary").v2;
 
 let HandleCreatePost = async (req, res) => {
@@ -350,6 +352,91 @@ let HandleUpdateNotificationReadStatus = async (req, res) => {
 	}
 };
 
+let handlePaymentZaloPay = async (req, res) => {
+	try {
+		const paymentResult = await apiService.createZaloPayOrder(req.body);
+		return res.status(200).json(paymentResult);
+	} catch (error) {
+		console.error("ZaloPay error:", error);
+		// Check if it's the active premium error
+		if (
+			error.message &&
+			error.message.includes("active Premium subscription")
+		) {
+			return res.status(400).json({
+				errCode: 1,
+				errMessage: error.message,
+			});
+		}
+		return res.status(500).json({
+			message: "An error occurred during ZaloPay processing",
+			error: error.message,
+		});
+	}
+};
+
+let handleCheckZaloPay = async (req, res) => {
+	try {
+		const { app_trans_id } = req.body;
+		const paymentResult = await apiService.checkZaloPayOrderStatus(
+			app_trans_id
+		);
+
+		// If payment successful and it was premium, return new JWT token
+		if (paymentResult.return_code === 1) {
+			const payment = await db.Payment.findOne({
+				where: { appTransId: app_trans_id },
+			});
+			if (payment && payment.paymentType === "premium") {
+				const user = await db.User.findByPk(payment.userId, {
+					attributes: { exclude: ["passwordHash"] },
+				});
+				if (user) {
+					const payload = {
+						id: user.id,
+						email: user.email,
+						fullName: user.fullName,
+						profilePicture: user.profilePicture,
+						role: user.role,
+						isPremium: user.isPremium,
+						premiumExpiresAt: user.premiumExpiresAt,
+					};
+					const newToken = CreateJWT(payload);
+					// Set cookie
+					res.cookie("jwt", newToken, {
+						httpOnly: true,
+						maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+					});
+					return res
+						.status(200)
+						.json({ ...paymentResult, token: newToken, user: payload });
+				}
+			}
+		}
+
+		return res.status(200).json(paymentResult);
+	} catch (error) {
+		console.error("ZaloPay error:", error);
+		return res.status(500).json({
+			message: "An error occurred during ZaloPay processing",
+			error: error.message,
+		});
+	}
+};
+
+let handleCallBackZaloPay = async (req, res) => {
+	try {
+		const paymentResult = await apiService.callbackZaloPayOrder(req.body);
+		return res.status(200).json(paymentResult);
+	} catch (error) {
+		console.error("ZaloPay error:", error);
+		return res.status(500).json({
+			message: "An error occurred during ZaloPay processing",
+			error: error.message,
+		});
+	}
+};
+
 module.exports = {
 	HandleCreatePost,
 	HandleLikePost,
@@ -365,4 +452,7 @@ module.exports = {
 	HandleGetPostByPostId,
 	HandleUpdateNotificationReadStatus,
 	HandleGetLikedPostsByUserId,
+	handlePaymentZaloPay,
+	handleCheckZaloPay,
+	handleCallBackZaloPay,
 };

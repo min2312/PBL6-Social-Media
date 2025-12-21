@@ -19,12 +19,16 @@ instance.interceptors.request.use(
 		return Promise.reject(error);
 	}
 );
-
 // Add a response interceptor
 instance.interceptors.response.use(
 	function (response) {
 		// Any status code that lie within the range of 2xx cause this function to trigger
 		// Do something with response data
+		if (response.headers["x-user-updated"] === "true") {
+			// Optionally, you can handle any client-side updates here if needed
+			const event = new CustomEvent("userStatusChanged");
+			window.dispatchEvent(event);
+		}
 		return response.data;
 	},
 	function (err) {

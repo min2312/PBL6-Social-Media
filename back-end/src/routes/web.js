@@ -2,6 +2,7 @@ import express from "express";
 import userController from "../controllers/userController";
 import adminController from "../controllers/adminController";
 import { checkUserJWT, CreateJWT } from "../middleware/JWT_Action";
+import checkExpiredSubscriptions from "../middleware/checkExpiredSubscriptions";
 import passport from "passport";
 import apiController from "../controllers/apiController";
 import { uploadCloud, uploadMedia } from "../middleware/Cloudinary_Multer";
@@ -15,6 +16,7 @@ let router = express.Router();
 
 let initWebRoutes = (app) => {
 	router.all("*", checkUserJWT);
+	router.all("*", checkExpiredSubscriptions); // Chạy SAU khi đã có req.user
 	router.post("/api/login", userController.HandleLogin);
 	router.post("/api/admin_login", adminController.HandleLoginAdmin);
 	router.post("/api/logout", userController.HandleLogOut);
@@ -75,7 +77,10 @@ let initWebRoutes = (app) => {
 		apiController.HandleEditPost
 	);
 	router.post("/api/delete-post", apiController.HandleDeletePost);
-
+	router.post("/payment/ZaloPay", apiController.handlePaymentZaloPay);
+	// ZaloPay status check and callback
+	router.post("/payment/ZaloPay/check", apiController.handleCheckZaloPay);
+	router.post("/payment/ZaloPay/callback", apiController.handleCallBackZaloPay);
 	router.delete("/api/delete-user", userController.HandleDeleteUser);
 	// router.post("/payment", apiController.HandlePaymentMoMo);
 

@@ -1,5 +1,13 @@
 import React, { useContext, useState } from "react";
-import { Search, Bell, Settings, LogOut, LogIn, ChevronDown } from "lucide-react";
+import {
+	Search,
+	Bell,
+	Settings,
+	LogOut,
+	LogIn,
+	ChevronDown,
+	Crown,
+} from "lucide-react";
 import "./Navbar.css";
 import { UserContext } from "../../Context/UserProvider";
 import { useNotifications } from "../../Context/NotificationContext";
@@ -21,10 +29,9 @@ const Navbar = ({ title = "HomePage" }) => {
 	const history = useHistory();
 	const location = useLocation();
 	const handleNotificationToggle = () => {
-		setShowNotifications(prev => !prev);
+		setShowNotifications((prev) => !prev);
 		setShowUserMenu(false); // Close user menu when opening notifications
 	};
-
 	const handleUserMenuToggle = () => {
 		setShowUserMenu(!showUserMenu);
 		setShowNotifications(false); // Close notifications when opening user menu
@@ -64,11 +71,7 @@ const Navbar = ({ title = "HomePage" }) => {
 				{/* Logo/Brand Section */}
 				<div className="navbar-brand" onClick={() => history.push("/")}>
 					<div className="brand-logo">
-						<img 
-							src={logo} 
-							alt="SocialHub Logo" 
-							className="logo-image"
-						/>
+						<img src={logo} alt="SocialHub Logo" className="logo-image" />
 					</div>
 					<span className="brand-name">KIDSOCIAL</span>
 				</div>
@@ -90,6 +93,27 @@ const Navbar = ({ title = "HomePage" }) => {
 				{/* Right Actions */}
 				{user && user.isAuthenticated ? (
 					<div className="navbar-actions">
+						{Boolean(user?.account?.isPremium) === true && (
+							<div
+								style={{
+									display: "flex",
+									alignItems: "center",
+									background:
+										"linear-gradient(135deg, #FFD700 0%, #FFA500 100%)",
+									padding: "6px 12px",
+									borderRadius: "20px",
+									marginRight: "12px",
+									boxShadow: "0 2px 8px rgba(255, 215, 0, 0.3)",
+								}}
+							>
+								<Crown size={16} style={{ marginRight: 4, color: "#000" }} />
+								<span
+									style={{ fontSize: "13px", fontWeight: "700", color: "#000" }}
+								>
+									Premium
+								</span>
+							</div>
+						)}
 						<div className="notification-container">
 							<button
 								className="navbar-button notification-btn"
@@ -97,7 +121,9 @@ const Navbar = ({ title = "HomePage" }) => {
 								onClick={handleNotificationToggle}
 							>
 								<Bell size={20} />
-								{unread > 0 && <span className="notification-badge">{unread}</span>}
+								{unread > 0 && (
+									<span className="notification-badge">{unread}</span>
+								)}
 							</button>
 
 							{showNotifications && (
@@ -118,14 +144,31 @@ const Navbar = ({ title = "HomePage" }) => {
 										<img
 											src={user.account.profilePicture}
 											alt="avatar"
-											style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
+											style={{
+												width: "100%",
+												height: "100%",
+												borderRadius: "50%",
+												objectFit: "cover",
+											}}
 										/>
 									) : (
-										<span>{user?.account?.fullName?.charAt(0)?.toUpperCase() || 'U'}</span>
+										<span>
+											{user?.account?.fullName?.charAt(0)?.toUpperCase() || "U"}
+										</span>
 									)}
 								</div>
 								<span className="user-menu-name">
 									{user?.account?.fullName?.split(" ").pop()}
+									{Boolean(user?.account?.isPremium) === true && (
+										<Crown
+											size={14}
+											style={{
+												marginLeft: 4,
+												color: "#FFD700",
+												display: "inline",
+											}}
+										/>
+									)}
 								</span>
 								<ChevronDown size={16} className="user-menu-icon" />
 							</button>
@@ -138,15 +181,61 @@ const Navbar = ({ title = "HomePage" }) => {
 												<img
 													src={user.account.profilePicture}
 													alt="avatar"
-													style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
+													style={{
+														width: "100%",
+														height: "100%",
+														borderRadius: "50%",
+														objectFit: "cover",
+													}}
 												/>
 											) : (
-												<span>{user?.account?.fullName?.charAt(0)?.toUpperCase() || 'U'}</span>
+												<span>
+													{user?.account?.fullName?.charAt(0)?.toUpperCase() ||
+														"U"}
+												</span>
 											)}
 										</div>
 										<div className="user-details">
-											<p className="user-name">{user?.account?.fullName}</p>
+											<p className="user-name">
+												{user?.account?.fullName}
+												{Boolean(user?.account?.isPremium) === true && (
+													<Crown
+														size={16}
+														style={{
+															marginLeft: 6,
+															color: "#FFD700",
+															display: "inline",
+															verticalAlign: "middle",
+														}}
+													/>
+												)}
+											</p>
 											<p className="user-email">{user?.account?.email}</p>
+											{Boolean(user?.account?.isPremium) === true && (
+												<div
+													style={{
+														display: "inline-block",
+														background:
+															"linear-gradient(135deg, #FFD700 0%, #FFA500 100%)",
+														padding: "4px 10px",
+														borderRadius: "12px",
+														marginTop: "6px",
+														fontSize: "11px",
+														fontWeight: "700",
+														color: "#000",
+													}}
+												>
+													<Crown
+														size={12}
+														style={{
+															marginRight: 4,
+															display: "inline",
+															verticalAlign: "middle",
+														}}
+													/>
+													PREMIUM MEMBER
+												</div>
+											)}
 										</div>
 									</div>
 									<div className="dropdown-divider"></div>

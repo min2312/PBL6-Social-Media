@@ -91,23 +91,23 @@ let CreatePost = (data, fileImages, fileVideos = []) => {
 					errMessage: "The post error",
 				});
 			} else {
-			let imagePath = null;
-			if (Array.isArray(data.image) && data.image.length > 0) {
-				imagePath = data.image; // mảng ảnh từ Cloudinary
-			} else if (fileImages && fileImages.length > 0) {
-				imagePath = fileImages.map((f) => f.path);
-			}
-			
-			// Derive videoUrl from uploaded video file
-			let videoUrl = null;
-			if (Array.isArray(fileVideos) && fileVideos.length > 0) {
-				const v = fileVideos[0];
-				videoUrl = v?.path || null;
-			} else if (typeof data.videoUrl === "string" && data.videoUrl) {
-				// In case client sent an existing video URL
-				videoUrl = data.videoUrl;
-			}
-			let newPost = await db.Post.create({
+				let imagePath = null;
+				if (Array.isArray(data.image) && data.image.length > 0) {
+					imagePath = data.image; // mảng ảnh từ Cloudinary
+				} else if (fileImages && fileImages.length > 0) {
+					imagePath = fileImages.map((f) => f.path);
+				}
+
+				// Derive videoUrl from uploaded video file
+				let videoUrl = null;
+				if (Array.isArray(fileVideos) && fileVideos.length > 0) {
+					const v = fileVideos[0];
+					videoUrl = v?.path || null;
+				} else if (typeof data.videoUrl === "string" && data.videoUrl) {
+					// In case client sent an existing video URL
+					videoUrl = data.videoUrl;
+				}
+				let newPost = await db.Post.create({
 					userId: Number(data.userId),
 					content: data.content,
 					videoUrl,
@@ -378,6 +378,7 @@ let GetAllPost = (postId) => {
 				return {
 					...p.toJSON(),
 					imageUrl: images,
+					isSponsored: p.isSponsored || false,
 				};
 			});
 			resolve(formattedPosts);
@@ -818,6 +819,221 @@ let UpdateNotificationReadStatus = (notificationId, isRead = true) => {
 	});
 };
 
+const createZaloPayOrder = async (orderDetails) => {
+	// orderDetails: { userId, type: 'premium'|'sponsored_post', postId?, amount, duration }
+	console.log("Creating ZaloPay order with details:", orderDetails);
+
+	// Check if premium is still active
+	if (orderDetails.type === "premium") {
+		const user = await db.User.findByPk(orderDetails.userId);
+		if (
+			user &&
+			user.isPremium &&
+			user.premiumExpiresAt &&
+			new Date(user.premiumExpiresAt) > new Date()
+		) {
+			throw new Error(
+				"You already have an active Premium subscription. Please wait until it expires."
+			);
+		}
+	}
+
+	const config = {
+		app_id: "2553",
+		key1: "PcY4iZIKFCIdgZvA6ueMcMHHUbRLYjPL",
+		key2: "kLtgPl8HHhfvMuDHPwKfgfsY4Ydm9eIz",
+		endpoint: "https://sb-openapi.zalopay.vn/v2/create",
+	};
+	const transID = Math.floor(Math.random() * 1000000);
+	const appTransId = `${moment().format("YYMMDD")}_${transID}`;
+
+	const redirectParams = new URLSearchParams({
+		type: orderDetails.type || "premium",
+		app_trans_id: appTransId,
+	}).toString();
+	const embed_data = {
+		redirecturl: `${process.env.CLIENT_URL}/payment?${redirectParams}`,
+	};
+
+	const order = {
+		app_id: config.app_id,
+		app_trans_id: appTransId,
+		app_user: String(orderDetails.userId || "user"),
+		app_time: Date.now(),
+		item: JSON.stringify([
+			{
+				name: orderDetails.type || "premium",
+				amount: orderDetails.amount || 50000,
+			},
+		]),
+		embed_data: JSON.stringify(embed_data),
+		amount: orderDetails.amount || 50000,
+		callback_url: `${
+			process.env.CALLBACK_BASE_URL || "http://localhost:8080"
+		}/payment/ZaloPay/callback`,
+		description: `SocialMedia - ${
+			orderDetails.type || "premium"
+		} - #${transID}`,
+		lang: "vn",
+		bank_code: "",
+	};
+
+	const data = `${config.app_id}|${order.app_trans_id}|${order.app_user}|${order.amount}|${order.app_time}|${order.embed_data}|${order.item}`;
+	order.mac = CryptoJS.HmacSHA256(data, config.key1).toString();
+
+	// Record pending payment in DB
+	try {
+		await db.Payment.create({
+			userId: orderDetails.userId,
+			postId: orderDetails.postId || null,
+			amount: orderDetails.amount || 50000,
+			paymentType: orderDetails.type || "premium",
+			appTransId: appTransId,
+			status: "pending",
+			duration: orderDetails.duration || 30, // store duration in days
+		});
+	} catch (e) {
+		console.error("Error creating payment record:", e);
+		// proceed to create ZaloPay order regardless, but surface later if needed
+	}
+
+	try {
+		const result = await axios.post(config.endpoint, null, { params: order });
+		return result.data;
+	} catch (error) {
+		console.log(error);
+		throw error;
+	}
+};
+const callbackZaloPayOrder = async (body) => {
+	const config = {
+		app_id: "2553",
+		key1: "PcY4iZIKFCIdgZvA6ueMcMHHUbRLYjPL",
+		key2: "kLtgPl8HHhfvMuDHPwKfgfsY4Ydm9eIz",
+	};
+	let result = {};
+	let dataStr = body.data;
+	let reqMac = body.mac;
+	let mac = CryptoJS.HmacSHA256(dataStr, config.key2).toString();
+	console.log("mac =", mac);
+
+	if (reqMac !== mac) {
+		// Callback không hợp lệ
+		result.return_code = -1;
+		result.return_message = "mac not equal";
+	} else {
+		let dataJson = JSON.parse(dataStr);
+		const appTransId = dataJson["app_trans_id"];
+		console.log("Callback success for app_trans_id =", appTransId);
+
+		// Update payment status and apply business logic
+		try {
+			const payment = await db.Payment.findOne({ where: { appTransId } });
+			if (payment) {
+				payment.status = "completed";
+				payment.updatedAt = new Date();
+				await payment.save();
+
+				if (payment.paymentType === "premium") {
+					// Premium: enable on user based on duration
+					const user = await db.User.findByPk(payment.userId);
+					if (user) {
+						user.isPremium = true;
+						const days = payment.duration || 30;
+						const expires = moment().add(days, "days").toDate();
+						user.premiumExpiresAt = expires;
+						await user.save();
+					}
+				} else if (payment.paymentType === "sponsored_post" && payment.postId) {
+					const post = await db.Post.findByPk(payment.postId);
+					if (post) {
+						post.isSponsored = true;
+						post.paymentStatus = "paid";
+						const days = payment.duration || 7;
+						post.sponsoredExpiresAt = moment().add(days, "days").toDate();
+						await post.save();
+					}
+				}
+			}
+		} catch (e) {
+			console.error("Error finalizing payment in callback:", e);
+		}
+
+		result.return_code = 1;
+		result.return_message = "success";
+	}
+
+	return result;
+};
+const checkZaloPayOrderStatus = async (app_trans_id) => {
+	const config = {
+		app_id: "2553",
+		key1: "PcY4iZIKFCIdgZvA6ueMcMHHUbRLYjPL",
+		key2: "kLtgPl8HHhfvMuDHPwKfgfsY4Ydm9eIz",
+		endpoint: "https://sb-openapi.zalopay.vn/v2/query",
+	};
+
+	let postData = {
+		app_id: config.app_id,
+		app_trans_id: app_trans_id,
+	};
+
+	let data = postData.app_id + "|" + postData.app_trans_id + "|" + config.key1; // appid|app_trans_id|key1
+	postData.mac = CryptoJS.HmacSHA256(data, config.key1).toString();
+	let postConfig = {
+		method: "post",
+		url: config.endpoint,
+		headers: {
+			"Content-Type": "application/x-www-form-urlencoded",
+		},
+		data: qs.stringify(postData),
+	};
+	try {
+		const response = await axios(postConfig);
+		const data = response.data;
+		// If success, mark payment completed (defensive in case callback missed)
+		try {
+			if (data.return_code === 1) {
+				const payment = await db.Payment.findOne({
+					where: { appTransId: app_trans_id },
+				});
+				if (payment && payment.status !== "completed") {
+					payment.status = "completed";
+					payment.updatedAt = new Date();
+					await payment.save();
+					if (payment.paymentType === "premium") {
+						const user = await db.User.findByPk(payment.userId);
+						if (user) {
+							user.isPremium = true;
+							const days = payment.duration || 30;
+							user.premiumExpiresAt = moment().add(days, "days").toDate();
+							await user.save();
+						}
+					} else if (
+						payment.paymentType === "sponsored_post" &&
+						payment.postId
+					) {
+						const post = await db.Post.findByPk(payment.postId);
+						if (post) {
+							post.isSponsored = true;
+							post.paymentStatus = "paid";
+							const days = payment.duration || 7;
+							post.sponsoredExpiresAt = moment().add(days, "days").toDate();
+							await post.save();
+						}
+					}
+				}
+			}
+		} catch (e) {
+			console.error("Error updating payment on status check:", e);
+		}
+		return data;
+	} catch (error) {
+		console.error("Error checking order status:", error);
+		throw error;
+	}
+};
+
 module.exports = {
 	GetAllPost,
 	GetComment,
@@ -834,4 +1050,7 @@ module.exports = {
 	GetPostByPostId,
 	UpdateNotificationReadStatus,
 	GetLikedPostsByUserId,
+	createZaloPayOrder,
+	callbackZaloPayOrder,
+	checkZaloPayOrderStatus,
 };

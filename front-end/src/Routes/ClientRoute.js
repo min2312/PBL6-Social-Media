@@ -9,6 +9,7 @@ import Login from "../pages/Login/Login";
 import Register from "../pages/Register/Register";
 import Admin from "../pages/Admin/Admin";
 import Settings from "../pages/Settings/Settings";
+import Payment from "../pages/Payment/Payment";
 import SearchResult from "../pages/SearchResult/SearchResult";
 import FriendList from "../pages/FriendList/FriendList";
 import PostById from "../pages/PostById/PostById";
@@ -56,6 +57,7 @@ const ClientRoute = () => {
 				<PrivateRoutes path="/friends" component={FriendList} />
 				<PrivateRoutesRole path="/admin" component={Admin} role="admin" />
 				<PrivateRoutes path="/settings" component={Settings} />
+				<PrivateRoutes path="/payment" component={Payment} />
 				<PrivateRoutes path="/search" component={SearchResult} />
 				<PrivateRoutes path="/post/:postId" component={PostById} />
 				<Route path="*">404 Not Found</Route>
