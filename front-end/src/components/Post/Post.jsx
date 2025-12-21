@@ -343,16 +343,45 @@ const Post = ({ post, onUpdatePost, onDeletePost }) => {
 					</div>
 					<div className="post-user-details">
 						<div className="user-name-container">
-							<p className="user-name clickable-user" onClick={() => handleUserClick(post.User?.id)}>{post.User?.fullName}</p>
+							<p
+								className="user-name clickable-user"
+								onClick={() => handleUserClick(post.User?.id)}
+							>
+								{post.User?.fullName}
+							</p>
 							<span className="subtext-separator">•</span>
-							<span className="post-timestamp clickable" onClick={handleTimestampClick}>{formattedTime}</span>
+							<span
+								className="post-timestamp clickable"
+								onClick={handleTimestampClick}
+							>
+								{formattedTime}
+							</span>
 						</div>
 						<div className="post-user-subtext">
-							<p className="user-username clickable-user" onClick={() => handleUserClick(post.User?.id)}>{post.User?.username}</p>
+							<p
+								className="user-username clickable-user"
+								onClick={() => handleUserClick(post.User?.id)}
+							>
+								{post.User?.username}
+							</p>
 						</div>
 					</div>
 				</div>
 				<div className="post-meta">
+					{post.isSponsored && (
+						<span
+							style={{
+								backgroundColor: "#ffd54f",
+								color: "#5d4037",
+								padding: "2px 8px",
+								borderRadius: 12,
+								fontSize: 12,
+								marginRight: 8,
+							}}
+						>
+							Sponsored
+						</span>
+					)}
 					{user?.account?.id === post.User?.id && (
 						<div className="post-menu-wrapper" ref={dropdownRef}>
 							<button className="post-menu-btn" onClick={toggleDropdown}>

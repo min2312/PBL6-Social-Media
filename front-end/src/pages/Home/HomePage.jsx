@@ -36,8 +36,18 @@ const HomePage = () => {
 			}
 			let response = await GetAllPost("ALL");
 			if (response && response.errCode === 0) {
+				let postsToShow = response.post;
+
+				// Filter out sponsored posts for premium users EXCEPT their own sponsored posts
+				if (user?.account?.isPremium) {
+					postsToShow = postsToShow.filter((post) => {
+						// Keep post if it's not sponsored OR if it's their own sponsored post
+						return !post.isSponsored || post.userId === user.account.id;
+					});
+				}
+
 				const formattedPosts = await Promise.all(
-					response.post.map(async (post) => ({
+					postsToShow.map(async (post) => ({
 						...post,
 						images: post.imageUrl,
 						likes: await HandleGetLikePost(post.id).then((res) =>

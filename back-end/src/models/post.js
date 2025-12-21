@@ -22,6 +22,18 @@ module.exports = (sequelize, DataTypes) => {
 			isDeleted: DataTypes.BOOLEAN,
 			isSharedPost: DataTypes.BOOLEAN,
 			originalPostId: DataTypes.INTEGER,
+			isSponsored: {
+				type: DataTypes.BOOLEAN,
+				defaultValue: false,
+			},
+			paymentStatus: {
+				type: DataTypes.STRING,
+				defaultValue: "pending",
+			},
+			sponsoredExpiresAt: {
+				type: DataTypes.DATE,
+				allowNull: true,
+			},
 		},
 		{
 			sequelize,

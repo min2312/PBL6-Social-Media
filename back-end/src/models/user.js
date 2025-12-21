@@ -34,6 +34,14 @@ module.exports = (sequelize, DataTypes) => {
 			status: DataTypes.STRING,
 			blockedUntil: DataTypes.DATE,
 			suspendedUntil: DataTypes.DATE,
+			isPremium: {
+				type: DataTypes.BOOLEAN,
+				defaultValue: false,
+			},
+			premiumExpiresAt: {
+				type: DataTypes.DATE,
+				allowNull: true,
+			},
 		},
 		{
 			sequelize,

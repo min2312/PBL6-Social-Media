@@ -140,6 +140,7 @@ const getUserAccount = async (req, res) => {
 			fullName: req.user.fullName,
 			email: req.user.email,
 			bio: req.user.bio,
+			isPremium: req.user.isPremium,
 			profilePicture: req.user.profilePicture,
 			createdAt: req.user.createdAt,
 		},

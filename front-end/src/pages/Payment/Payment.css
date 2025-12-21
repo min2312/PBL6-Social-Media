@@ -1,0 +1,252 @@
+.payment-container {
+	max-width: 700px;
+	margin: 40px auto;
+	padding: 32px;
+	background: #1e1e1e;
+	border-radius: 16px;
+	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+.payment-header {
+	margin-bottom: 32px;
+	text-align: center;
+}
+
+.payment-header h2 {
+	font-size: 28px;
+	font-weight: 700;
+	color: #ffffff;
+	margin-bottom: 8px;
+}
+
+.payment-header p {
+	font-size: 14px;
+	color: #aaa;
+}
+
+.payment-type-selector {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 16px;
+	margin-bottom: 32px;
+}
+
+.payment-type-card {
+	padding: 24px;
+	border: 2px solid #333;
+	border-radius: 12px;
+	cursor: pointer;
+	transition: all 0.3s ease;
+	text-align: center;
+	background: #2a2a2a;
+	min-height: 140px;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+}
+
+.payment-type-card:hover {
+	border-color: #667eea;
+	background: #333;
+	transform: translateY(-2px);
+}
+
+.payment-type-card.active {
+	border-color: #667eea;
+	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+	color: white;
+	box-shadow: 0 4px 12px rgba(102, 126, 234, 0.5);
+}
+
+.payment-type-icon {
+	font-size: 32px;
+	margin-bottom: 12px;
+}
+
+.payment-type-title {
+	font-weight: 700;
+	font-size: 18px;
+	margin-bottom: 6px;
+}
+
+.payment-type-price {
+	font-size: 13px;
+	opacity: 0.85;
+	font-weight: 500;
+}
+
+.payment-form {
+	display: flex;
+	flex-direction: column;
+	gap: 20px;
+}
+
+.form-group {
+	display: flex;
+	flex-direction: column;
+}
+
+.form-group label {
+	font-weight: 600;
+	font-size: 14px;
+	color: #ddd;
+	margin-bottom: 8px;
+}
+
+.form-group textarea,
+.form-group input[type="number"],
+.form-group select {
+	padding: 12px 16px;
+	border: 2px solid #333;
+	border-radius: 8px;
+	font-size: 14px;
+	transition: border-color 0.3s ease;
+	font-family: inherit;
+	background: #2a2a2a;
+	color: #ffffff;
+}
+
+.form-group textarea:focus,
+.form-group input[type="number"]:focus,
+.form-group select:focus {
+	outline: none;
+	border-color: #667eea;
+	background: #333;
+}
+
+.form-group textarea {
+	min-height: 100px;
+	resize: vertical;
+}
+
+.file-upload-wrapper {
+	position: relative;
+	display: inline-block;
+	width: 100%;
+}
+
+.file-upload-label {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 16px;
+	border: 2px dashed #555;
+	border-radius: 8px;
+	cursor: pointer;
+	transition: all 0.3s ease;
+	background: #2a2a2a;
+	color: #aaa;
+	font-weight: 500;
+}
+
+.file-upload-label:hover {
+	border-color: #667eea;
+	background: #333;
+	color: #667eea;
+}
+
+.file-upload-input {
+	display: none;
+}
+
+.file-info {
+	margin-top: 8px;
+	font-size: 12px;
+	color: #aaa;
+}
+
+.pricing-options {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 12px;
+	margin-bottom: 20px;
+}
+
+.pricing-option {
+	padding: 16px;
+	border: 2px solid #333;
+	border-radius: 8px;
+	cursor: pointer;
+	transition: all 0.3s ease;
+	background: #2a2a2a;
+	text-align: center;
+}
+
+.pricing-option:hover {
+	border-color: #667eea;
+	background: #333;
+}
+
+.pricing-option.selected {
+	border-color: #667eea;
+	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+	color: white;
+}
+
+.pricing-option-duration {
+	font-size: 16px;
+	font-weight: 700;
+	margin-bottom: 4px;
+	color: inherit;
+}
+
+.pricing-option-price {
+	font-size: 14px;
+	opacity: 0.9;
+	color: inherit;
+}
+
+.pricing-option.selected .pricing-option-duration,
+.pricing-option.selected .pricing-option-price {
+	color: white;
+}
+
+.payment-button {
+	padding: 16px 32px;
+	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+	color: white;
+	border: none;
+	border-radius: 8px;
+	font-size: 16px;
+	font-weight: 600;
+	cursor: pointer;
+	transition: all 0.3s ease;
+	margin-top: 12px;
+}
+
+.payment-button:hover:not(:disabled) {
+	transform: translateY(-2px);
+	box-shadow: 0 8px 16px rgba(102, 126, 234, 0.4);
+}
+
+.payment-button:disabled {
+	opacity: 0.6;
+	cursor: not-allowed;
+}
+
+.payment-message {
+	margin-top: 20px;
+	padding: 16px;
+	border-radius: 8px;
+	text-align: center;
+	font-weight: 500;
+}
+
+.payment-message.success {
+	background: #e8f5e9;
+	color: #2e7d32;
+	border: 1px solid #4caf50;
+}
+
+.payment-message.error {
+	background: #ffebee;
+	color: #c62828;
+	border: 1px solid #f44336;
+}
+
+.payment-message.info {
+	background: #e3f2fd;
+	color: #1565c0;
+	border: 1px solid #2196f3;
+}

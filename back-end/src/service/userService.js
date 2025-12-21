@@ -29,6 +29,7 @@ let HandleUserLogin = (email, password) => {
 							bio: user.bio,
 							createdAt: user.createdAt,
 							profilePicture: user.profilePicture,
+							isPremium: user.isPremium,
 						};
 						let token = CreateJWT(payload);
 						userData.errCode = 0;
@@ -303,6 +304,7 @@ let updateUserProfile = (data, fileImage) => {
 					bio: updatedUser.bio,
 					createdAt: updatedUser.createdAt,
 					profilePicture: updatedUser.profilePicture,
+					isPremium: updatedUser.isPremium,
 				};
 				let token = CreateJWT(payload);
 

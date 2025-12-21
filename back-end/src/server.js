@@ -14,7 +14,11 @@ require("dotenv").config();
 
 let app = express();
 app.use(
-	cors({ credentials: true, origin: true, exposedHeaders: ["Authorization"] })
+	cors({
+		credentials: true,
+		origin: true,
+		exposedHeaders: ["Authorization", , "X-User-Updated"],
+	})
 );
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));

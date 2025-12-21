@@ -44,10 +44,20 @@ const UserProvider = ({ children }) => {
 			let createdAt = response.DT.createdAt;
 			let bio = response.DT.bio;
 			let profilePicture = response.DT.profilePicture;
+			let isPremium = response.DT.isPremium;
 			let data = {
 				isAuthenticated: true,
 				token,
-				account: { id, email, fullName, role, createdAt, bio, profilePicture },
+				account: {
+					id,
+					email,
+					fullName,
+					role,
+					createdAt,
+					bio,
+					profilePicture,
+					isPremium,
+				},
 				isLoading: false,
 			};
 			setUser(data);
@@ -91,6 +101,19 @@ const UserProvider = ({ children }) => {
 		}
 	}, []);
 
+	useEffect(() => {
+		const handleStatusChange = () => {
+			console.log("Sự kiện đổi trạng thái User được bắt!");
+			fetchUser();
+		};
+
+		window.addEventListener("userStatusChanged", handleStatusChange);
+
+		return () => {
+			window.removeEventListener("userStatusChanged", handleStatusChange);
+		};
+	}, []);
+
 	return (
 		<UserContext.Provider
 			value={{
@@ -101,6 +124,7 @@ const UserProvider = ({ children }) => {
 				logoutContext,
 				loginAdmin,
 				logoutAdminContext,
+				fetchUser,
 			}}
 		>
 			{children}
